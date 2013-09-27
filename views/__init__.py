@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-##
 ## This file is part of Invenio.
 ## Copyright (C) 2013 CERN.
 ##
@@ -15,10 +14,9 @@
 ##
 ## You should have received a copy of the GNU General Public License
 ## along with Invenio; if not, write to the Free Software Foundation, Inc.,
-## 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+## 59 Temple Place, Suite 331, Boston, MA 02111-1307, USA.
 
-"""Collection Facet"""
+from .search import blueprint as search_blueprint
+from .admin import blueprint as admin_blueprint
 
-from ..facet_builders import CollectionFacetBuilder
-
-facet = CollectionFacetBuilder('collection', order=1)
+blueprints = [search_blueprint, admin_blueprint]

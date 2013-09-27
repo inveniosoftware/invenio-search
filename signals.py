@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-##
+#
 ## This file is part of Invenio.
 ## Copyright (C) 2013 CERN.
 ##
@@ -17,8 +17,20 @@
 ## along with Invenio; if not, write to the Free Software Foundation, Inc.,
 ## 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
-"""Collection Facet"""
+from invenio.base.signals import _signals as signals
 
-from ..facet_builders import CollectionFacetBuilder
+record_viewed = signals.signal(
+    'record-viewed')
+"""
+This signal is sent when a detailed view of record is displayed.
+Parameters:
+    recid 	- id of record
+    id_user	- id of user or 0 for guest
+    request     - flask request object
 
-facet = CollectionFacetBuilder('collection', order=1)
+Example subscriber:
+
+     def subscriber(sender, recid=0, id_user=0, request=None):
+         ...
+
+"""

@@ -17,4 +17,14 @@
 # along with Invenio; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
-"""Namespace for search extensions."""
+"""Raw reference search unit."""
+
+
+def search_unit(query, f, m, wl=None):
+    """Search for raw referres to by matched records."""
+    from invenio.legacy.refextract.api import search_from_reference
+
+    from ...engine import search_unit as search
+
+    field, pattern = search_from_reference(query)
+    return search(pattern, field)

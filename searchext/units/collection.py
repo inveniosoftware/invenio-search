@@ -17,4 +17,28 @@
 # along with Invenio; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
-"""Namespace for search extensions."""
+"""Collection search unit."""
+
+from intbitset import intbitset
+
+
+def search_unit(query, f, m, wl=None):
+    """Search for records in collection query.
+
+    Example:
+
+    .. code-block:: text
+
+        collection:"BOOK"
+        collection:"Books"
+    """
+    from invenio.legacy.search_engine import (
+        get_collection_reclist, search_unit_in_bibwords
+    )
+    if len(query):
+        ahitset = get_collection_reclist(query)
+        if not ahitset:
+            return search_unit_in_bibwords(query, 'collection', m, wl=wl)
+        return ahitset
+    else:
+        return intbitset([])

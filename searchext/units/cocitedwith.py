@@ -17,4 +17,29 @@
 # along with Invenio; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
-"""Namespace for search extensions."""
+"""Cocitedwith search unit."""
+
+from intbitset import intbitset
+
+
+def search_unit(query, f, m, wl=None):
+    """Search for records in citation index."""
+    from invenio.legacy.search_engine import record_exists
+    from invenio.legacy.bibrank.citation_searcher import \
+        calculate_co_cited_with_list
+
+    results = intbitset([])
+
+    if query:
+        if isinstance(query, intbitset):
+            ahitset = query
+        else:
+            recid = int(query)
+            ahitset = [recid] if record_exists(recid) == 1 else []
+
+        if len(ahitset):
+            for recid in ahitset:
+                results |= intbitset([
+                    x[0] for x in calculate_co_cited_with_list(recid)])
+
+    return results

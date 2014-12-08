@@ -17,4 +17,24 @@
 # along with Invenio; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
-"""Namespace for search extensions."""
+"""Cited by search unit."""
+
+from intbitset import intbitset
+
+
+def search_unit(query, f, m, wl=None):
+    """Search for records in citation index."""
+    from invenio.legacy.search_engine import search_pattern
+    from invenio.legacy.bibrank.citation_searcher import get_citedby_hitset
+
+    if query:
+        if isinstance(query, intbitset):
+            ahitset = query
+        else:
+            ahitset = search_pattern(p=query)
+        if ahitset:
+            return get_citedby_hitset(ahitset)
+        else:
+            return intbitset([])
+    else:
+        return intbitset([])

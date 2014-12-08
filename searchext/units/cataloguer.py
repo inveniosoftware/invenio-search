@@ -17,4 +17,27 @@
 # along with Invenio; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
-"""Namespace for search extensions."""
+"""Cataloguer search unit."""
+
+from intbitset import intbitset
+
+
+def search_unit(query, f, m, wl=None):
+    """Return hitset of recIDs that were modified by the given cataloguer."""
+    from invenio.ext.sqlalchemy import db
+    from invenio.modules.editor.models import HstRECORD
+    if query:
+        try:
+            cataloguer_name, modification_date = query.split(";")
+        except ValueError:
+            cataloguer_name = query
+            modification_date = ""
+
+        where = [HstRECORD.job_person == cataloguer_name]
+        if modification_date:
+            where += HstRECORD.filter_time_interval(modification_date)
+        return intbitset(
+            db.session.query(HstRECORD.id_bibrec).filter(*where).all()
+        )
+    else:
+        return intbitset([])

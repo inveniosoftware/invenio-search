@@ -17,4 +17,15 @@
 # along with Invenio; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
-"""Namespace for search extensions."""
+"""Date created search unit."""
+
+from intbitset import intbitset
+
+
+def search_unit(query, f, m, wl=None):
+    """Return hitset of recIDs found that were created during 'query'."""
+    from invenio.ext.sqlalchemy import db
+    from invenio.modules.records.models import Record
+
+    return intbitset(db.session.query(Record.id).filter(
+        *Record.filter_time_interval(query)).all())

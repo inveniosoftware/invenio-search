@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2014, 2015 CERN.
+# Copyright (C) 2015 CERN.
 #
 # Invenio is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -17,15 +17,27 @@
 # along with Invenio; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
-"""Date modified search unit."""
-
-from intbitset import intbitset
+"""Query results cacher."""
 
 
-def search_unit(query, f, m, wl=None):
-    """Return hitset of recIDs found that were modified during 'query'."""
-    from invenio.ext.sqlalchemy import db
-    from invenio_records.models import Record
+class SearchOp(object):
 
-    return intbitset(db.session.query(Record.id).filter(
-        *Record.filter_time_interval(query, 'm')).all())
+    """Store results in cache."""
+
+    def __init__(self, query):
+        """Define query that should be cached."""
+        self.query = query
+
+    def __repr__(self):
+        """Object representation."""
+        return "%s(%s)" % (self.__class__.__name__, repr(self.query))
+
+    def accept(self, visitor):
+        """Store intermediate results to the cache."""
+        self.query = self.query.accept(visitor)
+        return visitor.visit(self)
+
+
+def apply(query, **kwargs):
+    """Decorate query with a cache operator."""
+    return SearchOp(query)

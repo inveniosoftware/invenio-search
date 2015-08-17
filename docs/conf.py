@@ -302,7 +302,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   (master_doc, 'invenio-search', u'Invenio-Search Documentation',
-   author, 'invenio-search', 'Invenio module for metadata searching.',
+   author, 'invenio-search', 'Invenio module for information retrieval.',
    'Miscellaneous'),
 ]
 

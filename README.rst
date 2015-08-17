@@ -41,7 +41,7 @@
         :target: https://github.com/inveniosoftware/invenio-search/blob/master/LICENSE
 
 
-Invenio module for metadata searching.
+Invenio module for information retrieval.
 
 *This is an experimental development preview release.*
 

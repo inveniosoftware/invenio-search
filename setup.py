@@ -22,7 +22,7 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-"""Invenio module for metadata searching."""
+"""Invenio module for information retrieval."""
 
 import os
 import sys
@@ -42,6 +42,8 @@ requirements = [
 ]
 
 test_requirements = [
+    'unittest2>=1.1.0',
+    'Flask_Testing>=0.4.1',
     'pytest>=2.7.0',
     'pytest-cov>=1.8.0',
     'pytest-pep8>=1.0.6',

@@ -24,7 +24,7 @@
 Authors
 =======
 
-Invenio module for metadata searching.
+Invenio module for information retrieval.
 
 - Adrian Pawel Baran <adrian.pawel.baran@cern.ch>
 - Adrian-Tudor Panescu <adrian.tudor.panescu@cern.ch>

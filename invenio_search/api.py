@@ -54,7 +54,8 @@ class Query(object):
             tree = tree.accept(walker)
         return tree
 
-    def search(self, user_info=None, collection=None, **kwargs):
+    def search(self, user_info=None, collection=None, index="records*",
+               **kwargs):
         """Search records."""
         user_info = user_info or current_user
         # Enhance query first
@@ -65,8 +66,8 @@ class Query(object):
 
         for walker in search_walkers():
             query = query.accept(walker)
-        return Results(query)
 
+        return Results(query, index=index)
 
     def match(self, record, user_info=None):
         """Return True if record match the query."""
@@ -79,13 +80,15 @@ class Query(object):
 
 class Results(object):
 
-    def __init__(self, query, **kwargs):
+    def __init__(self, query, index, **kwargs):
         self.body = {
             'from': 0,
             'size': 10,
             'query': query,
         }
         self.body.update(kwargs)
+
+        self.index = index
 
         self._results = None
 
@@ -95,7 +98,7 @@ class Results(object):
         from intbitset import intbitset
         from invenio.ext.es import es
         results = es.search(
-            index='records',
+            index=self.index,
             doc_type='record',
             body={
                 'size': 9999999,
@@ -110,7 +113,7 @@ class Results(object):
 
         if self._results is None:
             self._results = es.search(
-                index='records',
+                index=self.index,
                 doc_type='record',
                 body=self.body,
             )

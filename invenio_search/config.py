@@ -185,3 +185,11 @@ SEARCH_ELASTIC_KEYWORD_MAPPING = {
     "980__b": ["collections.secondary"],
     "542__l": ["information_relating_to_copyright_status.copyright_status"],
 }
+
+
+# SEARCH_ELASTIC_RECORDS_INDEX_MAPPING -- this variable holds a dictionary
+# to map invenio queries to elasticsearch indices in the records namespace.
+# E.g {'collection:"Conferences"': "conferences"} will index a record
+# matching the query in the records-conferences index.
+SEARCH_ELASTIC_RECORDS_INDEX_MAPPING = {
+}

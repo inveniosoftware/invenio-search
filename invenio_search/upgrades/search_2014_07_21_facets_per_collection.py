@@ -24,7 +24,7 @@ from __future__ import print_function
 import warnings
 
 from invenio.ext.sqlalchemy import db
-from invenio.modules.upgrader.api import op
+from invenio_upgrader.api import op
 from sqlalchemy.dialects import mysql
 
 depends_on = ['invenio_release_1_1_0']

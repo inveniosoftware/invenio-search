@@ -37,6 +37,7 @@ requirements = [
     'Flask>=0.10.1',
     'six>=1.7.2',
     'invenio-query-parser>=0.2',
+    'invenio-upgrader>=0.1.0',
     'invenio-accounts>=0.1.0',
     'invenio-formatter>=0.2.0',
 ]

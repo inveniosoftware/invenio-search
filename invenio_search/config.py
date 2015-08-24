@@ -185,3 +185,12 @@ SEARCH_ELASTIC_KEYWORD_MAPPING = {
     "980__b": ["collections.secondary"],
     "542__l": ["information_relating_to_copyright_status.copyright_status"],
 }
+
+#elasticsearch configuration tool parameters
+ES_ALL = 'true'
+ES_DATE_DETECTION = 'false'
+ES_NUMERIC_DETECTION = 'false'
+ES_DEFAULT_TYPE = "string"
+ES_DEFAULT_ANALYSER = "basic_analyser"
+ES_SCHEMA_FOLDER = "/home/letreguilly/virtualenvs/invenio/src/invenio-search/invenio_search/schemas/"
+ES_MAPPING_FILE = "/home/letreguilly/virtualenvs/invenio/src/invenio-search/invenio_search/result/elasticmapping.json"

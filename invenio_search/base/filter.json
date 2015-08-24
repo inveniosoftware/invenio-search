@@ -1,0 +1,14 @@
+{% block asciifold_with_orig %}
+"asciifold_with_orig": {
+    "type": "asciifolding",
+    "preserve_original": true
+}
+{% endblock %},
+{% block synonyms_kbr %}
+"synonyms_kbr": {
+    "type": "synonym",
+    "synonyms": [
+        "production => creation"
+                ]
+}
+{% endblock %}

@@ -1,0 +1,77 @@
+{% block division%}
+"division":{
+    "type": "string"
+}
+{% endblock%},
+{% block _collections%}
+"_collections":{
+    "type": "string"
+}
+{% endblock%},
+{% block title%}
+"title":{
+    "type": "string"
+}
+{% endblock%},
+{% block global_default%}
+"global_default":{
+    "type": "string"
+}
+{% endblock%},
+{% block abstract%}
+"abstract":{
+    "type": "string"
+}
+{% endblock%},
+{% block main_entry_personal_name%}
+"main_entry_personal_name":{
+    "type": "string"
+}
+{% endblock%},
+{% block summary_%}
+"summary_":{
+    "type": "string"
+}
+{% endblock%},
+{% block varying_form_of_title%}
+"varying_form_of_title":{
+    "type": "string"
+}
+{% endblock%},
+{% block experiment%}
+"experiment":{
+    "type": "string"
+}
+{% endblock%},
+{% block collections%}
+"collections":{
+    "type": "string"
+}
+{% endblock%},
+{% block authors%}
+"authors":{
+    "type": "string"
+}
+{% endblock%},
+{% block date%}
+"date":{
+    "type": "string"
+}
+{% endblock%},
+{% block title_statement%}
+"title_statement":{
+    "type": "string"
+}
+{% endblock%},
+{% block added_entry_personal_name%}
+"added_entry_personal_name":{
+    "type": "string"
+}
+{% endblock%},
+{% block global_fulltext%}
+"global_fulltext":{
+    "type": "string"
+}
+{% endblock%}
+{% block custom %}
+{% endblock %}

@@ -1,0 +1,44 @@
+{% block root %}
+{
+    "settings": {
+        "analysis": {
+            "filter": {
+                {% block filters %}
+                    {% include 'custom/customFilter.json' %}
+                {% endblock %}
+            },
+            "analyzer": {
+                {% block analysers %}
+                    {% include 'custom/customAnalyser.json' %}
+                {% endblock %}
+                
+            }
+        }
+    },
+    "mappings": {
+        "record": {
+                "_all": {"enabled": {{_all}}},
+                "date_detection": {{date_detection}},
+                "numeric_detection": {{numeric_detection}},
+                "dynamic_templates": [
+                    {
+                        "default": {
+                            "match_mapping_type": {{default_type}},
+                            "mapping": {
+                                "analyzer": {{default_analyser}},
+                                "type": {{default_type}}
+                                ,"copy_to": "global_default"
+                            }
+                        }
+                    }
+                ],
+            "properties": {
+                    {% block customfield %}
+                        {% include 'custom/customField.json' %}
+                    {% endblock %}
+            }
+        }
+    }
+}
+{% endblock %}
+

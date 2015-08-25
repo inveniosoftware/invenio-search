@@ -6,9 +6,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: invenio-search 0.1.0.dev20150000\n"
+"Project-Id-Version: invenio-search 0.1.1\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-08-17 15:28+0200\n"
+"POT-Creation-Date: 2015-08-25 15:25+0200\n"
 "PO-Revision-Date: 2015-08-17 15:28+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: it <LL@li.org>\n"
@@ -153,19 +153,19 @@ msgstr ""
 msgid "Search examples"
 msgstr ""
 
-#: invenio_search/views/search.py:164
+#: invenio_search/views/search.py:129
 msgid "Home"
 msgstr ""
 
-#: invenio_search/views/search.py:170
+#: invenio_search/views/search.py:135
 msgid "Browse results"
 msgstr ""
 
-#: invenio_search/views/search.py:208
+#: invenio_search/views/search.py:174
 msgid "Search results"
 msgstr ""
 
-#: invenio_search/views/search.py:280
+#: invenio_search/views/search.py:246
 msgid "Try to modify the query."
 msgstr ""
 

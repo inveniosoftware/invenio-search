@@ -39,6 +39,7 @@ requirements = [
     'invenio-query-parser>=0.2',
     'invenio-upgrader>=0.1.0',
     'invenio-accounts>=0.1.0',
+    'invenio-knowledge>=0.1.0',
     'invenio-formatter>=0.2.0',
 ]
 

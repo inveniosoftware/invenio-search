@@ -25,4 +25,5 @@
 -e git+git://github.com/inveniosoftware/invenio-query-parser.git#egg=invenio-query-parser
 -e git+git://github.com/inveniosoftware/invenio-upgrader.git#egg=invenio-upgrader
 -e git+git://github.com/inveniosoftware/invenio-accounts.git#egg=invenio-accounts
+-e git+git://github.com/inveniosoftware/invenio-knowledge.git#egg=invenio-knowledge
 -e git+git://github.com/inveniosoftware/invenio-formatter.git#egg=invenio-formatter

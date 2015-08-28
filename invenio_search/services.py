@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2012, 2014 CERN.
+# Copyright (C) 2012, 2014, 2015 CERN.
 #
 # Invenio is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -21,7 +21,7 @@
 
 import re
 from invenio.config import CFG_SITE_LANG
-from invenio.modules.knowledge.api import get_kb_mappings
+from invenio_knowledge.api import get_kb_mappings
 from invenio.legacy.miscutil.data_cacher import DataCacher
 from invenio.legacy.bibindex.engine_stemmer import stem
 from invenio.legacy.dbquery import get_table_update_time

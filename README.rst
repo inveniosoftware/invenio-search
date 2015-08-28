@@ -43,7 +43,7 @@
 
 Invenio module for information retrieval.
 
-*This is an experimental development preview release.*
+*This is an experimental developer preview release.*
 
 * Free software: GPLv2 license
 * Documentation: https://invenio-search.readthedocs.org.

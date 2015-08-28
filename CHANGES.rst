@@ -24,6 +24,11 @@
 Changes
 =======
 
+Version 0.1.2 (released 2015-08-28)
+
+- Adds missing invenio-knowledge dependency and updates module
+  imports.
+
 Version 0.1.1 (released 2015-08-25)
 
 - Adds missing `invenio_upgrader` dependency following its separation

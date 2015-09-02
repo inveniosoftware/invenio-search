@@ -134,7 +134,7 @@ def get_most_popular_field_values(recids, tags, exclude_values=None,
 def get_permitted_restricted_collections(user_info,
                                          recreate_cache_if_needed=True):
     """Return a list of restricted collection with user is authorization."""
-    from invenio.modules.access.engine import acc_authorize_action
+    from invenio_access.engine import acc_authorize_action
 
     if recreate_cache_if_needed:
         restricted_collection_cache.recreate_cache_if_needed()

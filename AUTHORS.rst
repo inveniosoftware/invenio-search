@@ -84,6 +84,7 @@ Invenio module for information retrieval.
 - Raja Sripada <rsripada@cern.ch>
 - Raquel Jimenez Encinar <r.jimenez.encinar@gmail.com>
 - Roman Chyla <roman.chyla@gmail.com>
+- Sami Hiltunen <sami.mikael.hiltunen@cern.ch>
 - Samuele Carli <samuele.carli@cern.ch>
 - Samuele Kaplun <samuele.kaplun@cern.ch>
 - Theodoropoulos Theodoros <theod@lib.auth.gr>

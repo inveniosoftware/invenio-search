@@ -24,6 +24,19 @@
 Changes
 =======
 
+Version 0.1.3 (released 2015-09-04)
+
+- Fixes potential XSS issues by changing search flash messages
+  template so that they are not displayed as safe HTML by default.
+
+- Adds missing `invenio_access` dependency and amends past upgrade
+  recipes following its separation into standalone package.
+
+- Displaying HTML safe flash messages can be done by using one of
+  these flash contexts: 'search-results-after(html_safe)', 'websearch-
+  after-search-form(html_safe)' instead of the standard ones (which
+  are the same without '(html safe)' at the end).
+
 Version 0.1.2 (released 2015-08-28)
 
 - Adds missing invenio-knowledge dependency and updates module

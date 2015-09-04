@@ -17,19 +17,25 @@
 # along with Invenio; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 """
-JournalHint service to display
+JournalHint service to display.
+
 "Were you looking for a journal reference? Try: <link>"
 when the request is a journal reference
 """
-from invenio_search.services import SearchService
-from invenio.config import (CFG_SITE_URL,
-                            CFG_SITE_LANG)
-from invenio.base.i18n import gettext_set_language
-from invenio.legacy.search_engine import perform_request_search, print_record
-from invenio.legacy.webuser import collect_user_info
-from urllib import urlencode
+
 import re
+
 from cgi import escape
+
+from flask_login import current_user
+
+from invenio.base.i18n import gettext_set_language
+from invenio.config import CFG_SITE_LANG, CFG_SITE_URL
+from invenio.legacy.search_engine import perform_request_search, print_record
+
+from invenio_search.services import SearchService
+
+from urllib import urlencode
 
 __plugin_version__ = "Search Service Plugin API 1.0"
 
@@ -91,7 +97,7 @@ class JournalHintService(SearchService):
 
         if len(recids) == 1:
             recid = recids.pop()
-            user_info = collect_user_info(req)
+            user_info = current_user
             return (100, """\
 <p><span class="journalhint">%s</span></p>
 <table style="padding: 5px; border: 2px solid #ccc; margin: 20px"><tr><td>

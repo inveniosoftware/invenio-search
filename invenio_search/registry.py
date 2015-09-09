@@ -31,27 +31,6 @@ searchext = RegistryProxy('searchext', ModuleAutoDiscoveryRegistry,
                           'searchext')
 
 
-class SearchServiceRegistry(ModuleAutoDiscoverySubRegistry):
-
-    """Search Service Registry."""
-
-    __required_plugin_API_version__ = "Search Service Plugin API 1.0"
-
-    def register(self, item):
-        """Check plugin version and instantiate search service plugin."""
-        if item.__plugin_version__ != self.__required_plugin_API_version__:
-            raise RegistryError(
-                'Invalid plugin version {0} required {1}'.format(
-                    item.__plugin_version__,
-                    self.__required_plugin_API_version__
-                ))
-        service = getattr(item, item.__name__.split('.')[-1])
-        return super(SearchServiceRegistry, self).register(service())
-
-services = RegistryProxy('searchext.services', SearchServiceRegistry,
-                         'services', registry_namespace=searchext)
-
-
 class FacetsRegistry(DictModuleAutoDiscoverySubRegistry):
 
     """Registry for facets modules.

@@ -19,7 +19,7 @@
 
 """Generate filter for retricted collections."""
 
-from invenio.base.globals import cfg
+from invenio_base.globals import cfg
 
 from invenio_query_parser.ast import (
     AndOp, DoubleQuotedValue, Keyword, KeywordOp, NotOp, OrOp

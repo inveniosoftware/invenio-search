@@ -25,7 +25,7 @@ from flask import g, request
 
 from flask_login import current_user
 
-from invenio.base.globals import cfg
+from invenio_base.globals import cfg
 from invenio.ext.sqlalchemy import db
 from invenio_accounts.models import User
 

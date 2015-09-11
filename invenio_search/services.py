@@ -25,7 +25,7 @@ from invenio_knowledge.api import get_kb_mappings
 from invenio.legacy.miscutil.data_cacher import DataCacher
 from invenio.legacy.bibindex.engine_stemmer import stem
 from invenio.legacy.dbquery import get_table_update_time
-from invenio.base.i18n import gettext_set_language
+from invenio_base.i18n import gettext_set_language
 from invenio.legacy import template
 
 from . import registry

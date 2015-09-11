@@ -21,7 +21,7 @@ WebSearch service to answer based on BibKnowledge KB
 """
 from invenio.config import CFG_SITE_LANG
 from invenio_search.services import KnowledgeBaseService
-from invenio.base.i18n import gettext_set_language
+from invenio_base.i18n import gettext_set_language
 
 __plugin_version__ = "Search Service Plugin API 1.0"
 

@@ -22,7 +22,7 @@
 
 from flask import url_for
 from flask_login import current_user
-from invenio.base.i18n import _
+from invenio_base.i18n import _
 from invenio.ext.sqlalchemy import db
 from invenio.ext.template import render_template_to_string
 from .models import UserQuery

@@ -22,7 +22,7 @@ WebSearch service to search in collection names
 import re
 import urllib
 from invenio_search.services import ListLinksService
-from invenio.base.i18n import gettext_set_language
+from invenio_base.i18n import gettext_set_language
 from invenio.legacy.bibindex.engine_stemmer import stem
 from invenio.legacy.dbquery import get_table_update_time
 from invenio.config import \

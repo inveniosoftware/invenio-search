@@ -51,9 +51,9 @@ from flask_breadcrumbs import (default_breadcrumb_root,
                                register_breadcrumb)
 from flask_login import current_user
 
-from invenio.base.decorators import wash_arguments
-from invenio.base.globals import cfg
-from invenio.base.i18n import _
+from invenio_base.decorators import wash_arguments
+from invenio_base.globals import cfg
+from invenio_base.i18n import _
 from invenio_collections.decorators import check_collection
 from invenio_formatter import (
     format_records, get_output_format_content_type,

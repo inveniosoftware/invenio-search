@@ -24,7 +24,7 @@ when the request is a journal reference
 from invenio_search.services import SearchService
 from invenio.config import (CFG_SITE_URL,
                             CFG_SITE_LANG)
-from invenio.base.i18n import gettext_set_language
+from invenio_base.i18n import gettext_set_language
 from invenio.legacy.search_engine import perform_request_search, print_record
 from invenio.legacy.webuser import collect_user_info
 from urllib import urlencode

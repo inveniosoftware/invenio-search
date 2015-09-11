@@ -20,7 +20,7 @@
 WebSearch service to display LHC beam status
 """
 from invenio_search.services import SearchService
-from invenio.base.i18n import gettext_set_language
+from invenio_base.i18n import gettext_set_language
 from invenio.config import CFG_SITE_LANG, CFG_SITE_URL
 
 __plugin_version__ = "Search Service Plugin API 1.0"

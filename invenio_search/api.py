@@ -25,7 +25,7 @@ import pypeg2
 
 from flask_login import current_user
 
-from invenio.base.helpers import unicodifier
+from invenio_base.helpers import unicodifier
 
 from werkzeug.utils import cached_property
 

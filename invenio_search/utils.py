@@ -28,7 +28,7 @@ from intbitset import intbitset
 from six import iteritems, string_types
 from werkzeug.utils import import_string
 
-from invenio.base.globals import cfg
+from invenio_base.globals import cfg
 from invenio_collections.cache import (
     get_collection_allchildren,
     restricted_collection_cache,

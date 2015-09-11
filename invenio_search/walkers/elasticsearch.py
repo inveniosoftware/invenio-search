@@ -19,7 +19,7 @@
 
 """Implement AST convertor to Elastic Search DSL."""
 
-from invenio.base.globals import cfg
+from invenio_base.globals import cfg
 from invenio_query_parser.ast import (
     AndOp, KeywordOp, OrOp,
     NotOp, Keyword, Value,

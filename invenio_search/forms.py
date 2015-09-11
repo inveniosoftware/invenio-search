@@ -22,7 +22,7 @@
 from flask import url_for
 from six import iteritems
 
-from invenio.base.i18n import _
+from invenio_base.i18n import _
 from invenio_knowledge.api import get_kb_mappings
 from invenio.utils.forms import AutocompleteField, InvenioBaseForm, \
     RowWidget

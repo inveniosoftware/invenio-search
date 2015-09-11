@@ -22,7 +22,7 @@
 from intbitset import intbitset
 from flask import current_app
 
-from invenio.base.globals import cfg
+from invenio_base.globals import cfg
 from invenio.ext.cache import cache
 from invenio.legacy.miscutil.data_cacher import DataCacher, DataCacherProxy
 from invenio.utils.hash import md5

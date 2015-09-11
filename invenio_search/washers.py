@@ -20,7 +20,7 @@
 import re
 import time
 
-from invenio.base.globals import cfg
+from invenio_base.globals import cfg
 from invenio.utils.datastructures import LazyDict
 from invenio.utils.text import wash_for_utf8
 

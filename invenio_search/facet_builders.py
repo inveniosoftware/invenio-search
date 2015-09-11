@@ -26,7 +26,7 @@ from itertools import groupby
 from operator import itemgetter
 from six import iteritems
 
-from invenio.base.globals import cfg
+from invenio_base.globals import cfg
 from invenio_collections.models import Collection
 
 from .cache import (

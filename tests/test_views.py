@@ -28,6 +28,8 @@ from invenio.testsuite import InvenioTestCase, make_test_suite, \
 class SearchViewTest(InvenioTestCase):
     """ Test search view functions. """
 
+    render_templates = False
+
     def test_home_collection_page_availability(self):
         response = self.client.get(url_for('collections.index'))
         self.assert200(response)

@@ -54,6 +54,7 @@ test_requirements = [
     'pytest-cov>=2.1.0',
     'pytest-pep8>=1.0.6',
     'coverage>=4.0.0',
+    'invenio-testing>=0.1.0',
 ]
 
 

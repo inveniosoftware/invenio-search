@@ -19,11 +19,11 @@
 
 """Test policies on restricted and permitted collections."""
 
-from invenio_search.enhancers.collection_filter import \
-    create_collection_query
-from invenio.testsuite import InvenioTestCase, make_test_suite, run_test_suite
-
 from invenio_query_parser.ast import AndOp, NotOp, OrOp
+
+from invenio_search.enhancers.collection_filter import create_collection_query
+
+from invenio_testing import InvenioTestCase
 
 
 class MockedRecord(object):
@@ -145,8 +145,3 @@ class TestCollectionsFilterEnhancher(InvenioTestCase):
     def test_no_restrict(self):
         self.assertEqual(create_query(['a', 'b'], ['a', 'b'], 'cc', 'ANY'),
                          'cc')
-
-TEST_SUITE = make_test_suite(TestCollectionsFilterEnhancher)
-
-if __name__ == "__main__":
-    run_test_suite(TEST_SUITE)

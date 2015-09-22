@@ -19,14 +19,16 @@
 
 """Unit tests for the elasticsearch AST walker"""
 
-from invenio.testsuite import make_test_suite, run_test_suite, InvenioTestCase
+
 from invenio_query_parser.ast import (
-    AndOp, KeywordOp, OrOp, NotOp, Keyword, Value, SingleQuotedValue,
-    DoubleQuotedValue, ValueQuery, RegexValue, RangeOp, EmptyQuery,
-    GreaterOp, GreaterEqualOp, LowerOp, LowerEqualOp
+    AndOp, DoubleQuotedValue, EmptyQuery, GreaterEqualOp, GreaterOp, Keyword,
+    KeywordOp, LowerEqualOp, LowerOp, NotOp, OrOp, RangeOp, RegexValue,
+    SingleQuotedValue, Value, ValueQuery
 )
 
 from invenio_search.walkers.elasticsearch import ElasticSearchDSL
+
+from invenio_testing import InvenioTestCase
 
 
 class TestElasticSearchWalker(InvenioTestCase):
@@ -42,15 +44,15 @@ class TestElasticSearchWalker(InvenioTestCase):
     # Empty query
     def test_empty_query(self):
         self.assertEqual(EmptyQuery("").accept(self.converter), {
-            "match_all": {
-                }})
+            "match_all": {}
+        })
 
     # Value queries
     def test_value_query(self):
         self.assertEqual(ValueQuery(Value("bar")).accept(self.converter), {
             "multi_match": {
                 "fields": ["global_fulltext"], "query": "bar"}
-            })
+        })
 
     def test_single_quoted_value(self):
         tree = ValueQuery(SingleQuotedValue("bar"))
@@ -202,51 +204,51 @@ class TestElasticSearchWalker(InvenioTestCase):
                           NotOp(ValueQuery(Value('ccc')))),
                     ValueQuery(Value('ddd')))
         ll = {
-                "multi_match": {
-                    "fields": ["global_fulltext"],
-                    "query": "ddd"
-                }
-             }
+            "multi_match": {
+                "fields": ["global_fulltext"],
+                "query": "ddd"
+            }
+        }
         rr = {
-                "bool": {
-                    "must": [
-                        {
-                            "multi_match": {
-                                "fields": ["global_fulltext"],
-                                "query": "aaa"
-                            }
-                        },
-                        {
-                            "multi_match": {
-                                "fields": ["global_fulltext"],
-                                "query": "bbb"
-                            }
+            "bool": {
+                "must": [
+                    {
+                        "multi_match": {
+                            "fields": ["global_fulltext"],
+                            "query": "aaa"
                         }
-                    ]
-                }
-             }
+                    },
+                    {
+                        "multi_match": {
+                            "fields": ["global_fulltext"],
+                            "query": "bbb"
+                        }
+                    }
+                ]
+            }
+        }
         rl = {
-                "bool": {
-                    "must_not": [
-                        {
-                            "multi_match": {
-                                "fields": ["global_fulltext"],
-                                "query": "ccc"
-                            }
+            "bool": {
+                "must_not": [
+                    {
+                        "multi_match": {
+                            "fields": ["global_fulltext"],
+                            "query": "ccc"
                         }
-                    ]
-                }
-             }
+                    }
+                ]
+            }
+        }
         r = {
-                "bool": {
-                    "must": [rr, rl]
-                }
+            "bool": {
+                "must": [rr, rl]
             }
+        }
         d = {
-                "bool": {
-                    "should": [r, ll]
-                }
+            "bool": {
+                "should": [r, ll]
             }
+        }
         self.assertEqual(tree.accept(self.converter), d)
 
     # Operators
@@ -281,8 +283,3 @@ class TestElasticSearchWalker(InvenioTestCase):
                 "date": {"lte": "1984"}
             }
         })
-
-TEST_SUITE = make_test_suite(TestElasticSearchWalker)
-
-if __name__ == "__main__":
-    run_test_suite(TEST_SUITE)

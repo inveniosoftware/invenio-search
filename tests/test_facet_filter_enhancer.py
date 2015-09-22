@@ -21,11 +21,11 @@
 
 from __future__ import unicode_literals
 
-from invenio.testsuite import InvenioTestCase, make_test_suite, run_test_suite
-
 from invenio_query_parser.ast import (
     AndOp, DoubleQuotedValue, EmptyQuery, Keyword, KeywordOp, NotOp, OrOp
 )
+
+from invenio_testing import InvenioTestCase
 
 
 class TestFacetFilterEnhancer(InvenioTestCase):
@@ -112,8 +112,3 @@ class TestFacetFilterEnhancer(InvenioTestCase):
         from invenio_search.enhancers.facet_filter import \
             format_facet_tree_nodes
         self.assertEqual(format_facet_tree_nodes(None, {}, None), None)
-
-TEST_SUITE = make_test_suite(TestFacetFilterEnhancer)
-
-if __name__ == "__main__":
-    run_test_suite(TEST_SUITE)

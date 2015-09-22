@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2013, 2014 CERN.
+# Copyright (C) 2013, 2014, 2015 CERN.
 #
 # Invenio is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -19,13 +19,13 @@
 
 """Unit tests for search views."""
 
-from intbitset import intbitset
-from flask import url_for, current_app
-from invenio.testsuite import InvenioTestCase, make_test_suite, \
-    run_test_suite
+from flask import current_app, url_for
+
+from invenio_testing import InvenioTestCase
 
 
 class SearchViewTest(InvenioTestCase):
+
     """ Test search view functions. """
 
     render_templates = False
@@ -41,9 +41,3 @@ class SearchViewTest(InvenioTestCase):
     def test_search_page_availability(self):
         response = self.client.get(url_for('search.search'))
         self.assert200(response)
-
-
-TEST_SUITE = make_test_suite(SearchViewTest)
-
-if __name__ == "__main__":
-    run_test_suite(TEST_SUITE)

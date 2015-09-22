@@ -25,7 +25,7 @@ from flask import current_app
 from invenio_base.globals import cfg
 from invenio_ext.cache import cache
 from invenio.legacy.miscutil.data_cacher import DataCacher, DataCacherProxy
-from invenio.utils.hash import md5
+from invenio_utils.hash import md5
 
 from .models import Field, Fieldname
 

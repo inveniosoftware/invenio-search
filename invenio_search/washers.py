@@ -22,8 +22,8 @@ import re
 import time
 
 from invenio_base.globals import cfg
-from invenio.utils.datastructures import LazyDict
-from invenio.utils.text import wash_for_utf8
+from invenio_utils.datastructures import LazyDict
+from invenio_utils.text import wash_for_utf8
 
 re_pattern_wildcards_after_spaces = re.compile(r'(\s)[\*\%]+')
 re_pattern_single_quotes = re.compile("'(.*?)'")

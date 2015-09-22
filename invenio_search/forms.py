@@ -24,7 +24,7 @@ from six import iteritems
 
 from invenio_base.i18n import _
 from invenio_knowledge.api import get_kb_mappings
-from invenio.utils.forms import AutocompleteField, InvenioBaseForm, \
+from invenio_utils.forms import AutocompleteField, InvenioBaseForm, \
     RowWidget
 
 from werkzeug.local import LocalProxy

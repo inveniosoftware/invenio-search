@@ -28,7 +28,7 @@ from invenio_query_parser.ast import AndOp, DoubleQuotedValue, EmptyQuery, \
     Value, ValueQuery
 from invenio_query_parser.visitor import make_visitor
 
-from invenio.utils.memoise import memoize
+from invenio_utils.memoise import memoize
 
 
 @memoize

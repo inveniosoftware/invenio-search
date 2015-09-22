@@ -59,7 +59,7 @@ from invenio_formatter import (
     format_records, get_output_format_content_type,
     response_formated_records
 )
-from invenio.utils.pagination import Pagination
+from invenio_utils.pagination import Pagination
 
 from werkzeug.http import http_date
 from werkzeug.local import LocalProxy

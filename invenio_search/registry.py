@@ -25,7 +25,7 @@ from werkzeug.utils import cached_property
 
 from invenio_ext.registry import DictModuleAutoDiscoverySubRegistry, \
     ModuleAutoDiscoverySubRegistry
-from invenio.utils.memoise import memoize
+from invenio_utils.memoise import memoize
 
 searchext = RegistryProxy('searchext', ModuleAutoDiscoveryRegistry,
                           'searchext')

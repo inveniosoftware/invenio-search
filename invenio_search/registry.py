@@ -23,7 +23,7 @@ from flask_registry import RegistryError, ModuleAutoDiscoveryRegistry, \
     RegistryProxy
 from werkzeug.utils import cached_property
 
-from invenio.ext.registry import DictModuleAutoDiscoverySubRegistry, \
+from invenio_ext.registry import DictModuleAutoDiscoverySubRegistry, \
     ModuleAutoDiscoverySubRegistry
 from invenio.utils.memoise import memoize
 

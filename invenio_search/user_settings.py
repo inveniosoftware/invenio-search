@@ -23,8 +23,8 @@
 from flask import url_for
 from flask_login import current_user
 from invenio_base.i18n import _
-from invenio.ext.sqlalchemy import db
-from invenio.ext.template import render_template_to_string
+from invenio_ext.sqlalchemy import db
+from invenio_ext.template import render_template_to_string
 from .models import UserQuery
 from .forms import WebSearchUserSettingsForm
 from invenio.modules.dashboard.settings import Settings, UserSettingsStorage
@@ -50,7 +50,7 @@ class WebSearchSettings(Settings):
         uid = current_user.get_id()
         queries = db.session.query(db.func.count(UserQuery.id_query)).filter(
             UserQuery.id_user == uid
-            ).scalar()
+        ).scalar()
 
         template = """
 {{ _('You have made %(x_num_queries)d queries. A detailed list is available with a possibility to

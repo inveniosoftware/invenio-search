@@ -38,6 +38,7 @@ requirements = [
     'invenio-access>=0.1.0',
     'invenio-accounts>=0.1.2',
     'invenio-base>=0.1.0',
+    'invenio-ext>=0.1.0',
     'invenio-formatter>=0.2.1',
     'invenio-knowledge>=0.1.0',
     'invenio-query-parser>=0.2',

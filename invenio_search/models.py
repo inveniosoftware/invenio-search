@@ -26,7 +26,7 @@ from flask import g, request
 from flask_login import current_user
 
 from invenio_base.globals import cfg
-from invenio.ext.sqlalchemy import db
+from invenio_ext.sqlalchemy import db
 from invenio_accounts.models import User
 
 from sqlalchemy.schema import Index

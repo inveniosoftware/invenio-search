@@ -38,6 +38,7 @@ from .utils import (
     get_most_popular_field_values,
     get_records_that_can_be_displayed,
 )
+from functools import reduce
 
 
 def get_current_user_records_that_can_be_displayed(qid):

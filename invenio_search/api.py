@@ -67,7 +67,6 @@ class Query(object):
             query = query.accept(walker)
         return Results(query)
 
-
     def match(self, record, user_info=None):
         """Return True if record match the query."""
         return self.query.accept(MatchUnit(record))

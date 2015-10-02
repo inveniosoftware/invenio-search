@@ -140,6 +140,11 @@ def register_admin(app, admin):
     """Called on app initialization to register administration interface."""
     from invenio_collections.models import FacetCollection
     admin.add_view(
-        FacetsAdmin(app, FacetCollection, db.session, name='Facets',
-                    category="", menu_icon_type='fa', menu_icon_value='fa-folder')
-    )
+        FacetsAdmin(
+            app,
+            FacetCollection,
+            db.session,
+            name='Facets',
+            category="",
+            menu_icon_type='fa',
+            menu_icon_value='fa-folder'))

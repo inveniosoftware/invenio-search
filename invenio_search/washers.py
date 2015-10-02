@@ -1,5 +1,5 @@
 # This file is part of Invenio.
-# Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 
+# Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014,
 #               2015 CERN.
 #
 # Invenio is free software; you can redistribute it and/or
@@ -71,7 +71,7 @@ def get_search_results_default_urlargd():
         'verbose': (int, 0),
         'ec': (list, []),
         'wl': (int, cfg['CFG_WEBSEARCH_WILDCARD_LIMIT']),
-        }
+    }
 
 search_results_default_urlargd = LazyDict(get_search_results_default_urlargd)
 
@@ -91,7 +91,7 @@ def wash_pattern(p):
     p = re_pattern_single_quotes.sub(
         lambda x: "'" + x.group(1).replace(' ', '__SPACE__') + "'", p)
     p = re_pattern_double_quotes.sub(
-        lambda x: "\""+x.group(1).replace(' ', '__SPACE__') + "\"", p)
+        lambda x: "\"" + x.group(1).replace(' ', '__SPACE__') + "\"", p)
     p = re_pattern_regexp_quotes.sub(
         lambda x: "/" + x.group(1).replace(' ', '__SPACE__') + "/", p)
     # get rid of unquoted wildcards after spaces:

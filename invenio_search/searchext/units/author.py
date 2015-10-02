@@ -19,7 +19,8 @@
 
 """Author search unit."""
 
-from invenio.legacy.bibindex.engine_utils import author_name_requires_phrase_search
+from invenio.legacy.bibindex.engine_utils import \
+    author_name_requires_phrase_search
 from invenio_search.searchext.engines.native import default_search_unit
 
 

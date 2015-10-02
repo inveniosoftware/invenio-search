@@ -164,7 +164,6 @@ def rss(collection, p, jrec, so, rm, rg):
 
     return response_formated_records(
         response.records(), 'xr',
-        records=len(response),
         collection=collection,
         rg=rg,
     )
@@ -227,8 +226,8 @@ def search(collection, p, of, ot, so, sf, sp, rm, rg, jrec):
         filtered_facets = parsed_post_filter.query.accept(
             FacetsVisitor()
         )
-        # sets cannot be converted to json. use facetsVisitor to convert them to
-        # lists
+        # sets cannot be converted to json. use facetsVisitor to convert them
+        # to lists
         filtered_facets = FacetsVisitor.jsonable(filtered_facets)
 
     if len(response) and jrec > len(response):

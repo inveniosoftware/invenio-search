@@ -22,6 +22,7 @@ from fixture import DataSet
 
 
 class CollectionData(DataSet):
+
     class siteCollection:
         id = 1
         name = CFG_SITE_NAME
@@ -115,7 +116,7 @@ class FieldData(DataSet):
         id = 17
         name = u'coden'
 
-    #class Field_18:
+    # class Field_18:
     #    code = u'doi'
     #    id = 18
     #    name = u'doi'
@@ -1640,7 +1641,7 @@ class FieldTagData(DataSet):
         id_tag = TagData.Tag_120.ref('id')
         id_field = FieldData.Field_17.ref('id')
 
-    #class FieldTag_18_120:
+    # class FieldTag_18_120:
     #    score = 100
     #    id_tag = TagData.Tag_121.ref('id')
     #    id_field = FieldData.Field_18.ref('id')

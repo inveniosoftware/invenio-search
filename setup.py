@@ -35,11 +35,11 @@ history = open('CHANGES.rst').read()
 
 requirements = [
     'Flask>=0.10.1',
-    'invenio-access>=0.1.0',
+    'invenio-access>=0.2.0',
     'invenio-accounts>=0.1.2',
     'invenio-base>=0.3.0',
-    'invenio-ext>=0.2.1',
-    'invenio-formatter>=0.2.1',
+    'invenio-ext>=0.3.0',
+    'invenio-formatter>=0.2.2.post1',
     'invenio-knowledge>=0.1.0',
     'invenio-query-parser>=0.3.0',
     'invenio-upgrader>=0.1.2',

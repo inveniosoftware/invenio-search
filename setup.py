@@ -42,19 +42,20 @@ requirements = [
     'invenio-formatter>=0.2.1',
     'invenio-knowledge>=0.1.0',
     'invenio-query-parser>=0.3.0',
-    'invenio-utils>=0.1.1',
     'invenio-upgrader>=0.1.2',
+    'invenio-utils>=0.1.1',
     'six>=1.7.2',
 ]
 
 test_requirements = [
-    'unittest2>=1.1.0',
     'Flask_Testing>=0.4.1',
-    'pytest>=2.8.0',
+    'coverage>=4.0.0',
+    'invenio-collections>=0.1.2',
+    'invenio-testing>=0.1.1',
     'pytest-cov>=2.1.0',
     'pytest-pep8>=1.0.6',
-    'coverage>=4.0.0',
-    'invenio-testing>=0.1.1',
+    'pytest>=2.8.0',
+    'unittest2>=1.1.0',
 ]
 
 

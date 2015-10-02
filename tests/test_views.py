@@ -21,12 +21,14 @@
 
 from flask import current_app, url_for
 
+from mock import patch
+
 from invenio_testing import InvenioTestCase
 
 
 class SearchViewTest(InvenioTestCase):
 
-    """ Test search view functions. """
+    """Test search view functions."""
 
     render_templates = False
 
@@ -38,6 +40,8 @@ class SearchViewTest(InvenioTestCase):
             'collections.collection', name=current_app.config['CFG_SITE_NAME']))
         self.assert200(response)
 
-    def test_search_page_availability(self):
+    @patch('invenio_search.views.search.response_formated_records')
+    def test_search_page_availability(self, response_formated_records_patch):
+        response_formated_records_patch.return_value = ''
         response = self.client.get(url_for('search.search'))
         self.assert200(response)

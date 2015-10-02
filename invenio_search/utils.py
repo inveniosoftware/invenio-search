@@ -29,10 +29,6 @@ from six import iteritems, string_types
 from werkzeug.utils import import_string
 
 from invenio_base.globals import cfg
-from invenio_collections.cache import (
-    get_collection_allchildren,
-    restricted_collection_cache,
-)
 
 
 def get_most_popular_field_values(recids, tags, exclude_values=None,
@@ -135,6 +131,9 @@ def get_permitted_restricted_collections(user_info,
                                          recreate_cache_if_needed=True):
     """Return a list of restricted collection with user is authorization."""
     from invenio_access.engine import acc_authorize_action
+    from invenio_collections.cache import (
+        restricted_collection_cache,
+    )
 
     if recreate_cache_if_needed:
         restricted_collection_cache.recreate_cache_if_needed()

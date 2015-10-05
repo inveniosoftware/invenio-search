@@ -17,15 +17,16 @@
 # along with Invenio; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
-from invenio.config import CFG_SITE_NAME
 from fixture import DataSet
+
+from flask import current_app
 
 
 class CollectionData(DataSet):
 
     class siteCollection:
         id = 1
-        name = CFG_SITE_NAME
+        name = current_app.config['CFG_SITE_NAME']
         dbquery = None
 
 

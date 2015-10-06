@@ -28,4 +28,4 @@ This file is imported by ``invenio_search.__init__``,
 and parsed by ``setup.py``.
 """
 
-__version__ = "0.1.5"
+__version__ = "0.1.6.dev20151006"

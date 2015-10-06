@@ -23,9 +23,10 @@ from flask import current_app, url_for
 
 from mock import patch
 
-from invenio_testing import InvenioTestCase
+from invenio_testing import InvenioTestCase, nottest
 
 
+@nottest
 class SearchViewTest(InvenioTestCase):
 
     """Test search view functions."""

@@ -24,6 +24,11 @@
 Changes
 =======
 
+Version 0.1.5 (released 2015-10-06)
+-----------------------------------
+
+- Changes legacy config import to application config object.
+
 Version 0.1.4 (released 2015-10-02)
 -----------------------------------
 

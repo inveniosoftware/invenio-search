@@ -55,10 +55,12 @@ function(
      * It will broadcast the corresponding event so that other components may
      * update.
      *
-     * @param {} ev 
+     * @param {} ev
      * @param {} data
      */
     function facetChange(ev, data) {
+      // Highlight the clicked label
+      $(data.el).parent().find('.facet-label').toggleClass('label-primary');
       this.trigger(document, 'facetChange', {
         name: data.el.name,
         value: data.el.value,
@@ -85,7 +87,7 @@ function(
        * Update selected facets after receiving event "facetsSet".
        */
       this.on(document, 'facetsSet', function(ev, data) {
-        var that = this; 
+        var that = this;
         var filters = data.facetsFilter.getFilters();
         // uncheck all checkboxes
         $(that.attr.includeFacetSelector).prop('checked', false);

@@ -18,74 +18,101 @@
  */
 
 .modal-backdrop {
-    /* Show lighter modal window for search. */
-    background-color: rgba(255,255,255,0.5);
+  /* Show lighter modal window for search. */
+  background-color: rgba(255,255,255,0.5);
 }
 
 #search-query-filters {
-    margin-bottom: 20px;
+  margin-bottom: 20px;
 }
 
 #search-query-filters.empty{
-    display: none;
+  display: none;
 }
 
 #search-query-filters .search-query-filters-header {
-    padding-right: 10px;
-    color: #337ab7;
-    display: inline-block;   
+  padding-right: 10px;
+  color: #337ab7;
+  display: inline-block;
 }
 
 #search-query-filters .search-query-filters-body {
-    display: inline-block;
+  display: inline-block;
 }
 
 #search-query-filters .search-query-filters-text {
-    color: #333;
+  color: #333;
 }
 
 #search-query-filters .search-query-filters-edit {
-    color: #337ab7;
-    padding: 0;
-    margin-left: 10px;
-    font-size: 1.3em;
-    vertical-align: middle;
+  color: #337ab7;
+  padding: 0;
+  margin-left: 10px;
+  font-size: 1.3em;
+  vertical-align: middle;
 }
 
 #facet_list .panel-heading {
-    background-color: whiteSmoke;
+  background-color: whiteSmoke;
 }
 
 #facet_list .panel-heading a:after {
-    content: ' ';
-    float: right;
-    display: inline-block;
-    width: 14px;
-    height: 14px;
-    line-height: 14px;
-    vertical-align: text-top;
-    background-image: url("../img/glyphicons-halflings.png");
-    background-position: 14px 14px;
-    background-repeat: no-repeat;
-    /* list alt */
-    background-position: -264px -24px;
+  content: ' ';
+  float: right;
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  line-height: 14px;
+  vertical-align: text-top;
+  background-image: url("../img/glyphicons-halflings.png");
+  background-position: 14px 14px;
+  background-repeat: no-repeat;
+  /* list alt */
+  background-position: -264px -24px;
 }
 
 #facet_list ul.list-unstyled ul.list-unstyled {
-    padding-left: 10px;
-    font-size: 90%;
+  padding-left: 10px;
+  font-size: 90%;
 }
 
 #facet_list.affix {
-    top: 28px;
+  top: 28px;
 }
 
 #facet_list.affix-bottom {
-    position: absolute;
-    top: auto;
-    bottom: 170px;
+  position: absolute;
+  top: auto;
+  bottom: 170px;
 }
 
 .searchexamples .after-fix {
-    margin-right: 30px;
+  margin-right: 30px;
+}
+
+.facet-container {
+}
+
+.facet-container label{
+  width: 100%;
+}
+
+.facet-container .checkbox {
+  padding: 2px 3px;
+}
+
+.facet-container .checkbox:hover{
+  background: #eee;
+}
+
+.facet-title-truncate {
+  width: 60%!important;
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.facet-label {
+  margin-top: 2px;
 }

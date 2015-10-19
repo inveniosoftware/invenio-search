@@ -68,39 +68,33 @@
       {%- block index_results -%}
         <div class="row">
           {%- block facets %}
-            <div class="col-md-3 col-lg-2 visible-md visible-lg" id="facetparent">
+            <div class="col-md-3 visible-md visible-lg" id="facetparent">
               <div class="facet" id="facet_list" data-clampedwidth="#facetparent">
               {% for facet_name, data in response._search()['aggregations'].items() %}
-              <div class="panel panel-default">
-                <div class="panel-heading">{{ _(facet_name) }}</div>
-                <table class="table table-condensed">
-                {% for bucket in data['buckets'] %}
-                <tr>
-                  <td>
-                    <div class="checkbox">
-                      <label>
-                          <input class="include-facet"
-                                 {{ 'checked' if facet_name in filtered_facets
-                                 and bucket['key'] in filtered_facets[facet_name]['inc']}}
-                                 type="checkbox"
-                                 name="{{ facet_name }}" value="{{ bucket['key'] }}">
-                          {{ bucket['key'] }}
-                      </label>
-                    </div>
-                  </td>
-                  <td>
-                    <span class="badge pull-right">{{ bucket['doc_count'] }}</span>
-                  </td>
-                </tr>
-                {% endfor %}
-                </table>
-              </div>
+                <div class="facet-container">
+                  <h4>{{ _(facet_name) | title }}</h4>
+                  {% for bucket in data['buckets'] %}
+                      <div class="checkbox">
+                        <label>
+                            {%- set is_checked = 'checked' if facet_name in filtered_facets
+                                and bucket['key'] in filtered_facets[facet_name]['inc'] -%}
+                            <input class="include-facet"
+                                  type="checkbox"
+                                  {{is_checked}}
+                                  name="{{ facet_name }}" value="{{ bucket['key'] }}">
+                            <span class="facet-title-truncate">{{ bucket['key'] }}</span>
+                            <span class="facet-label label label-default {{ 'label-primary' if is_checked}} pull-right">{{ bucket['doc_count'] }}</span>
+                        </label>
+                      </div>
+                  {% endfor %}
+                  {{ '<hr />' | safe if not loop.last else '' }}
+                </div>
               {% endfor %}
               </div>
             </div>
           {%- endblock facets %}
           {%- block index_right -%}
-            <div class="col-md-9 col-lg-10">
+            <div class="col-md-9">
               {%- block facets_filter %}
                 <div class="row visible-md visible-lg">
                   <div class="col-md-10">

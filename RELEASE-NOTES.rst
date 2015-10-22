@@ -1,8 +1,8 @@
 =======================
- Invenio-Search v0.1.5
+ Invenio-Search v0.1.0
 =======================
 
-Invenio-Search v0.1.5 was released on October 6, 2015.
+Invenio-Search v0.1.0 was released on TBD, 2015.
 
 About
 -----
@@ -11,20 +11,20 @@ Invenio module for information retrieval.
 
 *This is an experimental developer preview release.*
 
-Bug fixes
----------
+What's new
+----------
 
-- Changes legacy config import to application config object.
+- Initial public release.
 
 Installation
 ------------
 
-   $ pip install invenio-search==0.1.5
+   $ pip install invenio-search==0.1.0
 
 Documentation
 -------------
 
-   http://invenio-search.readthedocs.org/en/v0.1.5
+   http://pythonhosted.org/invenio-search/
 
 Happy hacking and thanks for flying Invenio-Search.
 

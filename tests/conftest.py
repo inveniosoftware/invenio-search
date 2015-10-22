@@ -23,35 +23,24 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 
-root = true
+"""Pytest configuration."""
 
-[*]
-indent_style = space
-end_of_line = lf
-insert_final_newline = true
-trim_trailing_whitespace = true
-charset = utf-8
+from __future__ import absolute_import, print_function
 
-# Python files
-[*.py]
-indent_size = 4
-# isort plugin configuration
-known_first_party = invenio_search
-multi_line_output = 2
-default_section = THIRDPARTY
+import pytest
+from flask import Flask
+from flask_cli import FlaskCLI
 
-# RST files (used by sphinx)
-[*.rst]
-indent_size = 4
+from invenio_search import InvenioSearch
 
-# CSS, HTML, JS, JSON, YML
-[*.{css,html,js,json,yml}]
-indent_size = 2
 
-# Matches the exact files either package.json or .travis.yml
-[{package.json,.travis.yml}]
-indent_size = 2
-
-# Dockerfile
-[Dockerfile]
-indent_size = 4
+@pytest.fixture()
+def app():
+    """Flask application fixture."""
+    app = Flask('testapp')
+    FlaskCLI(app)
+    app.config.update(
+        TESTING=True
+    )
+    InvenioSearch(app)
+    return app

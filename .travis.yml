@@ -1,73 +1,68 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of Invenio
-# Copyright (C) 2015 CERN
+# This file is part of Invenio.
+# Copyright (C) 2015 CERN.
 #
-# Invenio is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License as
+# Invenio is free software; you can redistribute it
+# and/or modify it under the terms of the GNU General Public License as
 # published by the Free Software Foundation; either version 2 of the
 # License, or (at your option) any later version.
 #
-# Invenio is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
+# Invenio is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with Invenio; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+# along with Invenio; if not, write to the
+# Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+# MA 02111-1307, USA.
 #
-# In applying this license, CERN does not waive the privileges and immunities
-# granted to it by virtue of its status as an Intergovernmental Organization
-# or submit itself to any jurisdiction.
+# In applying this license, CERN does not
+# waive the privileges and immunities granted to it by virtue of its status
+# as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+
+addons:
+  postgresql: 9.3
 
 notifications:
   email: false
 
 sudo: false
 
-services:
-  - mysql
-  - redis
-  - elasticsearch
-
 language: python
 
 cache:
-  - apt
   - pip
 
+services:
+  - elasticsearch
+
 env:
-  - REQUIREMENTS=lowest REXTRAS=docs,tests
-  - REQUIREMENTS=release REXTRAS=docs,tests
-  - REQUIREMENTS=devel REXTRAS=docs,tests
+  - REQUIREMENTS=lowest
+  - REQUIREMENTS=release
+  - REQUIREMENTS=devel
 
 python:
   - "2.7"
+  - "3.3"
+  - "3.4"
+  - "3.5"
 
 before_install:
-  - "travis_retry pip install --upgrade pip"
-  - "travis_retry pip install check-manifest mock twine wheel coveralls"
-  - "python requirements.py --extras=$REXTRAS --level=min > .travis-lowest-requirements.txt"
-  - "python requirements.py --extras=$REXTRAS --level=pypi > .travis-release-requirements.txt"
-  - "python requirements.py --extras=$REXTRAS --level=dev > .travis-devel-requirements.txt"
-  - "mkdir -p ${VIRTUAL_ENV}/var/invenio.base-instance/"
-  - "cp .travis.invenio.cfg ${VIRTUAL_ENV}/var/invenio.base-instance/invenio.cfg"
+  - "travis_retry pip install --upgrade pip setuptools py"
+  - "travis_retry pip install twine wheel coveralls requirements-builder"
+  - "requirements-builder --level=min setup.py > .travis-lowest-requirements.txt"
+  - "requirements-builder --level=pypi setup.py > .travis-release-requirements.txt"
+  - "requirements-builder --level=dev --req requirements-devel.txt setup.py > .travis-devel-requirements.txt"
 
 install:
-  - "travis_retry pip install -e git+https://github.com/inveniosoftware/invenio#egg=invenio"
-  - "travis_retry pip install -r .travis-$REQUIREMENTS-requirements.txt --allow-all-external"
-  - "travis_retry pip install -e .[$REXTRAS]"
-
-before_script:
-  - "inveniomanage database init --yes-i-know"
-  - "inveniomanage database create --quiet"
+  - "travis_retry pip install -r .travis-${REQUIREMENTS}-requirements.txt"
+  - "travis_retry pip install -e .[all]"
 
 script:
-  - "check-manifest --ignore .travis-\\*-requirements.txt"
-  - "sphinx-build -qnN docs docs/_build/html"
-  - "python setup.py test"
+  - "./run-tests.sh"
 
 after_success:
   - coveralls
@@ -77,7 +72,7 @@ deploy:
   user: jirikuncar
   password:
     secure: Igz3vUYF2PbguZYLjm2Sj2KbzfguoazhYFGEBLeEHQmSZoJqf87ceOabQwTyAfsR8LIfWDA2CxG+A1W6yjtqWZAvUWxHT6tuzRNIrKN/xXKJFpvJRjoT14On4HX56FBXfv8jma6HjO6/BWrjXSuqZqofTQ/27LNMbNnUylRDlqLD/2dVEzWy+i1lbK5qICL9nYNPdXvktCMK4IXwfa+UUMWZnebXIjwSJrATJtzRpgsYqJNuMLu5cvNJDHkBk1hkyJKskuCtCHi/CNVm+aWmEIZE0gtll3nJaRq6JO9tQbtwxYAsxlwX92gugmiIY1qLRdjgmp6X9nuSPjPR1VwU0x55Ka1HdUvF8i/M4ngaSxhQJJYK63m6hgTEkos1zt7sEUii1z41fjKlBUGTdY73it387dhZ0vNGv2Md7LkBNwVWDts1HtSnh8N6sYLfeZLvtQzU1USzWRGNPApDZpxEt7W0TYDTHpcI4wB7mUmGa+noxYYNQuswQYg3gR8T2888f/Td629SnenfkAq0WhAZuxEt0bI2T15bPpRSdF2svesBdKS20yFTg5UfskgRVZ9lXoWiKSYu6fi+pVMFp8EFMgJ0AOWJsxRBal4+y0h7rcZNam6zsOP0GXK8snowJ6v7yfsS1hH1L4FtMHz/owiOnGDJN18NmwkGMDOn0dRqxXw=
-  distributions: "compile_catalog sdist bdist_wheel"
+  distributions: "sdist bdist_wheel"
   on:
     tags: true
     python: "2.7"

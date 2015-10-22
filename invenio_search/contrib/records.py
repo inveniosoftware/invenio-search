@@ -22,36 +22,36 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+"""Auto-index records metadata."""
 
-root = true
+import warnings
 
-[*]
-indent_style = space
-end_of_line = lf
-insert_final_newline = true
-trim_trailing_whitespace = true
-charset = utf-8
+from flask_sqlalchemy import models_committed
+from invenio_records.models import RecordMetadata
 
-# Python files
-[*.py]
-indent_size = 4
-# isort plugin configuration
-known_first_party = invenio_search
-multi_line_output = 2
-default_section = THIRDPARTY
+from invenio_search import current_search_client
 
-# RST files (used by sphinx)
-[*.rst]
-indent_size = 4
+warnings.warn(
+    'Automatic RecordMetadata indexing is enabled.',
+    category=ImportWarning,
+)
 
-# CSS, HTML, JS, JSON, YML
-[*.{css,html,js,json,yml}]
-indent_size = 2
 
-# Matches the exact files either package.json or .travis.yml
-[{package.json,.travis.yml}]
-indent_size = 2
-
-# Dockerfile
-[Dockerfile]
-indent_size = 4
+@models_committed.connect
+def index_record_modification(sender, changes):
+    """Example handler for indexing record metadata."""
+    for obj, change in changes:
+        if isinstance(obj, RecordMetadata):
+            if change in ('insert', 'update'):
+                current_search_client.index(
+                    index='records',
+                    doc_type='record',
+                    id=obj.id,
+                    body=obj.json,
+                )
+            elif change in ('delete'):
+                current_search_client.delete(
+                    index='records',
+                    doc_type='record',
+                    id=obj.id,
+                )

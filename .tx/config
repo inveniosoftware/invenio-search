@@ -23,35 +23,28 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 
-root = true
+# TODO: Transifex integration
+#
+# 1) Create message catalog:
+#    $ python setup.py extract_messages
+#    $ python setup.py init_catalog -l <lang>
+#    $ python setup.py compile_catalog
+# 2) Ensure project has been created on Transifex under the inveniosoftware
+#    organisation.
+# 3) Install the transifex-client
+#    $ pip install transifex-client
+# 4) Push source (.pot) and translations (.po) to Transifex
+#    $ tx push -s -t
+# 5) Pull translations for a single language from Transifex
+#    $ tx pull -l <lang>
+# 6) Pull translations for all languages from Transifex
+#    $ tx pull -a
 
-[*]
-indent_style = space
-end_of_line = lf
-insert_final_newline = true
-trim_trailing_whitespace = true
-charset = utf-8
+[main]
+host = https://www.transifex.com
 
-# Python files
-[*.py]
-indent_size = 4
-# isort plugin configuration
-known_first_party = invenio_search
-multi_line_output = 2
-default_section = THIRDPARTY
-
-# RST files (used by sphinx)
-[*.rst]
-indent_size = 4
-
-# CSS, HTML, JS, JSON, YML
-[*.{css,html,js,json,yml}]
-indent_size = 2
-
-# Matches the exact files either package.json or .travis.yml
-[{package.json,.travis.yml}]
-indent_size = 2
-
-# Dockerfile
-[Dockerfile]
-indent_size = 4
+[invenio-search.messagespot]
+file_filter = invenio_search/translations/<lang>/LC_MESSAGES/messages.po
+source_file = invenio_search/translations/messages.pot
+source_lang = en
+type = PO

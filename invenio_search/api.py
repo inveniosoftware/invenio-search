@@ -19,105 +19,97 @@
 
 """Search engine API."""
 
-from __future__ import unicode_literals
-
 import pypeg2
-
-from flask_login import current_user
-
-from invenio_base.helpers import unicodifier
-
 from werkzeug.utils import cached_property
 
 from .utils import parser, query_enhancers, query_walkers, search_walkers
-from .walkers.match_unit import MatchUnit
-from .walkers.terms import Terms
 
 
 class Query(object):
+    """Query wrapper."""
 
-    """Search engine implemetation.
-
-    .. versionadded:: 2.1
-       New search and match API.
-    """
-
-    def __init__(self, query):
+    def __init__(self, query=None, **kwargs):
         """Initialize with search query."""
-        self._query = unicodifier(query)
+        self._parser = parser()
+        self._query = query or ''
+        self.body = {}
+        self.build(**kwargs)
 
     @cached_property
     def query(self):
         """Parse query string using given grammar."""
+
+        # Skip pypeg2 parsing if parser is undefined.
+        if self._parser is None:
+            return self._query
+
         tree = pypeg2.parse(self._query, parser(), whitespace="")
         for walker in query_walkers():
             tree = tree.accept(walker)
         return tree
 
-    def search(self, user_info=None, collection=None, **kwargs):
-        """Search records."""
-        user_info = user_info or current_user
+    def build(self, **kwargs):
+        """Build query body."""
         # Enhance query first
-        query = self.query
         for enhancer in query_enhancers():
-            query = enhancer(query, user_info=user_info,
-                             collection=collection)
+            enhancer(self, **kwargs)
 
-        for walker in search_walkers():
-            query = query.accept(walker)
-        return Results(query)
+        query = self.query
 
-    def match(self, record, user_info=None):
-        """Return True if record match the query."""
-        return self.query.accept(MatchUnit(record))
+        if self._parser is not None:
+            for walker in search_walkers():
+                query = query.accept(walker)
 
-    def terms(self, keywords=None):
-        """Return list of terms for given keywords in query pattern."""
-        return self.query.accept(Terms(keywords=keywords))
+        self.body['query'] = query
 
+    def __getitem__(self, sliced_key):
+        """Set pagination."""
+        if isinstance(sliced_key, slice):
+            assert sliced_key.step in (None, 1)
+            self.body.update({
+                'size': sliced_key.stop - sliced_key.start,
+                'from': sliced_key.start,
+            })
+        else:
+            self.body.update({
+                'size': 1,
+                'from': int(sliced_key),
+            })
+        return self
 
-class Results(object):
+    def sort(self, *fields):
+        """Specify sorting options.
 
-    def __init__(self, query, **kwargs):
-        self.body = {
-            'from': 0,
-            'size': 10,
-            'query': query,
-        }
-        self.body.update(kwargs)
+        Call with no arguments with reset the sorting.
+        """
+        # Reset sorting options.
+        if not fields:
+            if 'sort' in self.body:
+                del self.body['sort']
+            return self
 
-        self._results = None
+        def _parse_field(field_data):
+            """Parse field data and checks for ``-`` before field name."""
+            if isinstance(field_data, dict):
+                return field_data
+            order = 'asc' if not field_data.startswith('-') else 'desc'
+            # TODO add field name mapping
+            return {field_data.lstrip('-'): {'order': order}}
 
-    @property
-    def recids(self):
-        # FIXME add warnings
-        from intbitset import intbitset
-        from invenio_ext.es import es
-        results = es.search(
-            index='records',
-            doc_type='record',
-            body={
-                'size': 9999999,
-                'fields': ['control_number'],
-                'query': self.body.get("query")
-            }
-        )
-        return intbitset([int(r['_id']) for r in results['hits']['hits']])
+        self.body.setdefault('sort', [])
+        for field in fields:
+            self.body['sort'].append(_parse_field(field))
+        return self
 
-    def _search(self):
-        from invenio_ext.es import es
+    def highlight(self, field=None, **kwargs):
+        """Enable hightlighs for given field."""
+        self.body.setdefault('highlight', {'fields': {}})
 
-        if self._results is None:
-            self._results = es.search(
-                index='records',
-                doc_type='record',
-                body=self.body,
-            )
-        return self._results
+        if field is None:
+            del self.body['highlight']
+            return self
 
-    def records(self):
-        from invenio_records.api import Record
-        return [Record(r['_source']) for r in self._search()['hits']['hits']]
+        self.body['highlight']['fields'][field] = kwargs
+        return self
 
-    def __len__(self):
-        return self._search()['hits']['total']
+    # TODO aggregation, parent_child, etc.

@@ -1,8 +1,8 @@
 =======================
- Invenio-Search v0.1.0
+ Invenio-Search v1.0.0
 =======================
 
-Invenio-Search v0.1.0 was released on TBD, 2015.
+Invenio-Search v1.0.0 was released on November 13, 2015.
 
 About
 -----
@@ -11,15 +11,15 @@ Invenio module for information retrieval.
 
 *This is an experimental developer preview release.*
 
-What's new
-----------
+Incompatible changes
+--------------------
 
-- Initial public release.
+- Brings a major rewrite.
 
 Installation
 ------------
 
-   $ pip install invenio-search==0.1.0
+   $ pip install invenio-search==1.0.0
 
 Documentation
 -------------

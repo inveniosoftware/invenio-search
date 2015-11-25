@@ -126,7 +126,7 @@ def index():
     size = request.values.get('size', 1, type=int)
     query = Query(request.values.get('q', ''))[(page-1)*size:page*size]
     response = current_search_client.search(
-        index=request.value.get('index', 'demo'),
+        index=request.values.get('index', 'demo'),
         doc_type=request.values.get('type'),
         body=query.body,
     )

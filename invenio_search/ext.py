@@ -26,11 +26,71 @@
 
 from __future__ import absolute_import, print_function
 
+from collections import defaultdict
+import pkg_resources
+
 from flask import current_app
 from werkzeug.utils import import_string
 
 from . import config
 from .cli import index as index_cmd
+
+
+class _SearchState(object):
+    """Store connection to elastic client and regiter indexes."""
+
+    def __init__(self, app, entry_point_group=None, **kwargs):
+        """Initialize state."""
+        self.app = app
+        self.aliases = defaultdict(list)
+        self.mappings = {}
+        self._client = kwargs.get('client')
+
+        if entry_point_group:
+            self.load_entry_point_group(entry_point_group)
+
+    def register_index(self, alias, package_name, resource_name='.',
+                       recursive=True):
+        """Register mappings from a package under given alias."""
+        # TODO build index name from resource_name and filename
+
+        for filename in pkg_resources.resource_listdir(package_name,
+                                                       resource_name):
+            if recursive and pkg_resources.resource_isdir(package_name,
+                                                          filename):
+                self.aliases[alias].append(filename)
+                self.register_index(
+                    filename, package_name,
+                    resource_name=os.path.join(resource_name, filename)
+                )
+                continue
+
+            self.aliases[alias].append(filename)
+            self.mapping[filename] = pkg_resouces.resouce_filename(
+                package_name, filename
+            )
+
+    def load_entry_point_group(self, entry_point_group):
+        """Load actions from an entry point group."""
+        for ep in pkg_resources.iter_entry_points(group=entry_point_group):
+            self.register_mapping(ep.name, ep.module_name)
+
+    def _client_builder(self):
+        """Default Elasticsearch client builder."""
+        from elasticsearch import Elasticsearch
+        from elasticsearch.connection import RequestsHttpConnection
+
+        return Elasticsearch(
+            hosts=self.app.config.get('SEARCH_ELASTIC_HOSTS'),
+            connection_class=RequestsHttpConnection,
+        )
+
+    @property
+    def client(self):
+        """Return client for current application."""
+        if self._client is None:
+            self._client = self._client_builder()
+        return self._client
 
 
 class InvenioSearch(object):
@@ -43,17 +103,20 @@ class InvenioSearch(object):
         if app:
             self.init_app(app, **kwargs)
 
-    def init_app(self, app, elasticsearch=None):
+    def init_app(self, app, entry_point_group='invenio_search.mappings',
+                 **kwargs):
         """Flask application initialization."""
         self.init_config(app)
-        # Configure elasticsearch client.
-        self._clients[app] = elasticsearch
 
         for autoindex in app.config.get('SEARCH_AUTOINDEX', []):
             import_string(autoindex)
 
         app.cli.add_command(index_cmd)
-        app.extensions['invenio-search'] = self
+
+        state = _SearchState(
+            app, entry_point_group=entry_point_group, **kwargs
+        )
+        self._state = app.extensions['invenio-search'] = state
 
     @staticmethod
     def init_config(app):
@@ -62,22 +125,6 @@ class InvenioSearch(object):
             if k.startswith('SEARCH_'):
                 app.config.setdefault(k, getattr(config, k))
 
-    @classmethod
-    def _client_builder(cls, app):
-        """Default Elasticsearch client builder."""
-        from elasticsearch import Elasticsearch
-        from elasticsearch.connection import RequestsHttpConnection
-
-        return Elasticsearch(
-            hosts=app.config.get('SEARCH_ELASTIC_HOSTS'),
-            connection_class=RequestsHttpConnection,
-        )
-
-    @property
-    def client(self):
-        """Return client for current application."""
-        app = current_app._get_current_object()
-        client = self._clients.get(app)
-        if client is None:
-            client = self._clients[app] = self.__class__._client_builder(app)
-        return client
+    def __getattr__(self, name):
+        """Proxy to state object."""
+        return getattr(self._state, name, None)

@@ -30,8 +30,7 @@ from werkzeug.local import LocalProxy
 
 def _get_current_search_client():
     """Return current search client."""
-    app = current_app._get_current_object()
-    return app.extensions['invenio-search'].client
+    return current_app.extensions['invenio-search'].client
 
 
 current_search_client = LocalProxy(_get_current_search_client)

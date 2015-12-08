@@ -68,10 +68,10 @@ def test_client_reference():
     assert 'invenio-search' not in app1.extensions
     assert 'invenio-search' not in app2.extensions
 
-    ext.init_app(app1, elasticsearch=client1)
+    ext.init_app(app1, client=client1)
     assert 'invenio-search' in app1.extensions
 
-    ext.init_app(app2, elasticsearch=client2)
+    ext.init_app(app2, client=client2)
     assert 'invenio-search' in app2.extensions
 
     with app1.app_context():

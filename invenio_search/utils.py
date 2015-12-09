@@ -22,7 +22,6 @@
 import functools
 
 import six
-
 from flask import current_app, g
 from werkzeug.utils import import_string
 

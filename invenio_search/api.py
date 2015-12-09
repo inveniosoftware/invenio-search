@@ -38,7 +38,6 @@ class Query(object):
     @cached_property
     def query(self):
         """Parse query string using given grammar."""
-
         # Skip pypeg2 parsing if parser is undefined.
         if self._parser is None:
             return self._query

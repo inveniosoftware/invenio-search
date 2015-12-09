@@ -32,7 +32,7 @@ import sys
 import click
 from flask_cli import with_appcontext
 
-from .proxy import current_search_client
+from .proxies import current_search, current_search_client
 
 
 def abort_if_false(ctx, param, value):
@@ -47,6 +47,18 @@ def abort_if_false(ctx, param, value):
 @click.group()
 def index():
     """Management command for search indicies."""
+
+
+@index.command()
+@click.option('--force', is_flag=True, default=False)
+@with_appcontext
+def init(force):
+    """Initialize registered aliases and mappings."""
+    with click.progressbar(
+            current_search.create(ignore=[400] if force else None),
+            length=current_search.number_of_indexes) as bar:
+        for name, response in bar:
+            bar.label = name
 
 
 @index.command()

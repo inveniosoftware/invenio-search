@@ -29,7 +29,6 @@ import os
 
 import pkg_resources
 
-
 SEARCH_QUERY_PARSER = 'invenio_query_parser.parser:Main'
 
 SEARCH_QUERY_WALKERS = [
@@ -67,10 +66,10 @@ SEARCH_INDEX_DEFAULT = 'records'
 SEARCH_AUTOINDEX = []
 try:
     pkg_resources.get_distribution('invenio_records')
+    SEARCH_AUTOINDEX.append(  # pragma: no cover
+        'invenio_search.contrib.records:index_record_modification')
 except pkg_resources.DistributionNotFound:  # pragma: no cover
     pass
-else:  # pragma: no cover
-    SEARCH_AUTOINDEX.append('invenio_search.contrib.records')
 
 
 # SEARCH_ELASTIC_KEYWORD_MAPPING -- this variable holds a dictionary to map

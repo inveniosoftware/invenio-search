@@ -20,7 +20,6 @@
 """Wrap Elastic Search AST convertor."""
 
 from flask import current_app
-
 from invenio_query_parser.contrib.elasticsearch.walkers import dsl
 
 

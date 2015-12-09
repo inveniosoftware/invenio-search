@@ -59,7 +59,7 @@ before_install:
 
 install:
   - "travis_retry pip install -r .travis-${REQUIREMENTS}-requirements.txt"
-  - "travis_retry pip install -e .[all]"
+  - "travis_retry pip install -e .[docs,tests]"
 
 script:
   - "./run-tests.sh"

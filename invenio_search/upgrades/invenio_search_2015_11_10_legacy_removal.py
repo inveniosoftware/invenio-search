@@ -22,7 +22,6 @@
 import warnings
 
 from invenio_db import db
-
 from sqlalchemy.sql import text
 
 depends_on = []

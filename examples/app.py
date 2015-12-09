@@ -74,9 +74,8 @@ from flask_mail import Mail
 from flask_menu import Menu
 from flask_security import current_user
 from invenio_accounts import InvenioAccounts
-from invenio_db import InvenioDB
-
 from invenio_accounts.views import blueprint
+from invenio_db import InvenioDB
 
 from invenio_search import InvenioSearch, Query, current_search_client
 
@@ -102,7 +101,8 @@ InvenioAccounts(app)
 
 app.register_blueprint(blueprint)
 
-InvenioSearch(app)
+search = InvenioSearch(app)
+search.register_mappings('records', 'data')
 
 
 def authenticated_query(query, **kwargs):

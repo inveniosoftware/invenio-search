@@ -28,12 +28,13 @@ from __future__ import absolute_import, print_function
 
 from .api import Query
 from .ext import InvenioSearch
-from .proxy import current_search_client
+from .proxies import current_search, current_search_client
 from .version import __version__
 
 __all__ = (
     '__version__',
     'InvenioSearch',
     'Query',
+    'current_search',
     'current_search_client',
 )

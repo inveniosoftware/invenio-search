@@ -23,8 +23,8 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 
-# FIXME pep257 invenio_search && \
-# FIXME isort -rc -c -df **/*.py && \
+pep257 invenio_search && \
+isort -rc -c -df **/*.py && \
 check-manifest --ignore ".travis-*" && \
 sphinx-build -qnNW docs docs/_build/html && \
 python setup.py test && \

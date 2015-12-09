@@ -26,10 +26,13 @@
 
 from __future__ import absolute_import, print_function
 
+import json
+import os
 from collections import defaultdict
-import pkg_resources
 
 from flask import current_app
+from pkg_resources import iter_entry_points, resource_filename, \
+    resource_isdir, resource_listdir
 from werkzeug.utils import import_string
 
 from . import config
@@ -42,37 +45,56 @@ class _SearchState(object):
     def __init__(self, app, entry_point_group=None, **kwargs):
         """Initialize state."""
         self.app = app
-        self.aliases = defaultdict(list)
         self.mappings = {}
+        self.aliases = {}
+        self.number_of_indexes = 0
         self._client = kwargs.get('client')
 
         if entry_point_group:
             self.load_entry_point_group(entry_point_group)
 
-    def register_index(self, alias, package_name, resource_name='.',
-                       recursive=True):
+    def register_mappings(self, alias, package_name):
         """Register mappings from a package under given alias."""
-        # TODO build index name from resource_name and filename
+        def _index_name(*parts):
+            """Build index name."""
+            return os.path.splitext('-'.join(parts))[0]
 
-        for filename in pkg_resources.resource_listdir(package_name,
-                                                       resource_name):
-            if recursive and pkg_resources.resource_isdir(package_name,
-                                                          filename):
-                self.aliases[alias].append(filename)
-                self.register_index(
-                    filename, package_name,
-                    resource_name=os.path.join(resource_name, filename)
-                )
-                continue
+        def _walk_dir(aliases, *parts):
+            root_name = _index_name(*parts)
+            resource_name = os.path.join(*parts)
 
-            self.aliases[alias].append(filename)
-            self.mapping[filename] = pkg_resouces.resouce_filename(
-                package_name, filename
-            )
+            if root_name not in aliases:
+                self.number_of_indexes += 1
+
+            data = aliases.get(root_name, {})
+
+            for filename in resource_listdir(package_name, resource_name):
+                index_name = _index_name(*(parts + (filename, )))
+                file_path = os.path.join(resource_name, filename)
+
+                if resource_isdir(package_name, file_path):
+                    _walk_dir(data, *(parts + (filename, )))
+                    continue
+
+                ext = os.path.splitext(filename)[1]
+                if ext not in {'.json', }:
+                    continue
+
+                assert index_name not in data, 'Duplicit index'
+                data[index_name] = self.mappings[index_name] = \
+                    resource_filename(
+                        package_name, os.path.join(resource_name, filename)
+                    )
+                self.number_of_indexes += 1
+
+            aliases[root_name] = data
+
+        # Start the recursion here:
+        _walk_dir(self.aliases, alias)
 
     def load_entry_point_group(self, entry_point_group):
         """Load actions from an entry point group."""
-        for ep in pkg_resources.iter_entry_points(group=entry_point_group):
+        for ep in iter_entry_points(group=entry_point_group):
             self.register_mapping(ep.name, ep.module_name)
 
     def _client_builder(self):
@@ -91,6 +113,35 @@ class _SearchState(object):
         if self._client is None:
             self._client = self._client_builder()
         return self._client
+
+    def create(self, ignore=None):
+        """Yield tuple with name and responses from a client."""
+        ignore = ignore or []
+
+        def _create(tree_or_filename, alias=None):
+            """Create indexes and aliases by walking DFS."""
+            # Iterate over aliases:
+            for name, value in tree_or_filename.items():
+                if not isinstance(value, dict):
+                    with open(value, 'r') as body:
+                        yield name, self.client.indices.create(
+                            index=name,
+                            body=json.load(body),
+                            ignore=ignore,
+                        )
+                else:
+                    for result in _create(value, alias=name):
+                        yield result
+
+            if alias is not None:
+                yield alias, self.client.indices.put_alias(
+                    index=list(tree_or_filename.keys()),
+                    name=alias,
+                    ignore=ignore,
+                )
+
+        for result in _create(self.aliases):
+            yield result
 
 
 class InvenioSearch(object):

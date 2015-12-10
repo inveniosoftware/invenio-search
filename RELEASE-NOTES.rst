@@ -2,7 +2,7 @@
  Invenio-Search v1.0.0
 =======================
 
-Invenio-Search v1.0.0 was released on November 13, 2015.
+Invenio-Search v1.0.0 was released on December 10, 2015.
 
 About
 -----

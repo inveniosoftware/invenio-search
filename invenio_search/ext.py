@@ -28,9 +28,7 @@ from __future__ import absolute_import, print_function
 
 import json
 import os
-from collections import defaultdict
 
-from flask import current_app
 from pkg_resources import iter_entry_points, resource_filename, \
     resource_isdir, resource_listdir
 from werkzeug.utils import import_string
@@ -80,7 +78,7 @@ class _SearchState(object):
                 if ext not in {'.json', }:
                     continue
 
-                assert index_name not in data, 'Duplicit index'
+                assert index_name not in data, 'Duplicate index'
                 data[index_name] = self.mappings[index_name] = \
                     resource_filename(
                         package_name, os.path.join(resource_name, filename)
@@ -95,7 +93,7 @@ class _SearchState(object):
     def load_entry_point_group(self, entry_point_group):
         """Load actions from an entry point group."""
         for ep in iter_entry_points(group=entry_point_group):
-            self.register_mapping(ep.name, ep.module_name)
+            self.register_mappings(ep.name, ep.module_name)
 
     def _client_builder(self):
         """Default Elasticsearch client builder."""

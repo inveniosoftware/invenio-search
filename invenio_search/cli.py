@@ -54,8 +54,25 @@ def index():
 @with_appcontext
 def init(force):
     """Initialize registered aliases and mappings."""
+    click.secho('Creating indexes...', fg='green', bold=True, file=sys.stderr)
     with click.progressbar(
             current_search.create(ignore=[400] if force else None),
+            length=current_search.number_of_indexes) as bar:
+        for name, response in bar:
+            bar.label = name
+
+
+@index.command()
+@click.option('--yes-i-know', is_flag=True, callback=abort_if_false,
+              expose_value=False,
+              prompt='Do you know that you are going to destroy all indexes?')
+@click.option('--force', is_flag=True, default=False)
+@with_appcontext
+def destroy(force):
+    """Destroy all indexes."""
+    click.secho('Destroying indexes...', fg='red', bold=True, file=sys.stderr)
+    with click.progressbar(
+            current_search.delete(ignore=[400, 404] if force else None),
             length=current_search.number_of_indexes) as bar:
         for name, response in bar:
             bar.label = name

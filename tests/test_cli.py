@@ -66,7 +66,7 @@ def test_init(app):
     with runner.isolated_filesystem():
         result = runner.invoke(cmd, ['init'],
                                obj=script_info)
-        assert result.exit_code == 0
+        assert 0 == result.exit_code
 
     with app.app_context():
         aliases = current_search_client.indices.get_aliases()
@@ -77,7 +77,15 @@ def test_init(app):
             list(search.mappings.keys())
         )
 
-        # Clean-up:
-        current_search_client.indices.delete_alias('_all', '_all',
-                                                   ignore=[400, 404])
-        current_search_client.indices.delete('*')
+    # Clean-up:
+    with app.app_context():
+        result = runner.invoke(cmd, ['destroy'],
+                               obj=script_info)
+        assert 1 == result.exit_code
+
+        result = runner.invoke(cmd, ['destroy', '--yes-i-know'],
+                               obj=script_info)
+        assert 0 == result.exit_code
+
+        aliases = current_search_client.indices.get_aliases()
+        assert 0 == len(aliases)

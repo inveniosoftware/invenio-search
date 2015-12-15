@@ -113,7 +113,7 @@ class _SearchState(object):
         return self._client
 
     def create(self, ignore=None):
-        """Yield tuple with name and responses from a client."""
+        """Yield tuple with created index name and responses from a client."""
         ignore = ignore or []
 
         def _create(tree_or_filename, alias=None):
@@ -139,6 +139,34 @@ class _SearchState(object):
                 )
 
         for result in _create(self.aliases):
+            yield result
+
+    def delete(self, ignore=None):
+        """Yield tuple with deleted index name and responses from a client."""
+        ignore = ignore or []
+
+        def _delete(tree_or_filename, alias=None):
+            """Delete indexes and aliases by walking DFS."""
+            if alias is not None:
+                yield alias, self.client.indices.delete_alias(
+                    index=list(tree_or_filename.keys()),
+                    name=alias,
+                    ignore=ignore,
+                )
+
+            # Iterate over aliases:
+            for name, value in tree_or_filename.items():
+                if not isinstance(value, dict):
+                    with open(value, 'r') as body:
+                        yield name, self.client.indices.delete(
+                            index=name,
+                            ignore=ignore,
+                        )
+                else:
+                    for result in _delete(value, alias=name):
+                        yield result
+
+        for result in _delete(self.aliases):
             yield result
 
 

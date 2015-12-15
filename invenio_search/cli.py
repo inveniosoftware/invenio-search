@@ -62,6 +62,23 @@ def init(force):
 
 
 @index.command()
+@click.option('--yes-i-know', is_flag=True, callback=abort_if_false,
+              expose_value=False,
+              prompt='Do you know that you are going to destroy all indexes?')
+@click.option('--force', is_flag=True, default=False)
+@with_appcontext
+def destroy(force):
+    """Destroy all indexes."""
+    click.secho('Destroying indexes...', fg='red', bold=True)
+    with click.progressbar(current_search.mappings.keys()) as bar:
+        for index_name in bar:
+            current_search_client.indices.delete(
+                index=index_name,
+                ignore=[400, 404] if force else None,
+            )
+
+
+@index.command()
 @click.argument('index_name')
 @click.option('-b', '--body', type=click.File('r'), default=sys.stdin)
 @click.option('--force', is_flag=True, default=False)

@@ -43,11 +43,17 @@ def index_record_modification(sender, changes):
     for obj, change in changes:
         if isinstance(obj, RecordMetadata):
             if change in ('insert', 'update'):
+                record_json = {
+                    '_created': obj.created,
+                    '_updated': obj.updated,
+                    '_revision': obj.version_id - 1,
+                }
+                record_json.update(obj.json)
                 current_search_client.index(
                     index='records',
                     doc_type='record',
                     id=obj.id,
-                    body=obj.json,
+                    body=record_json,
                 )
             elif change in ('delete'):
                 current_search_client.delete(

@@ -94,3 +94,6 @@ SEARCH_ELASTIC_KEYWORD_MAPPING = {
     "980__b": ["collections.secondary"],
     "542__l": ["information_relating_to_copyright_status.copyright_status"],
 }
+
+SEARCH_ELASTICSEARCH_RECORDS_DOC_TYPE = 'record'
+"""Elasticsearch default doc_type for records."""

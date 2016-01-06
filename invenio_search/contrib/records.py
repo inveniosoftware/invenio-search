@@ -26,6 +26,7 @@
 
 import warnings
 
+from flask import current_app
 from flask_sqlalchemy import models_committed
 from invenio_records.models import RecordMetadata
 
@@ -40,18 +41,19 @@ warnings.warn(
 @models_committed.connect
 def index_record_modification(sender, changes):
     """Example handler for indexing record metadata."""
+    doc_type = current_app.config['SEARCH_ELASTICSEARCH_RECORDS_DOC_TYPE']
     for obj, change in changes:
         if isinstance(obj, RecordMetadata):
             if change in ('insert', 'update'):
                 current_search_client.index(
                     index='records',
-                    doc_type='record',
+                    doc_type=doc_type,
                     id=obj.id,
                     body=obj.json,
                 )
             elif change in ('delete'):
                 current_search_client.delete(
                     index='records',
-                    doc_type='record',
+                    doc_type=doc_type,
                     id=obj.id,
                 )

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2014, 2015 CERN.
+# Copyright (C) 2014, 2015, 2016 CERN.
 #
 # Invenio is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -20,10 +20,47 @@
 """Utility functions for search engine."""
 
 import functools
+import os
 
 import six
 from flask import current_app, g
 from werkzeug.utils import import_string
+
+
+def build_index_name(*parts):
+    """Build an index name from parts."""
+    return os.path.splitext('-'.join([
+        part for part in parts if part
+    ]))[0]
+
+
+def schema_to_index(schema, index_names=None):
+    """Get index/doc_type given a schema URL.
+
+    >>> schema_to_index('records/record-v1.0.0.json')
+    ('records-record-v1.0.0', 'record-v1.0.0')
+    >>> schema_to_index('default-v1.0.0.json')
+    ('default-v1.0.0', 'default-v1.0.0')
+    >>> schema_to_index('default-v1.0.0.json', index_names=[])
+    (None, None)
+    >>> schema_to_index('invalidextension')
+    (None, None)
+    """
+    parts = schema.split('/')
+    doc_type = os.path.splitext(parts[-1])
+
+    if doc_type[1] not in {'.json', }:
+        return (None, None)
+
+    if index_names is None:
+        return (build_index_name(*parts), doc_type[0])
+
+    for start in range(len(parts)):
+        index_name = build_index_name(*parts[start:])
+        if index_name in index_names:
+            return (index_name, doc_type[0])
+
+    return (None, None)
 
 
 def g_memoise(method=None, key=None):

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2015, 2016 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -27,10 +27,12 @@
 
 from __future__ import absolute_import, print_function
 
+import pytest
 from flask import Flask
 from flask_cli import FlaskCLI
 
 from invenio_search import InvenioSearch, current_search_client
+from invenio_search.utils import schema_to_index
 
 
 def test_version():
@@ -87,3 +89,16 @@ def test_default_client(app):
         current_search_client.cluster.health(
             wait_for_status='yellow', request_timeout=1
         )
+
+
+@pytest.mark.parametrize(('schema_url', 'result'), [
+    ('invalidfileextension',
+     (None, None)),
+    ('records/record-v1.0.0.json',
+     ('records-record-v1.0.0', 'record-v1.0.0')),
+    ('/records/record-v1.0.0.json',
+     ('records-record-v1.0.0', 'record-v1.0.0')),
+])
+def test_schema_to_index(schema_url, result):
+    """Test conversion of schema to index name and document type."""
+    assert result == schema_to_index(schema_url)

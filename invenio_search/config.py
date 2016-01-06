@@ -2,7 +2,7 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2010, 2011, 2012, 2013,
-#               2015 CERN.
+#               2015, 2016 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -61,6 +61,9 @@ else:
 
 # SEARCH_INDEX_DEFAULT -- use when no index name is defined
 SEARCH_INDEX_DEFAULT = 'records'
+
+# SEARCH_DOC_TYPE_DEFAULT -- default doc_type when it can not be guessed
+SEARCH_DOC_TYPE_DEFAULT = 'record'
 
 # SEARCH_AUTOINDEX -- list of functions that put data in Elasticsearch.
 SEARCH_AUTOINDEX = []

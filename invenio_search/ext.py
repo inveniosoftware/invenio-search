@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2015, 2016 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -35,6 +35,7 @@ from werkzeug.utils import import_string
 
 from . import config
 from .cli import index as index_cmd
+from .utils import build_index_name
 
 
 class _SearchState(object):
@@ -53,12 +54,8 @@ class _SearchState(object):
 
     def register_mappings(self, alias, package_name):
         """Register mappings from a package under given alias."""
-        def _index_name(*parts):
-            """Build index name."""
-            return os.path.splitext('-'.join(parts))[0]
-
         def _walk_dir(aliases, *parts):
-            root_name = _index_name(*parts)
+            root_name = build_index_name(*parts)
             resource_name = os.path.join(*parts)
 
             if root_name not in aliases:
@@ -67,7 +64,7 @@ class _SearchState(object):
             data = aliases.get(root_name, {})
 
             for filename in resource_listdir(package_name, resource_name):
-                index_name = _index_name(*(parts + (filename, )))
+                index_name = build_index_name(*(parts + (filename, )))
                 file_path = os.path.join(resource_name, filename)
 
                 if resource_isdir(package_name, file_path):

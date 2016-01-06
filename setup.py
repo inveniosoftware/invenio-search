@@ -36,6 +36,7 @@ history = open('CHANGES.rst').read()
 tests_require = [
     'check-manifest>=0.25',
     'coverage>=4.0',
+    'invenio-db[versioning]>=1.0.0a7',
     'isort>=4.2.2',
     'pep257>=0.7.0',
     'pytest-cache>=1.0',
@@ -57,6 +58,8 @@ extras_require = {
 extras_require['all'] = []
 for reqs in extras_require.values():
     extras_require['all'].extend(reqs)
+
+extras_require['tests'] += extras_require['records']
 
 setup_requires = [
     'Babel>=1.3',

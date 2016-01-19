@@ -65,16 +65,6 @@ SEARCH_INDEX_DEFAULT = 'records'
 # SEARCH_DOC_TYPE_DEFAULT -- default doc_type when it can not be guessed
 SEARCH_DOC_TYPE_DEFAULT = 'record'
 
-# SEARCH_AUTOINDEX -- list of functions that put data in Elasticsearch.
-SEARCH_AUTOINDEX = []
-try:
-    pkg_resources.get_distribution('invenio_records')
-    SEARCH_AUTOINDEX.append(  # pragma: no cover
-        'invenio_search.contrib.records:index_record_modification')
-except pkg_resources.DistributionNotFound:  # pragma: no cover
-    pass
-
-
 # SEARCH_ELASTIC_KEYWORD_MAPPING -- this variable holds a dictionary to map
 # invenio keywords to elasticsearch fields
 SEARCH_ELASTIC_KEYWORD_MAPPING = {

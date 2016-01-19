@@ -31,7 +31,6 @@ import os
 
 from pkg_resources import iter_entry_points, resource_filename, \
     resource_isdir, resource_listdir
-from werkzeug.utils import import_string
 
 from . import config
 from .cli import index as index_cmd
@@ -181,9 +180,6 @@ class InvenioSearch(object):
                  **kwargs):
         """Flask application initialization."""
         self.init_config(app)
-
-        for autoindex in app.config.get('SEARCH_AUTOINDEX', []):
-            import_string(autoindex)
 
         app.cli.add_command(index_cmd)
 

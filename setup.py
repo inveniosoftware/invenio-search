@@ -134,6 +134,9 @@ setup(
         'invenio_base.apps': [
             'invenio_search = invenio_search:InvenioSearch',
         ],
+        'invenio_base.api_apps': [
+            'invenio_search = invenio_search:InvenioSearch',
+        ],
     },
     extras_require=extras_require,
     install_requires=install_requires,

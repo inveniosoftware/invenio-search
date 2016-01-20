@@ -59,12 +59,6 @@ if os.environ.get('SEARCH_ELASTIC_HOSTS'):  # pragma: no cover
 else:
     SEARCH_ELASTIC_HOSTS = None  # default localhost
 
-# SEARCH_INDEX_DEFAULT -- use when no index name is defined
-SEARCH_INDEX_DEFAULT = 'records'
-
-# SEARCH_DOC_TYPE_DEFAULT -- default doc_type when it can not be guessed
-SEARCH_DOC_TYPE_DEFAULT = 'record'
-
 # SEARCH_ELASTIC_KEYWORD_MAPPING -- this variable holds a dictionary to map
 # invenio keywords to elasticsearch fields
 SEARCH_ELASTIC_KEYWORD_MAPPING = {

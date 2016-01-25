@@ -44,7 +44,6 @@ Create a user:
 .. code-block:: console
 
    $ flask -a app.py users create info@invenio-software.org -a
-   $ flask -a app.py users activate info@invenio-software.org
 
 Upload sample records::
 
@@ -109,7 +108,7 @@ def authenticated_query(query, **kwargs):
     """Enhance query with user authentication rules."""
     from invenio_query_parser.ast import AndOp, DoubleQuotedValue, Keyword, \
         KeywordOp
-    if not current_user.is_authenticated():
+    if not current_user.is_authenticated:
         query.body['_source'] = {'exclude': ['public']}
         query.query = AndOp(
             KeywordOp(Keyword('public'), DoubleQuotedValue(1)),

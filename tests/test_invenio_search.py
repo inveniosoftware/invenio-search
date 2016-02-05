@@ -30,6 +30,7 @@ from __future__ import absolute_import, print_function
 import pytest
 from flask import Flask
 from flask_cli import FlaskCLI
+from mock import patch
 
 from invenio_search import InvenioSearch, current_search_client
 from invenio_search.utils import schema_to_index
@@ -102,3 +103,26 @@ def test_default_client(app):
 def test_schema_to_index(schema_url, result):
     """Test conversion of schema to index name and document type."""
     assert result == schema_to_index(schema_url)
+
+
+def test_load_entry_point_group():
+    """Test entry point loading."""
+    app = Flask('testapp')
+    FlaskCLI(app)
+    ext = InvenioSearch(app)
+    ep_group = 'test'
+
+    def mock_entry_points(group=None):
+        assert group == ep_group
+
+        class ep(object):
+
+            name = 'records'
+            module_name = 'data'
+
+        yield ep
+
+    assert len(ext.mappings) == 0
+    with patch('invenio_search.ext.iter_entry_points', mock_entry_points):
+        ext.load_entry_point_group(entry_point_group=ep_group)
+    assert len(ext.mappings) == 3

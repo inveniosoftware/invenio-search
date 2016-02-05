@@ -25,10 +25,6 @@
 
 """Invenio Search Engine config parameters."""
 
-import os
-
-import pkg_resources
-
 SEARCH_QUERY_PARSER = 'invenio_query_parser.parser:Main'
 
 SEARCH_QUERY_WALKERS = [
@@ -54,10 +50,7 @@ SEARCH_WALKERS = [
 
 # SEARCH_ELASTIC_HOSTS -- list of hosts for Elasticsearch client.
 # http://elasticsearch-py.readthedocs.org/en/master/api.html#elasticsearch.Elasticsearch
-if os.environ.get('SEARCH_ELASTIC_HOSTS'):  # pragma: no cover
-    SEARCH_ELASTIC_HOSTS = os.environ.get('SEARCH_ELASTIC_HOSTS').split(',')
-else:
-    SEARCH_ELASTIC_HOSTS = None  # default localhost
+SEARCH_ELASTIC_HOSTS = None  # default localhost
 
 # SEARCH_ELASTIC_KEYWORD_MAPPING -- this variable holds a dictionary to map
 # invenio keywords to elasticsearch fields

@@ -101,7 +101,7 @@ def create(index_name, body, force, verbose):
 @click.option('--verbose', is_flag=True, default=False)
 @click.option('--yes-i-know', is_flag=True, callback=abort_if_false,
               expose_value=False,
-              prompt='Do you know that you are going to destroy the db?')
+              prompt='Do you know that you are going to delete the index?')
 @with_appcontext
 def delete(index_name, force, verbose):
     """Delete index by its name."""

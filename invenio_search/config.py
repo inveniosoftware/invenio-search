@@ -44,6 +44,10 @@ SEARCH_WALKERS = [
     'invenio_search.walkers.elasticsearch:ElasticSearchDSL',
 ]
 
+# SEARCH_ALLOWED_KEYWORDS -- a list of allowed keywords for the query parser.
+SEARCH_ALLOWED_KEYWORDS = []
+
+
 #
 # ELASTIC configuration
 #

@@ -1,8 +1,8 @@
 =========================
- Invenio-Search v1.0.0a4
+ Invenio-Search v1.0.0a5
 =========================
 
-Invenio-Search v1.0.0a4 was released on February 5, 2016.
+Invenio-Search v1.0.0a5 was released on February 17, 2016.
 
 About
 -----
@@ -19,7 +19,7 @@ Incompatible changes
 Installation
 ------------
 
-   $ pip install invenio-search==1.0.0a4
+   $ pip install invenio-search==1.0.0a5
 
 Documentation
 -------------

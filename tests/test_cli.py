@@ -30,8 +30,9 @@ from __future__ import absolute_import, print_function
 from click.testing import CliRunner
 from flask_cli import ScriptInfo
 
-from invenio_search.cli import index as cmd
-from invenio_search.proxies import current_search, current_search_client
+from invenio_search.cli import alias as alias_cmd
+from invenio_search.cli import index as index_cmd
+from invenio_search.proxies import current_search_client
 
 
 def test_init(app):
@@ -64,7 +65,7 @@ def test_init(app):
     script_info = ScriptInfo(create_app=lambda info: app)
 
     with runner.isolated_filesystem():
-        result = runner.invoke(cmd, ['init'],
+        result = runner.invoke(index_cmd, ['init'],
                                obj=script_info)
         assert 0 == result.exit_code
 
@@ -77,13 +78,43 @@ def test_init(app):
             list(search.mappings.keys())
         )
 
+    # test alias commands
+    with app.app_context():
+        result = runner.invoke(alias_cmd, ['exists', 'records-default-v1.0.0',
+                                           'test-records'],
+                               obj=script_info)
+        assert 0 == result.exit_code
+        assert result.output == 'false\n'
+
+        result = runner.invoke(alias_cmd, ['create', 'records-default-v1.0.0',
+                                           'test-records'],
+                               obj=script_info)
+        assert 0 == result.exit_code
+
+        result = runner.invoke(alias_cmd, ['exists', 'records-default-v1.0.0',
+                                           'test-records'],
+                               obj=script_info)
+        assert 0 == result.exit_code
+        assert result.output == 'true\n'
+
+        result = runner.invoke(alias_cmd, ['delete', 'records-default-v1.0.0',
+                                           'test-records'],
+                               obj=script_info)
+        assert 0 == result.exit_code
+
+        result = runner.invoke(alias_cmd, ['exists', 'records-default-v1.0.0',
+                                           'test-records'],
+                               obj=script_info)
+        assert 0 == result.exit_code
+        assert result.output == 'false\n'
+
     # Clean-up:
     with app.app_context():
-        result = runner.invoke(cmd, ['destroy'],
+        result = runner.invoke(index_cmd, ['destroy'],
                                obj=script_info)
         assert 1 == result.exit_code
 
-        result = runner.invoke(cmd, ['destroy', '--yes-i-know'],
+        result = runner.invoke(index_cmd, ['destroy', '--yes-i-know'],
                                obj=script_info)
         assert 0 == result.exit_code
 

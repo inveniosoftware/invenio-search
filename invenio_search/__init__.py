@@ -26,7 +26,7 @@
 
 from __future__ import absolute_import, print_function
 
-from .api import Query
+from .api import RecordsSearch
 from .ext import InvenioSearch
 from .proxies import current_search, current_search_client
 from .version import __version__
@@ -34,7 +34,7 @@ from .version import __version__
 __all__ = (
     '__version__',
     'InvenioSearch',
-    'Query',
+    'RecordsSearch',
     'current_search',
     'current_search_client',
 )

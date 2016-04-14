@@ -71,6 +71,7 @@ install_requires = [
     'Flask-CLI>=0.2.1',
     'pyPEG2>=2.15.2',
     'elasticsearch>=2.0.0',
+    'elasticsearch-dsl>=2.0.0',
     'invenio-query-parser>=0.4.1',
     'requests>=2.4.0',
 ]

@@ -19,96 +19,94 @@
 
 """Search engine API."""
 
-import pypeg2
-from werkzeug.utils import cached_property
+from functools import partial
 
-from .utils import parser, query_enhancers, query_walkers, search_walkers
+import six
+from elasticsearch_dsl import FacetedSearch, Search
+from elasticsearch_dsl.faceted_search import FacetedResponse
+from elasticsearch_dsl.query import Bool, Ids, SimpleQueryString
+
+from .proxies import current_search_client
 
 
-class Query(object):
-    """Query wrapper."""
+class DefaultFilter(object):
+    """Shortcut for defining default filters with query parser."""
 
-    def __init__(self, query=None, **kwargs):
-        """Initialize with search query."""
-        self._parser = parser()
-        self._query = query or ''
-        self.body = {}
-        self.build(**kwargs)
+    def __init__(self, query=None, query_parser=None):
+        """Build filter property with query parser."""
+        self._query = query
+        self.query_parser = query_parser or (lambda x: x)
 
-    @cached_property
+    @property
     def query(self):
-        """Parse query string using given grammar."""
-        # Skip pypeg2 parsing if parser is undefined.
-        if self._parser is None:
-            return self._query
+        """Build lazy query if needed."""
+        return self._query() if callable(self._query) else self._query
 
-        tree = pypeg2.parse(self._query, parser(), whitespace="")
-        for walker in query_walkers():
-            tree = tree.accept(walker)
-        return tree
+    def __get__(self, obj, objtype):
+        """Return parsed query."""
+        return self.query_parser(self.query)
 
-    def build(self, **kwargs):
-        """Build query body."""
-        # Enhance query first
-        for enhancer in query_enhancers():
-            enhancer(self, **kwargs)
 
-        query = self.query
+class RecordsSearch(Search):
+    """Example subclass to searching records using Elastic DSL."""
 
-        if self._parser is not None:
-            for walker in search_walkers():
-                query = query.accept(walker)
+    class Meta:
+        """Configuration for ``Search`` and ``FacetedSearch`` classes."""
 
-        self.body['query'] = query
+        index = '_all'
+        doc_types = ['_all']
+        fields = ('*', )
+        facets = {}
 
-    def __getitem__(self, sliced_key):
-        """Set pagination."""
-        if isinstance(sliced_key, slice):
-            assert sliced_key.step in (None, 1)
-            self.body.update({
-                'size': sliced_key.stop - sliced_key.start,
-                'from': sliced_key.start,
-            })
-        else:
-            self.body.update({
-                'size': 1,
-                'from': int(sliced_key),
-            })
-        return self
+        default_filter = None
+        """Default filter added to search body.
 
-    def sort(self, *fields):
-        """Specify sorting options.
-
-        Call with no arguments with reset the sorting.
+        Example: ``default_filter = DefaultFilter('_access.owner:"1"')``.
         """
-        # Reset sorting options.
-        if not fields:
-            if 'sort' in self.body:
-                del self.body['sort']
-            return self
 
-        def _parse_field(field_data):
-            """Parse field data and checks for ``-`` before field name."""
-            if isinstance(field_data, dict):
-                return field_data
-            order = 'asc' if not field_data.startswith('-') else 'desc'
-            # TODO add field name mapping
-            return {field_data.lstrip('-'): {'order': order}}
+        # Record class?
+        # Record(result['_source'], model=None, id_=result['_id'])
 
-        self.body.setdefault('sort', [])
-        for field in fields:
-            self.body['sort'].append(_parse_field(field))
-        return self
+    def __init__(self, **kwargs):
+        """Use Meta to set kwargs defaults."""
+        kwargs.setdefault('index', getattr(self.Meta, 'index', None))
+        kwargs.setdefault('doc_type', getattr(self.Meta, 'doc_types', None))
+        kwargs.setdefault('using', current_search_client)
 
-    def highlight(self, field=None, **kwargs):
-        """Enable hightlighs for given field."""
-        self.body.setdefault('highlight', {'fields': {}})
+        super(RecordsSearch, self).__init__(**kwargs)
 
-        if field is None:
-            del self.body['highlight']
-            return self
+        default_filter = getattr(self.Meta, 'default_filter', None)
+        if default_filter:
+            self.query = Bool(filter=default_filter)
 
-        self.body['highlight']['fields'][field] = kwargs
-        return self
+    def get_record(self, id_):
+        """Return a record by its identifier."""
+        return self.query(Ids(values=[str(id_)]))
 
-    # TODO aggregation, parent_child, etc.
+    def get_records(self, ids):
+        """Return records by their identifiers."""
+        return self.query(Ids(values=[str(id_) for id_ in ids]))
+
+    @classmethod
+    def faceted_search(cls, query=None, filters=None, search=None):
+        """Return faceted search instance with defaults set.
+
+        :param query: Elastic DSL query object (``Q``).
+        :param filters: Dictionary with selected facet values.
+        :param search: An instance of ``Search`` class. (default: ``cls()``).
+        """
+        search_ = search or cls()
+
+        class RecordsFacetedSearch(FacetedSearch):
+            """Pass defaults from ``cls.Meta`` object."""
+
+            index = search_._index[0]
+            doc_types = search_._doc_type
+            fields = getattr(search_.Meta, 'fields', ('*', ))
+            facets = getattr(search_.Meta, 'facets', {})
+
+            def search(self):
+                """Use ``search`` or ``cls()`` instead of default Search."""
+                return search_.response_class(partial(FacetedResponse, self))
+
+        return RecordsFacetedSearch(query=query, filters=filters or {})

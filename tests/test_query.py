@@ -27,71 +27,82 @@
 
 from __future__ import absolute_import, print_function
 
-from invenio_search.api import Query as Q
+from elasticsearch_dsl import Q
+
+from invenio_search.api import DefaultFilter, RecordsSearch
 
 
 def test_empty_query(app):
     """Test building an empty query."""
-    app.config['SEARCH_QUERY_PARSER'] = None
-
     with app.app_context():
-        q = Q()
-        assert q.body['query'] == ''
+        q = RecordsSearch()
+        assert q.to_dict()['query'] == {'match_all': {}}
 
-        q = Q('')
-        assert q.body['query'] == ''
+        q = RecordsSearch.faceted_search('')
+        assert q._s.to_dict()['query'] == {'match_all': {}}
 
-        q = Q()[10]
-        assert q.body['from'] == 10
-        assert q.body['size'] == 1
+        q = RecordsSearch()[10]
+        assert q.to_dict()['from'] == 10
+        assert q.to_dict()['size'] == 1
 
         q = q[10:20]
-        assert q.body['from'] == 10
-        assert q.body['size'] == 10
+        assert q.to_dict()['from'] == 10
+        assert q.to_dict()['size'] == 10
 
-        q = q.sort('field1')
-        assert q.body['sort'][0] == {'field1': {'order': 'asc'}}
+        q = q.sort({'field1': {'order': 'asc'}})
+        assert q.to_dict()['sort'][0] == {'field1': {'order': 'asc'}}
 
         q = q.sort()
-        assert 'sort' not in q.body
+        assert 'sort' not in q.to_dict()
 
         q = q.sort('-field1')
-        assert q.body['sort'][0] == {'field1': {'order': 'desc'}}
+        assert q.to_dict()['sort'][0] == {'field1': {'order': 'desc'}}
 
         q = q.sort('field2', {'field3': {'order': 'asc'}})
-        assert q.body['sort'][0] == {'field1': {'order': 'desc'}}
-        assert q.body['sort'][1] == {'field2': {'order': 'asc'}}
-        assert q.body['sort'][2] == {'field3': {'order': 'asc'}}
+        assert q.to_dict()['sort'][0] == 'field2'
+        assert q.to_dict()['sort'][1] == {'field3': {'order': 'asc'}}
         q.sort()
 
-        q = Q()
-        q.highlight('field1', index_options='offsets')
-        assert len(q.body['highlight']['fields']) == 1
-        assert q.body['highlight']['fields']['field1'] == {
+        q = RecordsSearch()
+        q = q.highlight('field1', index_options='offsets')
+        assert len(q.to_dict()['highlight']['fields']) == 1
+        assert q.to_dict()['highlight']['fields']['field1'] == {
             'index_options': 'offsets'
         }
 
-        q.highlight('field2')
-        assert len(q.body['highlight']['fields']) == 2
-        assert q.body['highlight']['fields']['field1'] == {
+        q = q.highlight('field2')
+        assert len(q.to_dict()['highlight']['fields']) == 2
+        assert q.to_dict()['highlight']['fields']['field1'] == {
             'index_options': 'offsets'
         }
-        assert q.body['highlight']['fields']['field2'] == {}
+        assert q.to_dict()['highlight']['fields']['field2'] == {}
 
-        q.highlight()
-        assert 'highligth' not in q.body
+        q = q.highlight()
+        assert 'highligth' not in q.to_dict()
 
 
 def test_elasticsearch_query(app):
     """Test building an empty query."""
-    queries = set()
+    from flask import g
 
-    def enhance_query(query, **kwargs):
-        """Test query enhancer call."""
-        queries.add(query)
+    class TestSearch(RecordsSearch):
+        class Meta:
+            default_filter = DefaultFilter(
+                lambda: Q('terms', public=g.public)
+            )
 
-    app.config['SEARCH_QUERY_ENHANCERS'] = [enhance_query]
     with app.app_context():
-        q = Q()
-        assert q.body['query'] == {'match_all': {}}
-        assert q in queries
+        g.public = 1
+        q = TestSearch()
+        assert q.to_dict()['query'] == {
+            'bool': {'filter': [{'terms': {'public': 1}}]}
+        }
+        g.public = 0
+        q = TestSearch()
+        q = q.query(Q('match', title='Higgs'))
+        assert q.to_dict()['query']['bool']['filter'] == [
+            {'terms': {'public': 0}}
+        ]
+        assert q.to_dict()['query']['bool']['must'] == [
+            {'match': {'title': 'Higgs'}}
+        ]

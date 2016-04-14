@@ -66,6 +66,7 @@ Try to perform some queries from browser:
 
 from __future__ import absolute_import, print_function
 
+from elasticsearch_dsl.query import Bool, Q, QueryString, Terms
 from flask import Flask, jsonify, request
 from flask_babelex import Babel
 from flask_cli import FlaskCLI
@@ -76,7 +77,7 @@ from invenio_accounts import InvenioAccounts
 from invenio_accounts.views import blueprint
 from invenio_db import InvenioDB
 
-from invenio_search import InvenioSearch, Query, current_search_client
+from invenio_search import InvenioSearch, RecordsSearch, current_search_client
 
 # Create Flask application
 app = Flask(__name__)
@@ -104,29 +105,34 @@ search = InvenioSearch(app)
 search.register_mappings('records', 'data')
 
 
-def authenticated_query(query, **kwargs):
-    """Enhance query with user authentication rules."""
-    from invenio_query_parser.ast import AndOp, DoubleQuotedValue, Keyword, \
-        KeywordOp
-    if not current_user.is_authenticated:
-        query.body['_source'] = {'exclude': ['public']}
-        query.query = AndOp(
-            KeywordOp(Keyword('public'), DoubleQuotedValue(1)),
-            query.query
-        )
+class ExampleSearch(RecordsSearch):
+    class Meta:
+        index = 'demo'
+        doc_types = ['example']
+        fields = ('*', )
+        facets = {}
 
-app.config['SEARCH_QUERY_ENHANCERS'] = [authenticated_query]
+    def __init__(self, **kwargs):
+        super(ExampleSearch, self).__init__(**kwargs)
+        if not current_user.is_authenticated:
+            self.query = self.query._proxied & Q(
+                Bool(filter=[Q('term', public=1)])
+            )
 
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     """Query Elasticsearch using Invenio query syntax."""
     page = request.values.get('page', 1, type=int)
-    size = request.values.get('size', 1, type=int)
-    query = Query(request.values.get('q', ''))[(page-1)*size:page*size]
-    response = current_search_client.search(
-        index=request.values.get('index', 'demo'),
-        doc_type=request.values.get('type'),
-        body=query.body,
+    size = request.values.get('size', 2, type=int)
+    search = ExampleSearch()[(page-1)*size:page*size]
+    if 'q' in request.values:
+        search = search.query(QueryString(query=request.values.get('q')))
+
+    search = search.sort(
+        request.values.get('sort', 'title')
     )
-    return jsonify(**response)
+    search = ExampleSearch.faceted_search(
+        search=search
+    )
+    return jsonify(search.execute().to_dict())

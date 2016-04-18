@@ -54,7 +54,7 @@ class RecordsSearch(Search):
         """Configuration for ``Search`` and ``FacetedSearch`` classes."""
 
         index = '_all'
-        doc_types = ['_all']
+        doc_types = None
         fields = ('*', )
         facets = {}
 
@@ -101,7 +101,7 @@ class RecordsSearch(Search):
             """Pass defaults from ``cls.Meta`` object."""
 
             index = search_._index[0]
-            doc_types = search_._doc_type
+            doc_types = getattr(search_.Meta, 'doc_types', ['_all'])
             fields = getattr(search_.Meta, 'fields', ('*', ))
             facets = getattr(search_.Meta, 'facets', {})
 

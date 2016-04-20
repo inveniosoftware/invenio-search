@@ -66,7 +66,7 @@ Try to perform some queries from browser:
 
 from __future__ import absolute_import, print_function
 
-from elasticsearch_dsl.query import Bool, Q, QueryString, Terms
+from elasticsearch_dsl.query import Bool, Q, QueryString
 from flask import Flask, jsonify, request
 from flask_babelex import Babel
 from flask_cli import FlaskCLI
@@ -77,7 +77,7 @@ from invenio_accounts import InvenioAccounts
 from invenio_accounts.views import blueprint
 from invenio_db import InvenioDB
 
-from invenio_search import InvenioSearch, RecordsSearch, current_search_client
+from invenio_search import InvenioSearch, RecordsSearch
 
 # Create Flask application
 app = Flask(__name__)
@@ -106,6 +106,8 @@ search.register_mappings('records', 'data')
 
 
 class ExampleSearch(RecordsSearch):
+    """Example search class."""
+
     class Meta:
         index = 'demo'
         doc_types = ['example']
@@ -113,6 +115,7 @@ class ExampleSearch(RecordsSearch):
         facets = {}
 
     def __init__(self, **kwargs):
+        """Initialize instance."""
         super(ExampleSearch, self).__init__(**kwargs)
         if not current_user.is_authenticated:
             self.query = self.query._proxied & Q(
@@ -125,7 +128,7 @@ def index():
     """Query Elasticsearch using Invenio query syntax."""
     page = request.values.get('page', 1, type=int)
     size = request.values.get('size', 2, type=int)
-    search = ExampleSearch()[(page-1)*size:page*size]
+    search = ExampleSearch()[(page - 1) * size:page * size]
     if 'q' in request.values:
         search = search.query(QueryString(query=request.values.get('q')))
 

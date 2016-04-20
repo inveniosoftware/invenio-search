@@ -32,7 +32,7 @@ from flask import Flask
 from flask_cli import FlaskCLI
 from mock import patch
 
-from invenio_search import InvenioSearch, current_search_client
+from invenio_search import InvenioSearch, current_search, current_search_client
 from invenio_search.utils import schema_to_index
 
 
@@ -55,6 +55,12 @@ def test_init():
     assert 'invenio-search' not in app.extensions
     ext.init_app(app)
     assert 'invenio-search' in app.extensions
+
+
+def test_flush_and_refresh(app):
+    """Test flush and refresh."""
+    search = app.extensions['invenio-search']
+    search.flush_and_refresh('_all')
 
 
 def test_client_reference():

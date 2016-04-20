@@ -77,8 +77,7 @@ class _SearchState(object):
                 assert index_name not in data, 'Duplicate index'
                 data[index_name] = self.mappings[index_name] = \
                     resource_filename(
-                        package_name, os.path.join(resource_name, filename)
-                    )
+                        package_name, os.path.join(resource_name, filename))
                 self.number_of_indexes += 1
 
             aliases[root_name] = data
@@ -107,6 +106,20 @@ class _SearchState(object):
         if self._client is None:
             self._client = self._client_builder()
         return self._client
+
+    def flush_and_refresh(self, index):
+        """Flush and refresh one or more indices.
+
+        .. warning::
+
+           Do not call this method unless you know what you are doing. This
+           method is only intended to be called during tests.
+        """
+        self.client.indices.flush(wait_if_ongoing=True, index=index)
+        self.client.indices.refresh(index=index)
+        self.client.cluster.health(
+            wait_for_status='yellow', request_timeout=30)
+        return True
 
     def create(self, ignore=None):
         """Yield tuple with created index name and responses from a client."""

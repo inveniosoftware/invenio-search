@@ -1,8 +1,8 @@
 =========================
- Invenio-Search v1.0.0a6
+ Invenio-Search v1.0.0a7
 =========================
 
-Invenio-Search v1.0.0a6 was released on April 18, 2016.
+Invenio-Search v1.0.0a7 was released on April 21, 2016.
 
 About
 -----
@@ -19,7 +19,7 @@ Incompatible changes
 Installation
 ------------
 
-   $ pip install invenio-search==1.0.0a6
+   $ pip install invenio-search==1.0.0a7
 
 Documentation
 -------------

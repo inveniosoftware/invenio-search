@@ -43,7 +43,7 @@ Create a user:
 
 .. code-block:: console
 
-   $ flask -a app.py users create info@invenio-software.org -a
+   $ flask -a app.py users create info@inveniosoftware.org -a
 
 Upload sample records::
 

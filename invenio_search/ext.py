@@ -41,7 +41,11 @@ class _SearchState(object):
     """Store connection to elastic client and regiter indexes."""
 
     def __init__(self, app, entry_point_group=None, **kwargs):
-        """Initialize state."""
+        """Initialize state.
+
+        :param app: An instance of :class:`~flask.app.Flask`.
+        :param entry_point_group: The entrypoint group name to load plugins.
+        """
         self.app = app
         self.mappings = {}
         self.aliases = {}
@@ -52,7 +56,11 @@ class _SearchState(object):
             self.load_entry_point_group(entry_point_group)
 
     def register_mappings(self, alias, package_name):
-        """Register mappings from a package under given alias."""
+        """Register mappings from a package under given alias.
+
+        :param alias: The alias.
+        :param package_name: The package name
+        """
         def _walk_dir(aliases, *parts):
             root_name = build_index_name(*parts)
             resource_name = os.path.join(*parts)
@@ -183,7 +191,10 @@ class InvenioSearch(object):
     """Invenio-Search extension."""
 
     def __init__(self, app=None, **kwargs):
-        """Extension initialization."""
+        """Extension initialization.
+
+        :param app: An instance of :class:`~flask.app.Flask`.
+        """
         self._clients = {}
 
         if app:
@@ -191,7 +202,10 @@ class InvenioSearch(object):
 
     def init_app(self, app, entry_point_group='invenio_search.mappings',
                  **kwargs):
-        """Flask application initialization."""
+        """Flask application initialization.
+
+        :param app: An instance of :class:`~flask.app.Flask`.
+        """
         self.init_config(app)
 
         app.cli.add_command(index_cmd)
@@ -203,7 +217,10 @@ class InvenioSearch(object):
 
     @staticmethod
     def init_config(app):
-        """Initialize configuration."""
+        """Initialize configuration.
+
+        :param app: An instance of :class:`~flask.app.Flask`.
+        """
         for k in dir(config):
             if k.startswith('SEARCH_'):
                 app.config.setdefault(k, getattr(config, k))

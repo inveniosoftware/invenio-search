@@ -26,13 +26,16 @@ API Docs
 ========
 
 .. automodule:: invenio_search.api
+   :members:
 
 Configuration
 -------------
 
 .. automodule:: invenio_search.config
+   :members:
 
 Utilities
 ---------
 
 .. automodule:: invenio_search.utils
+   :members:

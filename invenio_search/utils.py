@@ -19,12 +19,7 @@
 
 """Utility functions for search engine."""
 
-import functools
 import os
-
-import six
-from flask import current_app, g
-from werkzeug.utils import import_string
 
 
 def build_index_name(*parts):
@@ -37,6 +32,7 @@ def build_index_name(*parts):
 def schema_to_index(schema, index_names=None):
     """Get index/doc_type given a schema URL.
 
+    >>> from invenio_search.utils import schema_to_index
     >>> schema_to_index('records/record-v1.0.0.json')
     ('records-record-v1.0.0', 'record-v1.0.0')
     >>> schema_to_index('default-v1.0.0.json')
@@ -45,6 +41,10 @@ def schema_to_index(schema, index_names=None):
     (None, None)
     >>> schema_to_index('invalidextension')
     (None, None)
+
+    :param schema: The schema name
+    :param index_names: A list of index name.
+    :returns: A tuple containing (index, doc_type).
     """
     parts = schema.split('/')
     doc_type = os.path.splitext(parts[-1])

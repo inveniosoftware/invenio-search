@@ -21,10 +21,9 @@
 
 from functools import partial
 
-import six
 from elasticsearch_dsl import FacetedSearch, Search
 from elasticsearch_dsl.faceted_search import FacetedResponse
-from elasticsearch_dsl.query import Bool, Ids, SimpleQueryString
+from elasticsearch_dsl.query import Bool, Ids
 
 from .proxies import current_search_client
 
@@ -80,11 +79,19 @@ class RecordsSearch(Search):
             self.query = Bool(filter=default_filter)
 
     def get_record(self, id_):
-        """Return a record by its identifier."""
+        """Return a record by its identifier.
+
+        :param id_: The record identifier.
+        :returns: The record.
+        """
         return self.query(Ids(values=[str(id_)]))
 
     def get_records(self, ids):
-        """Return records by their identifiers."""
+        """Return records by their identifiers.
+
+        :param ids: A list of record identifier.
+        :returns: A list of records.
+        """
         return self.query(Ids(values=[str(id_) for id_ in ids]))
 
     @classmethod

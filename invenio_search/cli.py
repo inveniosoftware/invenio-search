@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2015, 2016 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -30,7 +30,7 @@ import json
 import sys
 
 import click
-from flask_cli import with_appcontext
+from flask.cli import with_appcontext
 
 from .proxies import current_search, current_search_client
 

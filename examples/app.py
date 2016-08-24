@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2015, 2016 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -69,7 +69,6 @@ from __future__ import absolute_import, print_function
 from elasticsearch_dsl.query import Bool, Q, QueryString
 from flask import Flask, jsonify, request
 from flask_babelex import Babel
-from flask_cli import FlaskCLI
 from flask_mail import Mail
 from flask_menu import Menu
 from flask_security import current_user
@@ -92,7 +91,6 @@ app.config.update(
     SECURITY_PASSWORD_SALT="CHANGE_ME_ALSO",
     SEARCH_ELASTIC_KEYWORD_MAPPING={None: ['_all']},
 )
-FlaskCLI(app)
 Babel(app)
 Mail(app)
 Menu(app)

@@ -29,7 +29,6 @@ from __future__ import absolute_import, print_function
 
 import pytest
 from flask import Flask
-from flask_cli import FlaskCLI
 from mock import patch
 
 from invenio_search import InvenioSearch, current_search, current_search_client
@@ -45,12 +44,10 @@ def test_version():
 def test_init():
     """Test extension initialization."""
     app = Flask('testapp')
-    FlaskCLI(app)
     ext = InvenioSearch(app)
     assert 'invenio-search' in app.extensions
 
     app = Flask('testapp')
-    FlaskCLI(app)
     ext = InvenioSearch()
     assert 'invenio-search' not in app.extensions
     ext.init_app(app)
@@ -69,9 +66,7 @@ def test_client_reference():
     client2 = {'name': 'client2'}
 
     app1 = Flask('testapp1')
-    FlaskCLI(app1)
     app2 = Flask('testapp2')
-    FlaskCLI(app2)
 
     ext = InvenioSearch()
     assert 'invenio-search' not in app1.extensions
@@ -114,7 +109,6 @@ def test_schema_to_index(schema_url, result):
 def test_load_entry_point_group():
     """Test entry point loading."""
     app = Flask('testapp')
-    FlaskCLI(app)
     ext = InvenioSearch(app)
     ep_group = 'test'
 

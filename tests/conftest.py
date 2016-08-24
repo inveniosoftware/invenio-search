@@ -31,7 +31,6 @@ import os
 
 import pytest
 from flask import Flask
-from flask_cli import FlaskCLI
 from invenio_db import InvenioDB
 from sqlalchemy_utils.functions import create_database, database_exists, \
     drop_database
@@ -43,7 +42,6 @@ from invenio_search import InvenioSearch
 def app():
     """Flask application fixture."""
     app = Flask('testapp')
-    FlaskCLI(app)
     app.config.update(
         TESTING=True
     )
@@ -55,7 +53,6 @@ def app():
 def records_app(request):
     """Initialize InvenioRecords."""
     app = Flask('records_testapp')
-    FlaskCLI(app)
     app.config.update(
         TESTING=True,
         SQLALCHEMY_DATABASE_URI=os.environ.get(

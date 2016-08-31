@@ -59,3 +59,5 @@ SEARCH_ELASTIC_KEYWORD_MAPPING = {
     "980__b": ["collections.secondary"],
     "542__l": ["information_relating_to_copyright_status.copyright_status"],
 }
+
+SEARCH_RECORD_TO_INDEX = 'invenio_search.api.default_record_to_index'

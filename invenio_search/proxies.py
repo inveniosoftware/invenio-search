@@ -38,5 +38,10 @@ def _get_current_search_client():
     return _get_current_search().client
 
 
+def _get_current_record_to_index():
+    return _get_current_search().record_to_index
+
+
 current_search = LocalProxy(_get_current_search)
+current_record_to_index = LocalProxy(_get_current_record_to_index)
 current_search_client = LocalProxy(_get_current_search_client)

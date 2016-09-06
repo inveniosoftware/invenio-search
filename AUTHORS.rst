@@ -1,6 +1,6 @@
 ..
     This file is part of Invenio.
-    Copyright (C) 2015 CERN.
+    Copyright (C) 2015, 2016 CERN.
 
     Invenio is free software; you can redistribute it
     and/or modify it under the terms of the GNU General Public License as
@@ -29,6 +29,7 @@ Invenio module for information retrieval.
 - Adrian Pawel Baran <adrian.pawel.baran@cern.ch>
 - Adrian-Tudor Panescu <adrian.tudor.panescu@cern.ch>
 - Alessio Deiana <alessio.deiana@cern.ch>
+- Alizee Pace <alizee.pace@gmail.com>
 - Anna Afshar <anna.afsharghasemlouy@epfl.ch>
 - Benoit Thiell <bthiell@cfa.harvard.edu>
 - Carmen Alvarez Perez <carmen.alvarez.perez@cern.ch>

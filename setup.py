@@ -63,13 +63,11 @@ for reqs in extras_require.values():
 extras_require['tests'] += extras_require['records']
 
 setup_requires = [
-    'Babel>=1.3',
     'pytest-runner>=2.6.2',
 ]
 
 install_requires = [
     'Flask>=0.11.1',
-    'Flask-BabelEx>=0.9.2',
     'pyPEG2>=2.15.2',
     'elasticsearch>=2.0.0',
     'elasticsearch-dsl>=2.0.0',

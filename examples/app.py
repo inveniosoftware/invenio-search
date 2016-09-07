@@ -68,7 +68,6 @@ from __future__ import absolute_import, print_function
 
 from elasticsearch_dsl.query import Bool, Q, QueryString
 from flask import Flask, jsonify, request
-from flask_babelex import Babel
 from flask_mail import Mail
 from flask_menu import Menu
 from flask_security import current_user
@@ -91,7 +90,6 @@ app.config.update(
     SECURITY_PASSWORD_SALT="CHANGE_ME_ALSO",
     SEARCH_ELASTIC_KEYWORD_MAPPING={None: ['_all']},
 )
-Babel(app)
 Mail(app)
 Menu(app)
 InvenioDB(app)

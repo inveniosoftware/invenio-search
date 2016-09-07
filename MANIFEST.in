@@ -27,8 +27,6 @@ include *.sh
 include *.txt
 include .dockerignore
 include .editorconfig
-include .tx/config
-include babel.ini
 include LICENSE
 include pytest.ini
 include tests/data/records/authorities/notajson
@@ -38,9 +36,6 @@ recursive-include docs *.rst
 recursive-include docs Makefile
 recursive-include examples *.json
 recursive-include examples *.py
-recursive-include invenio_search *.mo
-recursive-include invenio_search *.po
-recursive-include invenio_search *.pot
 recursive-include invenio_search *.py
 recursive-include tests *.json
 recursive-include tests *.py

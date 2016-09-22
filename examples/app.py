@@ -25,36 +25,22 @@
 
 """Minimal Flask application example for development.
 
-Make sure that ``elasticsearch`` server is running:
+Run the ElasticSearch and Redis server.
+
+Run example development server:
 
 .. code-block:: console
 
-   $ elasticsearch
-   ... version[2.0.0] ...
-
-Create database and tables:
-
-.. code-block:: console
-
-   $ flask -a app.py db init
-   $ flask -a app.py db create
-
-Create a user:
-
-.. code-block:: console
-
-   $ flask -a app.py users create info@inveniosoftware.org -a
-
-Upload sample records::
-
-.. code-block:: console
-
+   $ pip install -e .[all]
    $ cd examples
-   $ echo '{"title": "Public", "body": "test 1", "public": 1}' > public.json
-   $ echo '{"title": "Private", "body": "test 2", "public": 0}' > private.json
-   $ flask --app app index put demo example -b public.json
-   $ flask --app app index put demo example -b private.json
-   $ flask --app app run
+   $ ./app-setup.sh
+   $ ./app-fixtures.sh
+
+Run example development server:
+
+.. code-block:: console
+
+   $ FLASK_APP=app.py flask run --debugger -p 5000
 
 Try to perform some queries from browser:
 
@@ -62,13 +48,19 @@ Try to perform some queries from browser:
 
    $ open http://localhost:5000/?q=body:test
 
+To be able to uninstall the example app:
+
+.. code-block:: console
+
+   $ ./app-teardown.sh
+
 """
 
 from __future__ import absolute_import, print_function
 
+import os
 from elasticsearch_dsl.query import Bool, Q, QueryString
 from flask import Flask, jsonify, request
-from flask_mail import Mail
 from flask_menu import Menu
 from flask_security import current_user
 from invenio_accounts import InvenioAccounts
@@ -89,8 +81,9 @@ app.config.update(
     SECRET_KEY="CHANGE_ME",
     SECURITY_PASSWORD_SALT="CHANGE_ME_ALSO",
     SEARCH_ELASTIC_KEYWORD_MAPPING={None: ['_all']},
+    SQLALCHEMY_DATABASE_URI=os.getenv('SQLALCHEMY_DATABASE_URI',
+                                      'sqlite:///app.db'),
 )
-Mail(app)
 Menu(app)
 InvenioDB(app)
 InvenioAccounts(app)

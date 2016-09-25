@@ -34,7 +34,7 @@ SEARCH_ALLOWED_KEYWORDS = []
 #
 
 # SEARCH_ELASTIC_HOSTS -- list of hosts for Elasticsearch client.
-# http://elasticsearch-py.readthedocs.org/en/master/api.html#elasticsearch.Elasticsearch
+# http://elasticsearch-py.readthedocs.io/en/master/api.html#elasticsearch.Elasticsearch
 SEARCH_ELASTIC_HOSTS = None  # default localhost
 
 # SEARCH_ELASTIC_KEYWORD_MAPPING -- this variable holds a dictionary to map

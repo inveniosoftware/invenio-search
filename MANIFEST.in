@@ -27,6 +27,7 @@ include *.sh
 include *.txt
 include .dockerignore
 include .editorconfig
+include docs/requirements.txt
 include LICENSE
 include pytest.ini
 include tests/data/records/authorities/notajson

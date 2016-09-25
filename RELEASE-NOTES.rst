@@ -24,7 +24,7 @@ Installation
 Documentation
 -------------
 
-   http://pythonhosted.org/invenio-search/
+   http://invenio-search.readthedocs.io/
 
 Happy hacking and thanks for flying Invenio-Search.
 

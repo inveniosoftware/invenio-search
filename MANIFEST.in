@@ -28,7 +28,9 @@ include *.txt
 include .dockerignore
 include .editorconfig
 include docs/requirements.txt
+include .lgtm
 include LICENSE
+include MAINTAINERS
 include pytest.ini
 include tests/data/records/authorities/notajson
 recursive-include docs *.bat *.py *.rst Makefile

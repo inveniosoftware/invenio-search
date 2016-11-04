@@ -57,7 +57,7 @@ def test_init(app):
         current_search_client.indices.delete_alias('_all', '_all',
                                                    ignore=[400, 404])
         current_search_client.indices.delete('*')
-        aliases = current_search_client.indices.get_aliases()
+        aliases = current_search_client.indices.get_alias()
         assert 0 == len(aliases)
 
     runner = CliRunner()
@@ -69,7 +69,7 @@ def test_init(app):
         assert 0 == result.exit_code
 
     with app.app_context():
-        aliases = current_search_client.indices.get_aliases()
+        aliases = current_search_client.indices.get_alias()
         assert 5 == sum(len(idx.get('aliases', {}))
                         for idx in aliases.values())
 
@@ -87,5 +87,5 @@ def test_init(app):
                                obj=script_info)
         assert 0 == result.exit_code
 
-        aliases = current_search_client.indices.get_aliases()
+        aliases = current_search_client.indices.get_alias()
         assert 0 == len(aliases)

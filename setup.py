@@ -69,8 +69,10 @@ setup_requires = [
 install_requires = [
     'Flask>=0.11.1',
     'pyPEG2>=2.15.2',
-    'elasticsearch>=2.0.0,<3.0.0',  # FIXME unpin for Elastic 5.0
-    'elasticsearch-dsl>=2.0.0',
+    # NOTE: Overlays have to choose which elasticsearch version they want to
+    # use and pin both elasticsearch and elasticsearch-dsl libraries.
+    'elasticsearch>=2.0.0,<6.0',
+    'elasticsearch-dsl>=2.0.0,<6.0',
     'invenio-query-parser>=0.4.1',
     'requests>=2.4.0',
 ]

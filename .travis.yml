@@ -22,6 +22,8 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+# Needed in order to use oraclejdk8
+dist: trusty
 
 addons:
   postgresql: 9.3
@@ -40,9 +42,12 @@ services:
   - postgresql
 
 env:
-  - REQUIREMENTS=lowest ES_HOST=127.0.0.1 ES_VERSION=2.2.0 SQLALCHEMY_DATABASE_URI="postgresql+psycopg2://postgres@localhost:5432/invenio"
-  - REQUIREMENTS=release ES_HOST=127.0.0.1 ES_VERSION=2.2.0 SQLALCHEMY_DATABASE_URI="postgresql+psycopg2://postgres@localhost:5432/invenio"
-  - REQUIREMENTS=devel ES_HOST=127.0.0.1 ES_VERSION=2.2.0 SQLALCHEMY_DATABASE_URI="postgresql+psycopg2://postgres@localhost:5432/invenio"
+  - REQUIREMENTS=lowest ES_HOST=127.0.0.1 ES_URL="https://download.elastic.co/elasticsearch/release/org/elasticsearch/distribution/tar/elasticsearch/2.2.0/elasticsearch-2.2.0.tar.gz" SQLALCHEMY_DATABASE_URI="postgresql+psycopg2://postgres@localhost:5432/invenio"
+  - REQUIREMENTS=release ES_HOST=127.0.0.1 ES_URL="https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.0.0.tar.gz" SQLALCHEMY_DATABASE_URI="postgresql+psycopg2://postgres@localhost:5432/invenio"
+  - REQUIREMENTS=devel ES_HOST=127.0.0.1 ES_URL="https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.0.0.tar.gz" SQLALCHEMY_DATABASE_URI="postgresql+psycopg2://postgres@localhost:5432/invenio"
+
+jdk:
+  - "oraclejdk8"
 
 python:
   - "2.7"
@@ -56,7 +61,7 @@ matrix:
 
 before_install:
   - "mkdir /tmp/elasticsearch"
-  - "wget -O - https://download.elasticsearch.org/elasticsearch/release/org/elasticsearch/distribution/tar/elasticsearch/${ES_VERSION}/elasticsearch-${ES_VERSION}.tar.gz | tar xz --directory=/tmp/elasticsearch --strip-components=1"
+  - "wget -O - $ES_URL | tar xz --directory=/tmp/elasticsearch --strip-components=1"
   - "/tmp/elasticsearch/bin/elasticsearch &"
   - "sleep 20"
   - "travis_retry pip install --upgrade pip setuptools py"

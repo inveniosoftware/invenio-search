@@ -1,0 +1,13 @@
+{
+    "mappings": {
+        "example": {
+            "properties": {
+                "title": { 
+                    "type": "string",
+                    "fielddata": true
+
+                }
+            }
+        }
+    }
+}

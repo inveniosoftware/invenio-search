@@ -128,7 +128,7 @@ def put(index_name, doc_type, identifier, body, force, verbose):
         doc_type=doc_type or index_name,
         id=identifier,
         body=json.load(body),
-        op_type='index' if force else 'create',
+        op_type='index' if force or identifier is None else 'create',
     )
     if verbose:
         click.echo(json.dumps(result))

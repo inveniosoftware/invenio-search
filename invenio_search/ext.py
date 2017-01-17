@@ -174,11 +174,10 @@ class _SearchState(object):
             # Iterate over aliases:
             for name, value in tree_or_filename.items():
                 if not isinstance(value, dict):
-                    with open(value, 'r') as body:
-                        yield name, self.client.indices.delete(
-                            index=name,
-                            ignore=ignore,
-                        )
+                    yield name, self.client.indices.delete(
+                        index=name,
+                        ignore=ignore,
+                    )
                 else:
                     for result in _delete(value, alias=name):
                         yield result

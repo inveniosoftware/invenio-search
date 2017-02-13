@@ -2,7 +2,7 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2010, 2011, 2012, 2013,
-#               2015, 2016 CERN.
+#               2015, 2016, 2017 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -25,20 +25,20 @@
 
 """Invenio Search Engine config parameters."""
 
-# SEARCH_ALLOWED_KEYWORDS -- a list of allowed keywords for the query parser.
 SEARCH_ALLOWED_KEYWORDS = []
-
+"""A list of allowed keywords for the query parser."""
 
 #
 # ELASTIC configuration
 #
 
-# SEARCH_ELASTIC_HOSTS -- list of hosts for Elasticsearch client.
-# http://elasticsearch-py.readthedocs.io/en/master/api.html#elasticsearch.Elasticsearch
 SEARCH_ELASTIC_HOSTS = None  # default localhost
+"""List of hosts for Elasticsearch client.
 
-# SEARCH_ELASTIC_KEYWORD_MAPPING -- this variable holds a dictionary to map
-# invenio keywords to elasticsearch fields
+Elasticsearch
+    <https://elasticsearch-py.readthedocs.io/en/master/api.html#elasticsearch.Elasticsearch>
+"""
+
 SEARCH_ELASTIC_KEYWORD_MAPPING = {
     None: ["_all"],
     "author": {
@@ -59,3 +59,4 @@ SEARCH_ELASTIC_KEYWORD_MAPPING = {
     "980__b": ["collections.secondary"],
     "542__l": ["information_relating_to_copyright_status.copyright_status"],
 }
+"""Holds a dictionary to map invenio keywords to elasticsearch fields."""

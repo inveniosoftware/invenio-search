@@ -22,4 +22,5 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+-e git+git://github.com/inveniosoftware/flask-menu.git#egg=flask-menu
 -e git+git://github.com/inveniosoftware/invenio-query-parser.git#egg=invenio-query-parser

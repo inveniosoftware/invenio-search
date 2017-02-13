@@ -48,7 +48,8 @@ tests_require = [
 
 extras_require = {
     'docs': [
-        "Sphinx>=1.4.2",
+        'Sphinx>=1.5.',
+        'invenio-accounts>=1.0.0b1',
     ],
     'records': [
         'invenio-records>=1.0.0a4',
@@ -68,6 +69,8 @@ setup_requires = [
 
 install_requires = [
     'Flask>=0.11.1',
+    'Flask-Menu>=0.5.0',
+    'Flask-Security>=1.7.5',
     'pyPEG2>=2.15.2',
     # NOTE: Overlays have to choose which elasticsearch version they want to
     # use and pin both elasticsearch and elasticsearch-dsl libraries.
@@ -90,7 +93,7 @@ setup(
     version=version,
     description=__doc__,
     long_description=readme + '\n\n' + history,
-    keywords='invenio TODO',
+    keywords='invenio search',
     license='GPLv2',
     author='CERN',
     author_email='info@inveniosoftware.org',
@@ -100,10 +103,10 @@ setup(
     include_package_data=True,
     platforms='any',
     entry_points={
-        'invenio_base.apps': [
+        'invenio_base.api_apps': [
             'invenio_search = invenio_search:InvenioSearch',
         ],
-        'invenio_base.api_apps': [
+        'invenio_base.apps': [
             'invenio_search = invenio_search:InvenioSearch',
         ],
     },
@@ -125,6 +128,6 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Python :: Implementation :: PyPy',
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
     ],
 )

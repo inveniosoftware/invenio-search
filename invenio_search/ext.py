@@ -32,6 +32,8 @@ import os
 from pkg_resources import iter_entry_points, resource_filename, \
     resource_isdir, resource_listdir
 
+from werkzeug.utils import import_string, cached_property
+
 from . import config
 from .cli import index as index_cmd
 from .utils import build_index_name
@@ -107,6 +109,10 @@ class _SearchState(object):
             hosts=self.app.config.get('SEARCH_ELASTIC_HOSTS'),
             connection_class=RequestsHttpConnection,
         )
+
+    @cached_property
+    def record_to_index(self):
+        return import_string(self.app.config.get('SEARCH_RECORD_TO_INDEX'))
 
     @property
     def client(self):

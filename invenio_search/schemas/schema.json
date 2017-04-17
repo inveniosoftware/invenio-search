@@ -1,0 +1,82 @@
+{
+    "type": "object",
+    "properties": {
+        "global_fulltext": {
+                    "type": "string"
+                },
+                "global_default": {
+                    "type": "string"
+                },
+                "_collections": {
+                    "type": "string"
+                },
+                "collections": {
+                    "properties": {
+                        "primary": {
+                            "type": "string"
+                        },
+                        "secondary": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "authors": {
+                    "type": "string"
+                },
+                "main_entry_personal_name": {
+                    "type": "object",
+                    "properties": {
+                        "personal_name": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "added_entry_personal_name": {
+                    "type": "object",
+                    "properties": {
+                        "personal_name": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "abstract": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "title_statement": {
+                    "type": "object",
+                    "properties": {
+                        "title": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "division": {
+                    "type": "string"
+                },
+                "experiment": {
+                    "type": "string"
+                },
+                "varying_form_of_title": {
+                    "type": "object",
+                    "properties": {
+                        "title_proper_short_title": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "summary_": {
+                    "type": "object",
+                    "properties": {
+                        "summary_": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "date": {
+                    "type": "date"
+                }
+    }
+}

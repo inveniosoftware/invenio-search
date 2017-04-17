@@ -1,0 +1,21 @@
+{% block natural_text %}
+"natural_text":{
+                "type": "custom",
+                "tokenizer":  "standard",
+                "filter": [
+                    "asciifold_with_orig",
+                    "lowercase",
+                    "synonyms_kbr"
+                ]
+            }
+{% endblock%},
+{% block basic_analyzer %}
+"basic_analyzer": {
+                "type": "custom",
+                "tokenizer": "standard",
+                "filter": [
+                    "asciifold_with_orig",
+                    "lowercase"
+                ]
+           }
+{% endblock%}

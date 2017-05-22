@@ -99,7 +99,7 @@ class _SearchState(object):
             self.register_mappings(ep.name, ep.module_name)
 
     def _client_builder(self):
-        """Default Elasticsearch client builder."""
+        """Build Elasticsearch client."""
         from elasticsearch import Elasticsearch
         from elasticsearch.connection import RequestsHttpConnection
 

@@ -46,7 +46,7 @@ def abort_if_false(ctx, param, value):
 #
 @click.group()
 def index():
-    """Management command for search indicies."""
+    """Manage search indices."""
 
 
 @index.command()

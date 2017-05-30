@@ -25,10 +25,8 @@
 """Invenio module for information retrieval."""
 
 import os
-import sys
 
 from setuptools import find_packages, setup
-from setuptools.command.test import test as TestCommand
 
 readme = open('README.rst').read()
 history = open('CHANGES.rst').read()
@@ -69,7 +67,6 @@ setup_requires = [
 
 install_requires = [
     'Flask>=0.11.1',
-    'Flask-Security>=1.7.5',
     'pyPEG2>=2.15.2',
     # NOTE: Overlays have to choose which elasticsearch version they want to
     # use and pin both elasticsearch and elasticsearch-dsl libraries.

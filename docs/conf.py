@@ -27,13 +27,8 @@
 from __future__ import print_function
 
 import os
-import sys
-
-import sphinx.environment
-from docutils.utils import get_source_line
 
 # Plug example application into module path
-sys.path.append('examples')
 
 # -- General configuration ------------------------------------------------
 

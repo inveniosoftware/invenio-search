@@ -33,6 +33,7 @@ from pkg_resources import iter_entry_points, resource_filename, \
     resource_isdir, resource_listdir
 
 from . import config
+from .cli import alias as alias_cmd
 from .cli import index as index_cmd
 from .utils import build_index_name
 
@@ -208,6 +209,7 @@ class InvenioSearch(object):
         self.init_config(app)
 
         app.cli.add_command(index_cmd)
+        app.cli.add_command(alias_cmd)
 
         state = _SearchState(
             app, entry_point_group=entry_point_group, **kwargs

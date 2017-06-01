@@ -132,3 +132,55 @@ def put(index_name, doc_type, identifier, body, force, verbose):
     )
     if verbose:
         click.echo(json.dumps(result))
+
+
+@click.group()
+def alias():
+    """Management command for alias."""
+
+
+@alias.command('create')
+@click.argument('index_name')
+@click.argument('alias_name')
+@click.option('--force', is_flag=True, default=False)
+@click.option('--verbose', is_flag=True, default=False)
+@with_appcontext
+def alias_create(index_name, alias_name, force, verbose):
+    """Create a new alias to the specified index."""
+    result = current_search_client.indices.put_alias(
+        index=index_name,
+        name=alias_name,
+        ignore=[400, 404] if force else None,
+    )
+    if verbose:
+        click.echo(json.dumps(result))
+
+
+@alias.command('delete')
+@click.argument('index_name')
+@click.argument('alias_name')
+@click.option('--force', is_flag=True, default=False)
+@click.option('--verbose', is_flag=True, default=False)
+@with_appcontext
+def alias_delete(index_name, alias_name, force, verbose):
+    """Delete a alias to the specified index."""
+    result = current_search_client.indices.delete_alias(
+        index=index_name,
+        name=alias_name,
+        ignore=[400, 404] if force else None,
+    )
+    if verbose:
+        click.echo(json.dumps(result))
+
+
+@alias.command('exists')
+@click.argument('index_name')
+@click.argument('alias_name')
+@with_appcontext
+def alias_exists(index_name, alias_name):
+    """Check if alias to the specified index exists."""
+    result = current_search_client.indices.exists_alias(
+        index=index_name,
+        name=alias_name,
+    )
+    click.echo(json.dumps(result))

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015, 2016 CERN.
+# Copyright (C) 2015, 2016, 2017 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -29,6 +29,7 @@ from __future__ import absolute_import, print_function
 
 import os
 import shutil
+import sys
 import tempfile
 
 import pytest
@@ -38,6 +39,10 @@ from sqlalchemy_utils.functions import create_database, database_exists, \
     drop_database
 
 from invenio_search import InvenioSearch
+
+sys.path.append(
+    os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
+                 'tests/mock_module'))
 
 
 @pytest.yield_fixture()
@@ -112,7 +117,7 @@ def template_entrypoints():
         event_type_name = 'mock_module'
         from pkg_resources import EntryPoint
         entrypoint = EntryPoint(event_type_name, event_type_name)
-        entrypoint.load = lambda: lambda: ['templates']
+        entrypoint.load = lambda: lambda: ['mock_module.templates']
         eps.append(entrypoint)
 
     entrypoints = mock_iter_entry_points_factory(

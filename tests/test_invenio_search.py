@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015, 2016 CERN.
+# Copyright (C) 2015, 2016, 2017 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -137,4 +137,7 @@ def test_load_entry_point_group(template_entrypoints):
 
     with patch('invenio_search.ext.iter_entry_points',
                return_value=template_entrypoints('invenio_search.templates')):
-        assert len(ext.templates.keys()) == 3
+        if ES_VERSION[0] == 2:
+            assert len(ext.templates.keys()) == 2
+        elif ES_VERSION[0] == 5:
+            assert len(ext.templates.keys()) == 1

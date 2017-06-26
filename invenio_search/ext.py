@@ -135,23 +135,35 @@ class _SearchState(object):
         # Start the recursion here:
         _walk_dir(self.aliases, alias)
 
-    def register_templates(self, directory, package_name):
+    def register_templates(self, directory):
         """Register templates from the provided directory.
 
         :param directory: The templates directory.
-        :param package_name: The package name.
         """
+        try:
+            resource_listdir(directory, 'v{}'.format(ES_VERSION[0]))
+            directory = '{}/v{}'.format(directory, ES_VERSION[0])
+        except (OSError, IOError) as ex:
+            if getattr(ex, 'errno', 0) == errno.ENOENT:
+                raise OSError(
+                    "Please move your templates to a subfolder named "
+                    "according to the Elasticsearch version "
+                    "which your templates are intended "
+                    "for. (e.g. '{}.v{}')".format(directory,
+                                                  ES_VERSION[0]))
         result = {}
+        module_name, parts = directory.split('.')[0], directory.split('.')[1:]
+        parts = tuple(parts)
 
-        def _walk_dir(*parts):
+        def _walk_dir(parts):
             resource_name = os.path.join(*parts)
 
-            for filename in resource_listdir(package_name, resource_name):
+            for filename in resource_listdir(module_name, resource_name):
                 template_name = build_index_name(*(parts[1:] + (filename, )))
                 file_path = os.path.join(resource_name, filename)
 
-                if resource_isdir(package_name, file_path):
-                    _walk_dir(*(parts + (filename, )))
+                if resource_isdir(module_name, file_path):
+                    _walk_dir((parts + (filename, )))
                     continue
 
                 ext = os.path.splitext(filename)[1]
@@ -159,10 +171,10 @@ class _SearchState(object):
                     continue
 
                 result[template_name] = resource_filename(
-                    package_name, os.path.join(resource_name, filename))
+                    module_name, os.path.join(resource_name, filename))
 
         # Start the recursion here:
-        _walk_dir(directory)
+        _walk_dir(parts)
         return result
 
     def load_entry_point_group_mappings(self, entry_point_group_mappings):
@@ -176,8 +188,7 @@ class _SearchState(object):
         for ep in iter_entry_points(group=entry_point_group_templates):
             with self.app.app_context():
                 for template_dir in ep.load()():
-                    result.append(
-                        self.register_templates(template_dir, ep.name))
+                    result.append(self.register_templates(template_dir))
         return result
 
     def _client_builder(self):

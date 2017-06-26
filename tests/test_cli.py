@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015, 2016 CERN.
+# Copyright (C) 2015, 2016, 2017 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -28,6 +28,7 @@
 from __future__ import absolute_import, print_function
 
 from click.testing import CliRunner
+from elasticsearch import VERSION as ES_VERSION
 from flask.cli import ScriptInfo
 from mock import patch
 
@@ -55,10 +56,13 @@ def test_init(app, template_entrypoints):
 
     with patch('invenio_search.ext.iter_entry_points',
                return_value=template_entrypoints('invenio_search.templates')):
-        assert 'file_download_v1' in search.templates
-        assert 'record_view_v1' in search.templates
-        assert 'subdirectory-file_download_v1' in search.templates
-        assert len(search.templates.keys()) == 3
+        if ES_VERSION[0] == 2:
+            assert len(search.templates.keys()) == 2
+            assert 'record-view-v1' in search.templates
+            assert 'subdirectory-file-download-v1' in search.templates
+        elif ES_VERSION[0] == 5:
+            assert len(search.templates.keys()) == 1
+            assert 'record-view-v5' in search.templates
 
     with app.app_context():
 
@@ -75,12 +79,14 @@ def test_init(app, template_entrypoints):
         result = runner.invoke(cmd, ['init'],
                                obj=script_info)
         with app.app_context():
-            assert current_search_client.indices.exists_template(
-                'file_download_v1')
-            assert current_search_client.indices.exists_template(
-                'subdirectory-file_download_v1')
-            assert current_search_client.indices.exists_template(
-                'record_view_v1')
+            if ES_VERSION[0] == 2:
+                assert current_search_client.indices.exists_template(
+                    'subdirectory-file-download-v1')
+                assert current_search_client.indices.exists_template(
+                    'record-view-v1')
+            elif ES_VERSION[0] == 5:
+                assert current_search_client.indices.exists_template(
+                    'record-view-v5')
         assert 0 == result.exit_code
 
     with app.app_context():

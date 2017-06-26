@@ -1,5 +1,5 @@
 {
-  "template": "events-stats_file_download-*",
+  "template": "events-stats-file-download-*",
   "settings": {
     "index": {
       "refresh_interval": "5s"

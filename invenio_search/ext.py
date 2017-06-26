@@ -31,35 +31,53 @@ import os
 
 from pkg_resources import iter_entry_points, resource_filename, \
     resource_isdir, resource_listdir
+from werkzeug.utils import cached_property
 
 from . import config
 from .cli import index as index_cmd
+from .proxies import current_search_client
 from .utils import build_index_name
 
 
 class _SearchState(object):
     """Store connection to elastic client and regiter indexes."""
 
-    def __init__(self, app, entry_point_group=None, **kwargs):
+    def __init__(self, app,
+                 entry_point_group_mappings=None,
+                 entry_point_group_templates=None,
+                 **kwargs):
         """Initialize state.
 
         :param app: An instance of :class:`~flask.app.Flask`.
-        :param entry_point_group: The entrypoint group name to load plugins.
+        :param entry_point_group_mappings:
+            The entrypoint group name to load mappings.
+        :param entry_point_group_templates:
+            The entrypoint group name to load templates.
         """
         self.app = app
         self.mappings = {}
         self.aliases = {}
         self.number_of_indexes = 0
         self._client = kwargs.get('client')
+        self.entry_point_group_templates = entry_point_group_templates
 
-        if entry_point_group:
-            self.load_entry_point_group(entry_point_group)
+        if entry_point_group_mappings:
+            self.load_entry_point_group_mappings(entry_point_group_mappings)
+
+    @cached_property
+    def templates(self):
+        result = None
+        if self.entry_point_group_templates:
+            result = self.load_entry_point_group_templates(
+                self.entry_point_group_templates)
+        return {k: v for d in result for k, v in d.items()} \
+            if result is not None else {}
 
     def register_mappings(self, alias, package_name):
         """Register mappings from a package under given alias.
 
         :param alias: The alias.
-        :param package_name: The package name
+        :param package_name: The package name.
         """
         def _walk_dir(aliases, *parts):
             root_name = build_index_name(*parts)
@@ -93,10 +111,50 @@ class _SearchState(object):
         # Start the recursion here:
         _walk_dir(self.aliases, alias)
 
-    def load_entry_point_group(self, entry_point_group):
+    def register_templates(self, directory, package_name):
+        """Register templates from the provided directory.
+
+        :param directory: The templates directory.
+        :param package_name: The package name.
+        """
+        result = {}
+
+        def _walk_dir(*parts):
+            resource_name = os.path.join(*parts)
+
+            for filename in resource_listdir(package_name, resource_name):
+                template_name = build_index_name(*(parts[1:] + (filename, )))
+                file_path = os.path.join(resource_name, filename)
+
+                if resource_isdir(package_name, file_path):
+                    _walk_dir(*(parts + (filename, )))
+                    continue
+
+                ext = os.path.splitext(filename)[1]
+                if ext not in {'.json', }:
+                    continue
+
+                result[template_name] = resource_filename(
+                    package_name, os.path.join(resource_name, filename))
+
+        # Start the recursion here:
+        _walk_dir(directory)
+        return result
+
+    def load_entry_point_group_mappings(self, entry_point_group_mappings):
         """Load actions from an entry point group."""
-        for ep in iter_entry_points(group=entry_point_group):
+        for ep in iter_entry_points(group=entry_point_group_mappings):
             self.register_mappings(ep.name, ep.module_name)
+
+    def load_entry_point_group_templates(self, entry_point_group_templates):
+        """Load actions from an entry point group."""
+        result = []
+        for ep in iter_entry_points(group=entry_point_group_templates):
+            with self.app.app_context():
+                for template_dir in ep.load()():
+                    result.append(
+                        self.register_templates(template_dir, ep.name))
+        return result
 
     def _client_builder(self):
         """Build Elasticsearch client."""
@@ -158,6 +216,23 @@ class _SearchState(object):
         for result in _create(self.aliases):
             yield result
 
+    def put_templates(self, ignore=None):
+        """Yield tuple with registered template and response from client."""
+        ignore = ignore or []
+
+        def _put_template(template):
+            """Put template in search client."""
+            with open(self.templates[template], 'r') as body:
+                return self.templates[template],\
+                    current_search_client.indices.put_template(
+                        name=template,
+                        body=json.load(body),
+                        ignore=ignore,
+                )
+
+        for template in self.templates:
+            yield _put_template(template)
+
     def delete(self, ignore=None):
         """Yield tuple with deleted index name and responses from a client."""
         ignore = ignore or []
@@ -199,7 +274,9 @@ class InvenioSearch(object):
         if app:
             self.init_app(app, **kwargs)
 
-    def init_app(self, app, entry_point_group='invenio_search.mappings',
+    def init_app(self, app,
+                 entry_point_group_mappings='invenio_search.mappings',
+                 entry_point_group_templates='invenio_search.templates',
                  **kwargs):
         """Flask application initialization.
 
@@ -210,7 +287,10 @@ class InvenioSearch(object):
         app.cli.add_command(index_cmd)
 
         state = _SearchState(
-            app, entry_point_group=entry_point_group, **kwargs
+            app,
+            entry_point_group_mappings=entry_point_group_mappings,
+            entry_point_group_templates=entry_point_group_templates,
+            **kwargs
         )
         self._state = app.extensions['invenio-search'] = state
 

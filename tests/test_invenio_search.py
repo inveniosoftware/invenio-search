@@ -106,13 +106,13 @@ def test_schema_to_index(schema_url, result):
     assert result == schema_to_index(schema_url)
 
 
-def test_load_entry_point_group():
+def test_load_entry_point_group(template_entrypoints):
     """Test entry point loading."""
     app = Flask('testapp')
     ext = InvenioSearch(app)
     ep_group = 'test'
 
-    def mock_entry_points(group=None):
+    def mock_entry_points_mappings(group=None):
         assert group == ep_group
 
         class ep(object):
@@ -123,6 +123,12 @@ def test_load_entry_point_group():
         yield ep
 
     assert len(ext.mappings) == 0
-    with patch('invenio_search.ext.iter_entry_points', mock_entry_points):
-        ext.load_entry_point_group(entry_point_group=ep_group)
+    with patch('invenio_search.ext.iter_entry_points',
+               mock_entry_points_mappings):
+        ext.load_entry_point_group_mappings(
+            entry_point_group_mappings=ep_group)
     assert len(ext.mappings) == 3
+
+    with patch('invenio_search.ext.iter_entry_points',
+               return_value=template_entrypoints('invenio_search.templates')):
+        assert len(ext.templates.keys()) == 3

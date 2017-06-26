@@ -76,3 +76,36 @@ def records_app(request):
 
     request.addfinalizer(teardown)
     return app
+
+
+def mock_iter_entry_points_factory(data, mocked_group):
+    """Create a mock iter_entry_points function."""
+    from pkg_resources import iter_entry_points
+
+    def entrypoints(group, name=None):
+        if group == mocked_group:
+            for entrypoint in data:
+                yield entrypoint
+        else:
+            for x in iter_entry_points(group=group, name=name):
+                yield x
+    return entrypoints
+
+
+@pytest.yield_fixture()
+def template_entrypoints():
+    """Declare some events by mocking the invenio_stats.events entrypoint.
+
+    It yields a list like [{event_type: <event_type_name>}, ...].
+    """
+    eps = []
+    for idx in range(5):
+        event_type_name = 'data'
+        from pkg_resources import EntryPoint
+        entrypoint = EntryPoint(event_type_name, event_type_name)
+        entrypoint.load = lambda: lambda: ['templates']
+        eps.append(entrypoint)
+
+    entrypoints = mock_iter_entry_points_factory(
+        eps, 'invenio_search.templates')
+    return entrypoints

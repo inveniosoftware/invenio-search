@@ -29,12 +29,13 @@ from __future__ import absolute_import, print_function
 
 from click.testing import CliRunner
 from flask.cli import ScriptInfo
+from mock import patch
 
 from invenio_search.cli import index as cmd
 from invenio_search.proxies import current_search, current_search_client
 
 
-def test_init(app):
+def test_init(app, template_entrypoints):
     """Run client initialization."""
     search = app.extensions['invenio-search']
     search.register_mappings('records', 'data')
@@ -52,6 +53,13 @@ def test_init(app):
     ])
     assert 6 == search.number_of_indexes
 
+    with patch('invenio_search.ext.iter_entry_points',
+               return_value=template_entrypoints('invenio_search.templates')):
+        assert 'file_download_v1' in search.templates
+        assert 'record_view_v1' in search.templates
+        assert 'subdirectory-file_download_v1' in search.templates
+        assert len(search.templates.keys()) == 3
+
     with app.app_context():
 
         current_search_client.indices.delete_alias('_all', '_all',
@@ -66,6 +74,13 @@ def test_init(app):
     with runner.isolated_filesystem():
         result = runner.invoke(cmd, ['init'],
                                obj=script_info)
+        with app.app_context():
+            assert current_search_client.indices.exists_template(
+                'file_download_v1')
+            assert current_search_client.indices.exists_template(
+                'subdirectory-file_download_v1')
+            assert current_search_client.indices.exists_template(
+                'record_view_v1')
         assert 0 == result.exit_code
 
     with app.app_context():

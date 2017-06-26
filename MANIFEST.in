@@ -37,4 +37,4 @@ prune docs/_build
 recursive-include docs *.bat *.py *.rst Makefile
 recursive-include examples *.json *.py *.sh *.txt
 recursive-include invenio_search *.py
-recursive-include tests *.json *.py
+recursive-include tests *.json *.py *.txt

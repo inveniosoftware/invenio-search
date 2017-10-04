@@ -95,7 +95,8 @@ def test_elasticsearch_query(app):
         g.public = 1
         q = TestSearch()
         assert q.to_dict()['query'] == {
-            'bool': {'filter': [{'terms': {'public': 1}}]}
+            'bool': {'minimum_should_match': 1,
+                     'filter': [{'terms': {'public': 1}}]}
         }
         g.public = 0
         q = TestSearch()

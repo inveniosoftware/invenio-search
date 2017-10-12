@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2014, 2015 CERN.
+# Copyright (C) 2014, 2015, 2016, 2017 CERN.
 #
 # Invenio is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -19,11 +19,13 @@
 
 """Search engine API."""
 
+import hashlib
 from functools import partial
 
 from elasticsearch_dsl import FacetedSearch, Search
 from elasticsearch_dsl.faceted_search import FacetedResponse
 from elasticsearch_dsl.query import Bool, Ids
+from flask import request
 
 from .proxies import current_search_client
 
@@ -117,3 +119,36 @@ class RecordsSearch(Search):
                 return search_.response_class(partial(FacetedResponse, self))
 
         return RecordsFacetedSearch(query=query, filters=filters or {})
+
+    def with_preference_param(self):
+        """Add the preference param to the ES request and return a new Search.
+
+        The preference param avoids the bouncing effect with multiple
+        replicas, documented on ES documentation.
+        See: https://www.elastic.co/guide/en/elasticsearch/guide/current
+        /_search_options.html#_preference for more information.
+        """
+        user_hash = self._get_user_hash()
+        if user_hash:
+            return self.params(preference=user_hash)
+        return self
+
+    def _get_user_agent(self):
+        """Retrieve the request's User-Agent, if available.
+
+        Taken from Flask Login utils.py.
+        """
+        user_agent = request.headers.get('User-Agent')
+        if user_agent is not None:
+            user_agent = user_agent.encode('utf-8')
+        return user_agent or ''
+
+    def _get_user_hash(self):
+        """Calculate a digest based on request's User-Agent and ip address."""
+        if request:
+            user_hash = '{ip}-{ua}'.format(ip=request.remote_addr,
+                                           ua=self._get_user_agent())
+            alg = hashlib.md5()
+            alg.update(user_hash.encode('utf8'))
+            return alg.hexdigest()
+        return None

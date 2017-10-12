@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2015, 2016, 2017 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -27,7 +27,10 @@
 
 from __future__ import absolute_import, print_function
 
-from elasticsearch_dsl import Q
+import hashlib
+
+from elasticsearch_dsl import Q, Search
+from flask import request
 
 from invenio_search.api import DefaultFilter, RecordsSearch
 
@@ -107,3 +110,39 @@ def test_elasticsearch_query(app):
         assert q.to_dict()['query']['bool']['must'] == [
             {'match': {'title': 'Higgs'}}
         ]
+
+
+class SpySearch(Search):
+    exposed_params = {}
+
+    def params(self, **kwargs):
+        self.exposed_params.update(kwargs)
+        return super(SpySearch, self).params(**kwargs)
+
+
+def test_es_preference_param_no_request():
+    """Test that the preference param is not added when not in a request."""
+    RecordsSearch.__bases__ = (SpySearch,)
+
+    rs = RecordsSearch()
+    new_rs = rs.with_preference_param()
+    assert new_rs.exposed_params == {}
+
+
+def test_es_preference_param(app):
+    """Test the preference param is correctly added in a request."""
+    RecordsSearch.__bases__ = (SpySearch,)
+
+    with app.test_request_context('/', headers={'User-Agent': 'Chrome'},
+                                  environ_base={'REMOTE_ADDR': '212.54.1.8'}):
+        rs = RecordsSearch()
+        new_rs = rs.with_preference_param()
+
+        alg = hashlib.md5()
+        encoded_user_agent = 'Chrome'.encode('utf8')
+        encoded_user_string = '{ip}-{ua}'.format(ip=request.remote_addr,
+                                                 ua=encoded_user_agent)
+        alg.update(encoded_user_string.encode('utf8'))
+        digest = alg.hexdigest()
+
+        assert new_rs.exposed_params == dict(preference=digest)

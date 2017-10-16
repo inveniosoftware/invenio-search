@@ -25,9 +25,6 @@
 
 """Invenio Search Engine config parameters."""
 
-SEARCH_ALLOWED_KEYWORDS = []
-"""A list of allowed keywords for the query parser."""
-
 #
 # ELASTIC configuration
 #
@@ -38,25 +35,3 @@ SEARCH_ELASTIC_HOSTS = None  # default localhost
 Elasticsearch
     <https://elasticsearch-py.readthedocs.io/en/master/api.html#elasticsearch.Elasticsearch>
 """
-
-SEARCH_ELASTIC_KEYWORD_MAPPING = {
-    None: ["_all"],
-    "author": {
-        'a': ["main_entry_personal_name.personal_name",
-              "added_entry_personal_name.personal_name"],
-        'p': ["main_entry_personal_name.personal_name",
-              "added_entry_personal_name.personal_name"],
-        'e': ['authors.raw'],
-    },
-    "collection": ["_collections"],
-    "title": ["title_statement.title"],
-    "980": [
-        "collections.primary",
-        "collections.secondary",
-        "collections.deleted",
-    ],
-    "980__a": ["collections.primary"],
-    "980__b": ["collections.secondary"],
-    "542__l": ["information_relating_to_copyright_status.copyright_status"],
-}
-"""Holds a dictionary to map invenio keywords to elasticsearch fields."""

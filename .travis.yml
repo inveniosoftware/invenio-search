@@ -86,7 +86,9 @@ deploy:
   user: jirikuncar
   password:
     secure: Igz3vUYF2PbguZYLjm2Sj2KbzfguoazhYFGEBLeEHQmSZoJqf87ceOabQwTyAfsR8LIfWDA2CxG+A1W6yjtqWZAvUWxHT6tuzRNIrKN/xXKJFpvJRjoT14On4HX56FBXfv8jma6HjO6/BWrjXSuqZqofTQ/27LNMbNnUylRDlqLD/2dVEzWy+i1lbK5qICL9nYNPdXvktCMK4IXwfa+UUMWZnebXIjwSJrATJtzRpgsYqJNuMLu5cvNJDHkBk1hkyJKskuCtCHi/CNVm+aWmEIZE0gtll3nJaRq6JO9tQbtwxYAsxlwX92gugmiIY1qLRdjgmp6X9nuSPjPR1VwU0x55Ka1HdUvF8i/M4ngaSxhQJJYK63m6hgTEkos1zt7sEUii1z41fjKlBUGTdY73it387dhZ0vNGv2Md7LkBNwVWDts1HtSnh8N6sYLfeZLvtQzU1USzWRGNPApDZpxEt7W0TYDTHpcI4wB7mUmGa+noxYYNQuswQYg3gR8T2888f/Td629SnenfkAq0WhAZuxEt0bI2T15bPpRSdF2svesBdKS20yFTg5UfskgRVZ9lXoWiKSYu6fi+pVMFp8EFMgJ0AOWJsxRBal4+y0h7rcZNam6zsOP0GXK8snowJ6v7yfsS1hH1L4FtMHz/owiOnGDJN18NmwkGMDOn0dRqxXw=
-  distributions: "sdist bdist_wheel"
+  distributions: "compile_catalog sdist bdist_wheel"
   on:
     tags: true
     python: "2.7"
+    repo: inveniosoftware/invenio-search
+    condition: $DEPLOY = true

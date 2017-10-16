@@ -49,7 +49,7 @@ class DefaultFilter(object):
 
 
 class RecordsSearch(Search):
-    """Example subclass to searching records using Elastic DSL."""
+    """Example subclass for searching records using Elastic DSL."""
 
     class Meta:
         """Configuration for ``Search`` and ``FacetedSearch`` classes."""
@@ -64,9 +64,6 @@ class RecordsSearch(Search):
 
         Example: ``default_filter = DefaultFilter('_access.owner:"1"')``.
         """
-
-        # Record class?
-        # Record(result['_source'], model=None, id_=result['_id'])
 
     def __init__(self, **kwargs):
         """Use Meta to set kwargs defaults."""
@@ -139,12 +136,12 @@ class RecordsSearch(Search):
         Taken from Flask Login utils.py.
         """
         user_agent = request.headers.get('User-Agent')
-        if user_agent is not None:
+        if user_agent:
             user_agent = user_agent.encode('utf-8')
         return user_agent or ''
 
     def _get_user_hash(self):
-        """Calculate a digest based on request's User-Agent and ip address."""
+        """Calculate a digest based on request's User-Agent and IP address."""
         if request:
             user_hash = '{ip}-{ua}'.format(ip=request.remote_addr,
                                            ua=self._get_user_agent())

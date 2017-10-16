@@ -67,7 +67,6 @@ setup_requires = [
 
 install_requires = [
     'Flask>=0.11.1',
-    'pyPEG2>=2.15.2',
     # NOTE: Overlays have to choose which elasticsearch version they want to
     # use and pin both elasticsearch and elasticsearch-dsl libraries.
     'elasticsearch>=2.0.0,<6.0',

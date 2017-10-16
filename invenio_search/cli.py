@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015, 2016 CERN.
+# Copyright (C) 2015, 2016, 2017 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -36,7 +36,7 @@ from .proxies import current_search, current_search_client
 
 
 def abort_if_false(ctx, param, value):
-    """Abort command is value is False."""
+    """Abort command if value is False."""
     if not value:
         ctx.abort()
 
@@ -91,7 +91,7 @@ def destroy(force):
 @click.option('--verbose', is_flag=True, default=False)
 @with_appcontext
 def create(index_name, body, force, verbose):
-    """Create new index."""
+    """Create a new index."""
     result = current_search_client.indices.create(
         index=index_name,
         body=json.load(body),

@@ -85,9 +85,8 @@ app.config.update(
     MAIL_SUPPRESS_SEND=True,
     SECRET_KEY="CHANGE_ME",
     SECURITY_PASSWORD_SALT="CHANGE_ME_ALSO",
-    SEARCH_ELASTIC_KEYWORD_MAPPING={None: ['_all']},
     SQLALCHEMY_DATABASE_URI=os.getenv('SQLALCHEMY_DATABASE_URI',
-                                      'sqlite:///app.db'),
+                                      'sqlite:///instance/test.db'),
 )
 Menu(app)
 InvenioDB(app)
@@ -110,6 +109,8 @@ class ExampleSearch(RecordsSearch):
     """Example search class."""
 
     class Meta:
+        """Configuration for ``RecordsSearch`` class."""
+
         index = 'demo'
         doc_types = ['example']
         fields = ('*', )

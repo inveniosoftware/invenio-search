@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015, 2016 CERN.
+# Copyright (C) 2015, 2016, 2017 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -40,7 +40,7 @@ from .utils import build_index_name
 
 
 class _SearchState(object):
-    """Store connection to elastic client and regiter indexes."""
+    """Store connection to elastic client and registered indices."""
 
     def __init__(self, app,
                  entry_point_group_mappings=None,
@@ -192,21 +192,21 @@ class _SearchState(object):
         ignore = ignore or []
 
         def _create(tree_or_filename, alias=None):
-            """Create indexes and aliases by walking DFS."""
+            """Create indices and aliases by walking DFS."""
             # Iterate over aliases:
             for name, value in tree_or_filename.items():
-                if not isinstance(value, dict):
+                if isinstance(value, dict):
+                    for result in _create(value, alias=name):
+                        yield result
+                else:
                     with open(value, 'r') as body:
                         yield name, self.client.indices.create(
                             index=name,
                             body=json.load(body),
                             ignore=ignore,
                         )
-                else:
-                    for result in _create(value, alias=name):
-                        yield result
 
-            if alias is not None:
+            if alias:
                 yield alias, self.client.indices.put_alias(
                     index=list(tree_or_filename.keys()),
                     name=alias,
@@ -239,7 +239,7 @@ class _SearchState(object):
 
         def _delete(tree_or_filename, alias=None):
             """Delete indexes and aliases by walking DFS."""
-            if alias is not None:
+            if alias:
                 yield alias, self.client.indices.delete_alias(
                     index=list(tree_or_filename.keys()),
                     name=alias,
@@ -248,14 +248,14 @@ class _SearchState(object):
 
             # Iterate over aliases:
             for name, value in tree_or_filename.items():
-                if not isinstance(value, dict):
+                if isinstance(value, dict):
+                    for result in _delete(value, alias=name):
+                        yield result
+                else:
                     yield name, self.client.indices.delete(
                         index=name,
                         ignore=ignore,
                     )
-                else:
-                    for result in _delete(value, alias=name):
-                        yield result
 
         for result in _delete(self.aliases):
             yield result

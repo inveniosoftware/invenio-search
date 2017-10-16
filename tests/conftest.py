@@ -28,6 +28,8 @@
 from __future__ import absolute_import, print_function
 
 import os
+import shutil
+import tempfile
 
 import pytest
 from flask import Flask
@@ -41,12 +43,19 @@ from invenio_search import InvenioSearch
 @pytest.fixture()
 def app():
     """Flask application fixture."""
-    app = Flask('testapp')
+    # Set temporary instance path for sqlite
+    instance_path = tempfile.mkdtemp()
+    app = Flask('testapp', instance_path=instance_path)
     app.config.update(
         TESTING=True
     )
     InvenioSearch(app)
-    return app
+
+    with app.app_context():
+        yield app
+
+    # Teardown instance path.
+    shutil.rmtree(instance_path)
 
 
 @pytest.fixture()
@@ -92,7 +101,7 @@ def mock_iter_entry_points_factory(data, mocked_group):
     return entrypoints
 
 
-@pytest.yield_fixture()
+@pytest.fixture()
 def template_entrypoints():
     """Declare some events by mocking the invenio_stats.events entrypoint.
 

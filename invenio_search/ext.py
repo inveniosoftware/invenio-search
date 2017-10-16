@@ -40,7 +40,7 @@ from .utils import build_index_name
 
 
 class _SearchState(object):
-    """Store connection to elastic client and registered indices."""
+    """Store connection to elastic client and registered indexes."""
 
     def __init__(self, app,
                  entry_point_group_mappings=None,

@@ -42,13 +42,13 @@ Run example development server:
 
 .. code-block:: console
 
-   $ FLASK_APP=app.py flask run --debugger -p 5000
+   $ FLASK_DEBUG=1 FLASK_APP=app.py flask run -p 5000
 
-Try to perform some queries from browser:
+Try to perform some search queries:
 
 .. code-block:: console
 
-   $ open http://localhost:5000/?q=body:test
+   $ curl http://localhost:5000/?q=body:test
 
 To be able to uninstall the example app:
 

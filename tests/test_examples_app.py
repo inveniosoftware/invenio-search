@@ -52,7 +52,7 @@ def example_app():
 
     # Start example app
     webapp = subprocess.Popen(
-        'FLASK_APP=app.py flask run --debugger -p 5000',
+        'FLASK_DEBUG=1 FLASK_APP=app.py flask run -p 5000',
         stdout=subprocess.PIPE, preexec_fn=os.setsid, shell=True)
     time.sleep(10)
     yield webapp

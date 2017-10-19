@@ -1,6 +1,6 @@
 ..
     This file is part of Invenio.
-    Copyright (C) 2015 CERN.
+    Copyright (C) 2015, 2016, 2017 CERN.
 
     Invenio is free software; you can redistribute it
     and/or modify it under the terms of the GNU General Public License as
@@ -42,6 +42,11 @@
 
 
 Invenio module for information retrieval.
+
+Allows retrieving records from a configurable backend (currently, from
+Elasticsearch).
+
+Supports version 2 and 5 of Elasticsearch.
 
 * Free software: GPLv2 license
 * Documentation: https://invenio-search.readthedocs.io/

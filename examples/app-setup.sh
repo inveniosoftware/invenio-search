@@ -15,7 +15,7 @@ mkdir $DIR/instance
 # Install specific dependencies
 pip install -r requirements.txt
 
-# Create the database
+# Create the database and index
 flask db init
 flask db create
 flask index init

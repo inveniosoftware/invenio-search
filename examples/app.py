@@ -137,7 +137,7 @@ def index():
     search = search.sort(
         request.values.get('sort', 'title')
     )
-    search = ExampleSearch.faceted_search(
-        search=search
-    )
-    return jsonify(search.execute().to_dict())
+    search = ExampleSearch.faceted_search(search=search)
+    results = search.execute().to_dict()
+    results.pop('_faceted_search', None)
+    return jsonify(results)

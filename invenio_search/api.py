@@ -22,6 +22,7 @@
 import hashlib
 from functools import partial
 
+from elasticsearch import VERSION as ES_VERSION
 from elasticsearch_dsl import FacetedSearch, Search
 from elasticsearch_dsl.faceted_search import FacetedResponse
 from elasticsearch_dsl.query import Bool, Ids
@@ -113,7 +114,11 @@ class RecordsSearch(Search):
 
             def search(self):
                 """Use ``search`` or ``cls()`` instead of default Search."""
-                return search_.response_class(partial(FacetedResponse, self))
+                if ES_VERSION[0] == 2:
+                    return search_.response_class(
+                        partial(FacetedResponse, self))
+                else:
+                    return search_.response_class(FacetedResponse)
 
         return RecordsFacetedSearch(query=query, filters=filters or {})
 

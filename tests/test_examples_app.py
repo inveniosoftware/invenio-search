@@ -34,7 +34,7 @@ from os.path import abspath, dirname, join
 import pytest
 
 
-@pytest.fixture
+@pytest.yield_fixture
 def example_app():
     """Example app fixture."""
     current_dir = os.getcwd()

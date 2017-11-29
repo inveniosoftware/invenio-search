@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015, 2016 CERN.
+# Copyright (C) 2015, 2016, 2017 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -35,7 +35,7 @@ tests_require = [
     'check-manifest>=0.25',
     'coverage>=4.0',
     'invenio-db[versioning]>=1.0.0a8',
-    'isort>=4.2.2',
+    'isort>=4.2.15',
     'mock>=1.3.0',
     'pydocstyle>=1.0.0',
     'pytest-cache>=1.0',
@@ -49,6 +49,20 @@ extras_require = {
         'Sphinx>=1.5.6,<1.6',
         'invenio-accounts>=1.0.0b1',
     ],
+    # Elasticsearch version
+    'elasticsearch2': [
+        'elasticsearch>=2.0.0,<3.0.0',
+        'elasticsearch-dsl>=2.0.0,<3.0.0',
+    ],
+    'elasticsearch5': [
+        'elasticsearch>=5.0.0,<6.0.0',
+        'elasticsearch-dsl>=5.1.0,<6.0.0',
+    ],
+    # NOTE: Latest version of elasticsearch-dsl is not compatible with ES6 yet.
+    # 'elasticsearch6': [
+    #     'elasticsearch>=6.0.0,<7.0.0',
+    #     'elasticsearch-dsl>=5.4.0.dev0,<7.0.0',
+    # ],
     'records': [
         'invenio-records>=1.0.0a4',
     ],
@@ -56,8 +70,12 @@ extras_require = {
 }
 
 extras_require['all'] = []
-for reqs in extras_require.values():
+for name, reqs in extras_require.items():
+    if name[0] == ':' or name in (
+            'elasticsearch2', 'elasticsearch5', 'elasticsearch6'):
+        continue
     extras_require['all'].extend(reqs)
+
 
 extras_require['tests'] += extras_require['records']
 
@@ -67,10 +85,6 @@ setup_requires = [
 
 install_requires = [
     'Flask>=0.11.1',
-    # NOTE: Overlays have to choose which elasticsearch version they want to
-    # use and pin both elasticsearch and elasticsearch-dsl libraries.
-    'elasticsearch>=2.0.0,<6.0',
-    'elasticsearch-dsl>=2.0.0,<5.1.0',
     'invenio-query-parser>=0.4.1',
     'requests>=2.4.0',
 ]

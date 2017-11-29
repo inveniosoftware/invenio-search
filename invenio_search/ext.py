@@ -26,9 +26,12 @@
 
 from __future__ import absolute_import, print_function
 
+import errno
 import json
 import os
+import warnings
 
+from elasticsearch import VERSION as ES_VERSION
 from pkg_resources import iter_entry_points, resource_filename, \
     resource_isdir, resource_listdir
 from werkzeug.utils import cached_property
@@ -79,6 +82,27 @@ class _SearchState(object):
         :param alias: The alias.
         :param package_name: The package name.
         """
+        # For backwards compatibility, we also allow for ES2 mappings to be
+        # placed at the root level of the specified package path, and not in
+        # the `<package-path>/v2` directory.
+        if ES_VERSION[0] == 2:
+            try:
+                resource_listdir(package_name, 'v2')
+                package_name += '.v2'
+            except (OSError, IOError) as ex:
+                if getattr(ex, 'errno', 0) != errno.ENOENT:
+                    raise
+                warnings.warn(
+                    "Having mappings in a path which doesn't specify the "
+                    "Elasticsearch version is deprecated. Please move your "
+                    "mappings to a subfolder named according to the "
+                    "Elasticsearch version which your mappings are intended "
+                    "for. (e.g. '{}/v2/{}')".format(
+                        package_name, alias),
+                    PendingDeprecationWarning)
+        else:
+            package_name = '{}.v{}'.format(package_name, ES_VERSION[0])
+
         def _walk_dir(aliases, *parts):
             root_name = build_index_name(*parts)
             resource_name = os.path.join(*parts)

@@ -95,14 +95,7 @@ InvenioAccounts(app)
 app.register_blueprint(blueprint)
 
 search = InvenioSearch(app)
-
-if ES_VERSION[0] == 2:
-    search.register_mappings('demo', 'data.elastic_v2')
-elif ES_VERSION[0] == 5:
-    search.register_mappings('demo', 'data.elastic_v5')
-else:
-    raise Exception('This example supports only elasticsearch version '
-                    '2.x and 5.x')
+search.register_mappings('demo', 'data')
 
 
 class ExampleSearch(RecordsSearch):
@@ -139,5 +132,4 @@ def index():
     )
     search = ExampleSearch.faceted_search(search=search)
     results = search.execute().to_dict()
-    results.pop('_faceted_search', None)
-    return jsonify(results)
+    return jsonify({'hits': results.get('hits')})

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015, 2017 CERN.
+# Copyright (C) 2017 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -22,20 +22,4 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-include *.rst
-include *.sh
-include *.txt
-include .dockerignore
-include .editorconfig
-include docs/requirements.txt
-include .lgtm
-include LICENSE
-include MAINTAINERS
-include pytest.ini
-include tests/mock_module/mappings/records/authorities/notajson
-include tests/mock_module/mappings/*/records/authorities/notajson
-prune docs/_build
-recursive-include docs *.bat *.py *.rst Makefile
-recursive-include examples *.json *.py *.sh *.txt
-recursive-include invenio_search *.py
-recursive-include tests *.json *.py *.txt
+"""Mock module used to test loading of ES resources."""

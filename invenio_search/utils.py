@@ -23,10 +23,11 @@ import os
 
 
 def build_index_name(*parts):
-    """Build an index name from parts."""
-    return os.path.splitext('-'.join([
-        part for part in parts if part
-    ]))[0]
+    """Build an index name from parts.
+
+    :param parts: Parts that should be combined to make an index name.
+    """
+    return os.path.splitext('-'.join([part for part in parts if part]))[0]
 
 
 def schema_to_index(schema, index_names=None):

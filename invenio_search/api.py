@@ -114,11 +114,11 @@ class RecordsSearch(Search):
 
             def search(self):
                 """Use ``search`` or ``cls()`` instead of default Search."""
-                if ES_VERSION[0] == 2:
-                    return search_.response_class(
-                        partial(FacetedResponse, self))
-                else:
+                # Later versions of `elasticsearch-dsl` (>=5.1.0) changed the
+                # Elasticsearch FacetedResponse class constructor signature.
+                if ES_VERSION[0] > 2:
                     return search_.response_class(FacetedResponse)
+                return search_.response_class(partial(FacetedResponse, self))
 
         return RecordsFacetedSearch(query=query, filters=filters or {})
 

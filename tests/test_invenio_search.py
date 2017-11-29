@@ -28,10 +28,11 @@
 from __future__ import absolute_import, print_function
 
 import pytest
+from elasticsearch import VERSION as ES_VERSION
 from flask import Flask
 from mock import patch
 
-from invenio_search import InvenioSearch, current_search, current_search_client
+from invenio_search import InvenioSearch, current_search_client
 from invenio_search.utils import schema_to_index
 
 
@@ -118,7 +119,7 @@ def test_load_entry_point_group(template_entrypoints):
         class ep(object):
 
             name = 'records'
-            module_name = 'data'
+            module_name = 'mock_module.mappings'
 
         yield ep
 
@@ -128,6 +129,11 @@ def test_load_entry_point_group(template_entrypoints):
         ext.load_entry_point_group_mappings(
             entry_point_group_mappings=ep_group)
     assert len(ext.mappings) == 3
+    # Check that mappings are loaded from the correct folder depending on the
+    # ES version.
+    if ES_VERSION[0] > 2:
+        mappings_dir = 'mock_module/mappings/v{}/records'.format(ES_VERSION[0])
+        assert all(mappings_dir in path for path in ext.mappings.values())
 
     with patch('invenio_search.ext.iter_entry_points',
                return_value=template_entrypoints('invenio_search.templates')):

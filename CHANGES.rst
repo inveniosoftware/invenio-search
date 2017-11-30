@@ -24,19 +24,10 @@
 Changes
 =======
 
-Version 1.0.0b1 (released 2017-10-23)
+Version 1.0.0b2 (released 2017-11-30)
 -------------------------------------
 
 - Initial public release
-
-Version 1.0.0a11 (released 2017-10-16)
---------------------------------------
-
-Incompatible changes
-~~~~~~~~~~~~~~~~~~~~
-
-- Brings a major rewrite.
-
 
 Version 0.1.5 (released 2015-10-06)
 -----------------------------------

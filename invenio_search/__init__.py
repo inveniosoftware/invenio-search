@@ -40,20 +40,12 @@ installed and running (currently, version 2.x and 5.x are supported):
    $ elasticsearch --version
    Version: 2.4.6, Build: 5376dca/2017-07-18T12:17:44Z, JVM: 1.8.0_144
 
-In this case, we are using version 2 of Elasticsearch, so make sure to pin the
-correct version of ``elasticseach`` and ``elasticsearch-dsl`` packages -
-simply put those 2 lines in your ``setup.py`` :
+In this case, we are using version 2 of Elasticsearch, so make sure to install
+``invenio-search`` with the appropriate extras:
 
-.. code-block:: python
+.. code-block:: console
 
-    # setup.py
-    # ...
-    install_requires = [
-        ...
-        'elasticsearch>=2.0.0,<3.0.0',
-        'elasticsearch-dsl>=2.0.0,<3.0.0',
-        ...
-    ]
+    pip install invenio-search[elasticsearch2]
 
 .. _creating_index:
 
@@ -81,12 +73,11 @@ have just created:
 
     # app.py
     ...
-    search.register_mappings('demo', 'examples.data.elastic_v2')
+    search.register_mappings('demo', 'examples.data')
 
-The above code will look into directory ``examples/data/elastic_v2`` and load
-all the mapping files it can find there into the Elasticsearch (each file will
-create a new index). It will also add ``demo`` as an alias to each of the
-indexes.
+The above code will look into directory ``examples/data`` and load all the
+mapping files it can find there into Elasticsearch (each file will create a new
+index). It will also add ``demo`` as an alias to each of the indexes.
 
 You can read more about the Elasticsearch mappings on elasticsearch website
 (https://www.elastic.co/guide/en/elasticsearch/guide/current/mapping-intro.html).
@@ -179,7 +170,7 @@ Create a new app.py file with a route.
     search = InvenioSearch(app)
 
     # This line is needed to be able to call `flask index init`
-    search.register_mappings('demo', 'examples.data.elastic_v2')
+    search.register_mappings('demo', 'examples.data')
 
 
     @app.route('/', methods=['GET', 'POST'])
@@ -278,6 +269,52 @@ content. Otherwise, you can use curl (as described here:
 https://www.elastic.co/guide/en/elasticsearch/guide/current/_talking_to_elasticsearch.html).
 
 .. _invenio-access:  https://invenio-access.readthedocs.io/
+
+Elasticsearch version support
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Invenio-Search currently supports Elasticsearch versions 2.x and 5.x. Support
+for version 6.x will be added as soon as the ``elasticsearch-dsl`` library
+officialy supports it. The only requirement is specifying the appropriate
+"extra" when installing ``invenio-search`` through ``pip``.
+
+.. code-block:: console
+
+    $ # For Elasticsearch 2:
+    $ pip install invenio-search[elasticsearch2]
+
+    $ # For Elasticsearch 5:
+    $ pip install invenio-search[elasticsearch5]
+
+
+Because of the breaking changes that are introduced in Elasticsearch between
+major versions in relation to mappings, a specific directory structure has to
+be followed, in order to specify which JSON mapping files will be used for
+creating the Elasticsearch indices. For backwards compatibility with existing
+Invenio modules and installations, for Elasticsearch 2, mappings will be loaded
+from the root level of the package directory. You can see a full example in the
+``examples/data`` directory of the ``invenio-search`` repository:
+
+.. code-block:: console
+
+    $ tree --dirsfirst examples/data
+
+    examples/data
+    +- demo            # Elasticsearch 2 mappings
+    |  +- authorities
+    |  |  +- authority-v1.0.0.json
+    |  +- bibliographic
+    |  |  +- bibliographic-v1.0.0.json
+    |  +- default-v1.0.0.json
+    +- v5
+    |  +- demo        # Elasticsearch 5 mappings
+    |  |  +- authorities
+    |  |  |  +- authority-v1.0.0.json
+    |  |  +- bibliographic
+    |  |  |  +- bibliographic-v1.0.0.json
+    |  |  +- default-v1.0.0.json
+    |  +- __init__.py
+    +-- __init__.py
 
 """
 

@@ -21,7 +21,6 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
-
 r"""Invenio module for information retrieval.
 
 Allows retrieving records from a configurable backend (currently, from
@@ -277,6 +276,10 @@ Invenio-Search currently supports Elasticsearch versions 2.x and 5.x. Support
 for version 6.x will be added as soon as the ``elasticsearch-dsl`` library
 officialy supports it. The only requirement is specifying the appropriate
 "extra" when installing ``invenio-search`` through ``pip``.
+
+Invenio-Search currently supports Elasticsearch versions 2.x and 5.x. The only
+requirement is specifying the appropriate "extra" when installing
+``invenio-search`` through ``pip``.
 
 .. code-block:: console
 

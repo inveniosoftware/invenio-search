@@ -27,6 +27,8 @@
 
 from __future__ import absolute_import, print_function
 
+import ast
+
 from click.testing import CliRunner
 from elasticsearch import VERSION as ES_VERSION
 from flask.cli import ScriptInfo
@@ -110,3 +112,31 @@ def test_init(app, template_entrypoints):
 
         aliases = current_search_client.indices.get_alias()
         assert 0 == len(aliases)
+
+
+def test_list(app):
+    """Run listing of mappings."""
+    original = app.config.get('SEARCH_MAPPINGS')
+    app.config['SEARCH_MAPPINGS'] = ['records']
+    search = app.extensions['invenio-search']
+    search.register_mappings('authors', 'mock_module.mappings')
+    search.register_mappings('records', 'mock_module.mappings')
+
+    runner = CliRunner()
+    script_info = ScriptInfo(create_app=lambda info: app)
+
+    result = runner.invoke(cmd, ['list', '--only-aliases'], obj=script_info)
+    # Turn cli outputted str presentation of Python list into a list
+    assert set(ast.literal_eval(result.output)) == set(['records', 'authors'])
+
+    result = runner.invoke(cmd, ['list'], obj=script_info)
+    assert result.output == (
+        u"├──authors\n"
+        u"│  ├──authors-authors-v1.0.0\n"
+        u"├──records *\n"
+        u"│  ├──records-authorities\n"
+        u"│  │  ├──records-authorities-authority-v1.0.0\n"
+        u"│  ├──records-bibliographic\n"
+        u"│  │  ├──records-bibliographic-bibliographic-v1.0.0\n"
+        u"│  ├──records-default-v1.0.0\n\n"
+    )

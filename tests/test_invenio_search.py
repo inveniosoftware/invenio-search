@@ -32,7 +32,7 @@ from elasticsearch import VERSION as ES_VERSION
 from flask import Flask
 from mock import patch
 
-from invenio_search import InvenioSearch, current_search_client
+from invenio_search import InvenioSearch, current_search, current_search_client
 from invenio_search.utils import schema_to_index
 
 
@@ -141,3 +141,36 @@ def test_load_entry_point_group(template_entrypoints):
             assert len(ext.templates.keys()) == 2
         elif ES_VERSION[0] == 5:
             assert len(ext.templates.keys()) == 1
+
+
+@pytest.mark.parametrize(('aliases_config', 'expected_aliases'), [
+    (None, ['records', 'authors']),
+    (['records', 'authors'], ['records', 'authors']),
+    (['authors'], ['authors']),
+    ([], []),
+    (['does_not_exist'], []),
+])
+def test_whitelisted_aliases(app, aliases_config, expected_aliases):
+    """Test functionality of active aliases configuration variable."""
+
+    orig = app.config['SEARCH_MAPPINGS']
+
+    search = app.extensions['invenio-search']
+    search.register_mappings('records', 'mock_module.mappings')
+    search.register_mappings('authors', 'mock_module.mappings')
+
+    app.config.update(SEARCH_MAPPINGS=aliases_config)
+
+    with app.app_context():
+        current_search_client.indices.delete_alias('_all', '_all',
+                                                   ignore=[400, 404])
+        current_search_client.indices.delete('*')
+        list(current_search.create(ignore=None))
+
+        aliases = current_search_client.indices.get_alias()
+        if expected_aliases == []:
+            assert 0 == len(aliases)
+        else:
+            assert current_search_client.indices.exists(expected_aliases)
+
+    app.config['SEARCH_MAPPINGS'] = orig

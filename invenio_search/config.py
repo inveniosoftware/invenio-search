@@ -35,3 +35,33 @@ SEARCH_ELASTIC_HOSTS = None  # default localhost
 Elasticsearch
     <https://elasticsearch-py.readthedocs.io/en/master/api.html#elasticsearch.Elasticsearch>
 """
+
+SEARCH_MAPPINGS = None  # loads all mappings and creates aliases for them
+"""List of aliases for which, their search mappings should be created.
+
+If `None` all aliases (and their search mappings) defined through entry_points
+in setup.py will be created.
+
+Provide an empty list if no aliases (or their search mappings)
+should be created.
+
+For example if you don't want to create aliases
+and their mappings for `authors`:
+
+.. code-block::python
+
+    # in your `setup.py` you would specify:
+    entry_points={
+        ...,
+        'invenio_search.mappings': [
+            'records = invenio_foo_bar.mappings',
+            'authors = invenio_foo_bar.mappings',
+            'books = invenio_baz.mappings',
+        ],
+        ...
+    }
+
+    # and in your config.py
+    SEARCH_MAPPINGS = ['records']
+
+"""

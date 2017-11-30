@@ -222,6 +222,21 @@ class _SearchState(object):
             wait_for_status='yellow', request_timeout=30)
         return True
 
+    @property
+    def active_aliases(self):
+        """Get a filtered list of aliases based on configuration.
+
+        Returns aliases and their mappings that are defined in the
+        `SEARCH_MAPPINGS` config variable. If the `SEARCH_MAPPINGS` is set to
+        `None` (the default), all aliases are included.
+        """
+        whitelisted_aliases = self.app.config.get('SEARCH_MAPPINGS')
+        if whitelisted_aliases is None:
+            return self.aliases
+        else:
+            return {k: v for k, v in self.aliases.items()
+                    if k in whitelisted_aliases}
+
     def create(self, ignore=None):
         """Yield tuple with created index name and responses from a client."""
         ignore = ignore or []
@@ -248,7 +263,7 @@ class _SearchState(object):
                     ignore=ignore,
                 )
 
-        for result in _create(self.aliases):
+        for result in _create(self.active_aliases):
             yield result
 
     def put_templates(self, ignore=None):
@@ -292,7 +307,7 @@ class _SearchState(object):
                         ignore=ignore,
                     )
 
-        for result in _delete(self.aliases):
+        for result in _delete(self.active_aliases):
             yield result
 
 

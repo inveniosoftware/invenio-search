@@ -76,7 +76,9 @@ class RecordsSearch(Search):
 
         default_filter = getattr(self.Meta, 'default_filter', None)
         if default_filter:
-            self.query = Bool(minimum_should_match=1, filter=default_filter)
+            # NOTE: https://github.com/elastic/elasticsearch/issues/21844
+            self.query = Bool(minimum_should_match="0<1",
+                              filter=default_filter)
 
     def get_record(self, id_):
         """Return a record by its identifier.

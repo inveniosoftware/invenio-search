@@ -132,11 +132,11 @@ def test_list(app):
     result = runner.invoke(cmd, ['list'], obj=script_info)
     assert result.output == (
         u"├──authors\n"
-        u"│  ├──authors-authors-v1.0.0\n"
-        u"├──records *\n"
-        u"│  ├──records-authorities\n"
-        u"│  │  ├──records-authorities-authority-v1.0.0\n"
-        u"│  ├──records-bibliographic\n"
-        u"│  │  ├──records-bibliographic-bibliographic-v1.0.0\n"
-        u"│  ├──records-default-v1.0.0\n\n"
+        u"│  └──authors-authors-v1.0.0\n"
+        u"└──records *\n"
+        u"   ├──records-authorities\n"
+        u"   │  └──records-authorities-authority-v1.0.0\n"
+        u"   ├──records-bibliographic\n"
+        u"   │  └──records-bibliographic-bibliographic-v1.0.0\n"
+        u"   └──records-default-v1.0.0\n\n"
     )

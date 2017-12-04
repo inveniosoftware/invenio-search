@@ -41,12 +41,14 @@
         :target: https://github.com/inveniosoftware/invenio-search/blob/master/LICENSE
 
 
-Invenio module for information retrieval.
+Elasticsearch management for Invenio.
 
-Allows retrieving records from a configurable backend (currently, from
-Elasticsearch).
+Features:
 
-Supports version 2 and 5 of Elasticsearch.
+- Allows Invenio modules to register indexes, aliases and index templates.
+- Manages the creation and deletion of indices, aliases and templates.
+- API for providing stable searches (e.g. prevents bouncing of search results).
+- Maps JSONSchema URLs to Elasticsearch indexes.
+- Supports Elasticsearch v2 and v5.
 
-* Free software: GPLv2 license
-* Documentation: https://invenio-search.readthedocs.io/
+Further documentation is available at https://invenio-search.readthedocs.io/.

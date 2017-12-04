@@ -21,11 +21,11 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
-r"""Invenio module for information retrieval.
+
+r"""Elasticsearch management for Invenio.
 
 Allows retrieving records from a configurable backend (currently, from
 Elasticsearch).
-
 
 Initialization
 --------------
@@ -149,7 +149,6 @@ with ``Hello invenio-search`` title. If you get the ``TransportError(404,
 forgot to create the index (follow the steps from :ref:`creating_index` to
 see how to setup an index and add example data).
 
-
 Creating a search page
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -194,7 +193,6 @@ And now you can perform search queries:
 
 Filtering
 ~~~~~~~~~
-
 To filter out some documents, you can create your own search class. Let's try
 to remove all private documents from the search results (by ``private``
 documents, we understand all the documents that have ``public`` attribute set
@@ -259,37 +257,8 @@ check the invenio-access_ module.
 Miscellaneous
 -------------
 
-Elasticsearch plugins
-~~~~~~~~~~~~~~~~~~~~~
-
-For convenience, you can install a plugin like Elastic HQ
-(http://www.elastichq.org/) for easy introspection of your indexes and their
-content. Otherwise, you can use curl (as described here:
-https://www.elastic.co/guide/en/elasticsearch/guide/current/_talking_to_elasticsearch.html).
-
-.. _invenio-access:  https://invenio-access.readthedocs.io/
-
 Elasticsearch version support
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Invenio-Search currently supports Elasticsearch versions 2.x and 5.x. Support
-for version 6.x will be added as soon as the ``elasticsearch-dsl`` library
-officialy supports it. The only requirement is specifying the appropriate
-"extra" when installing ``invenio-search`` through ``pip``.
-
-Invenio-Search currently supports Elasticsearch versions 2.x and 5.x. The only
-requirement is specifying the appropriate "extra" when installing
-``invenio-search`` through ``pip``.
-
-.. code-block:: console
-
-    $ # For Elasticsearch 2:
-    $ pip install invenio-search[elasticsearch2]
-
-    $ # For Elasticsearch 5:
-    $ pip install invenio-search[elasticsearch5]
-
-
 Because of the breaking changes that are introduced in Elasticsearch between
 major versions in relation to mappings, a specific directory structure has to
 be followed, in order to specify which JSON mapping files will be used for
@@ -318,6 +287,17 @@ from the root level of the package directory. You can see a full example in the
     |  |  +- default-v1.0.0.json
     |  +- __init__.py
     +-- __init__.py
+
+
+Elasticsearch plugins
+~~~~~~~~~~~~~~~~~~~~~
+
+For convenience, you can install a plugin like Elastic HQ
+(http://www.elastichq.org/) for easy introspection of your indexes and their
+content. Otherwise, you can use curl (as described here:
+https://www.elastic.co/guide/en/elasticsearch/guide/current/_talking_to_elasticsearch.html).
+
+.. _invenio-access:  https://invenio-access.readthedocs.io/
 
 """
 

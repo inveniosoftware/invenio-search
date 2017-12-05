@@ -49,6 +49,32 @@ class DefaultFilter(object):
         return self.query_parser(self.query)
 
 
+class MinShouldMatch(str):
+    """Work-around for Elasticsearch DSL problem.
+
+    The ElasticSearch DSL Bool query tries to inspect the
+    ``minimum_should_match`` parameter, but understands only integers and not
+    queries like "0<1". This class circumvents the specific problematic clause
+    in Elasticsearch DSL.
+    """
+
+    def __lt__(self, other):
+        """Circumvent problematic Elasticsearch DSL clause."""
+        return False
+
+    def __le__(self, other):
+        """Circumvent problematic Elasticsearch DSL clause."""
+        return False
+
+    def __gt__(self, other):
+        """Circumvent problematic Elasticsearch DSL clause."""
+        return False
+
+    def __ge__(self, other):
+        """Circumvent problematic Elasticsearch DSL clause."""
+        return False
+
+
 class RecordsSearch(Search):
     """Example subclass for searching records using Elastic DSL."""
 
@@ -77,7 +103,7 @@ class RecordsSearch(Search):
         default_filter = getattr(self.Meta, 'default_filter', None)
         if default_filter:
             # NOTE: https://github.com/elastic/elasticsearch/issues/21844
-            self.query = Bool(minimum_should_match="0<1",
+            self.query = Bool(minimum_should_match=MinShouldMatch("0<1"),
                               filter=default_filter)
 
     def get_record(self, id_):

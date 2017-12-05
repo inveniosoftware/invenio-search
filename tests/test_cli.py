@@ -140,3 +140,16 @@ def test_list(app):
         u"   │  └──records-bibliographic-bibliographic-v1.0.0\n"
         u"   └──records-default-v1.0.0\n\n"
     )
+
+
+def test_check(app):
+    runner = CliRunner()
+    script_info = ScriptInfo(create_app=lambda info: app)
+
+    result = runner.invoke(cmd, ['check'], obj=script_info)
+    assert result.exit_code == 0
+
+    with patch('invenio_search.cli.ES_VERSION',
+               return_value=(ES_VERSION[0] + 1, 0, 0)):
+        result = runner.invoke(cmd, ['check'], obj=script_info)
+        assert result.exit_code != 0

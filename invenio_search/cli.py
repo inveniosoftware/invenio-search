@@ -29,8 +29,10 @@ from __future__ import absolute_import, print_function
 import json
 import pprint
 import sys
+from functools import wraps
 
 import click
+from elasticsearch import VERSION as ES_VERSION
 from flask.cli import with_appcontext
 
 from .proxies import current_search, current_search_client
@@ -42,6 +44,24 @@ def abort_if_false(ctx, param, value):
         ctx.abort()
 
 
+def es_version_check(f):
+    """Decorator to check Elasticsearch version."""
+    @wraps(f)
+    def inner(*args, **kwargs):
+        cluster_ver = current_search.cluster_version[0]
+        client_ver = ES_VERSION[0]
+        if cluster_ver != client_ver:
+            raise click.ClickException(
+                'Elasticsearch version mismatch. Invenio was installed with '
+                'Elasticsearch v{client_ver}.x support, but the cluster runs '
+                'Elasticsearch v{cluster_ver}.x.'.format(
+                    client_ver=client_ver,
+                    cluster_ver=cluster_ver,
+                ))
+        return f(*args, **kwargs)
+    return inner
+
+
 #
 # Index management commands
 #
@@ -51,8 +71,17 @@ def index():
 
 
 @index.command()
+@with_appcontext
+@es_version_check
+def check():
+    """Check Elasticsearch version."""
+    click.secho('Checks passed', fg='green')
+
+
+@index.command()
 @click.option('--force', is_flag=True, default=False)
 @with_appcontext
+@es_version_check
 def init(force):
     """Initialize registered aliases and mappings."""
     click.secho('Creating indexes...', fg='green', bold=True, file=sys.stderr)
@@ -75,6 +104,7 @@ def init(force):
               prompt='Do you know that you are going to destroy all indexes?')
 @click.option('--force', is_flag=True, default=False)
 @with_appcontext
+@es_version_check
 def destroy(force):
     """Destroy all indexes."""
     click.secho('Destroying indexes...', fg='red', bold=True, file=sys.stderr)
@@ -91,6 +121,7 @@ def destroy(force):
 @click.option('--force', is_flag=True, default=False)
 @click.option('--verbose', is_flag=True, default=False)
 @with_appcontext
+@es_version_check
 def create(index_name, body, force, verbose):
     """Create a new index."""
     result = current_search_client.indices.create(
@@ -147,6 +178,7 @@ def list_cmd(only_active, only_aliases, verbose):
               expose_value=False,
               prompt='Do you know that you are going to delete the index?')
 @with_appcontext
+@es_version_check
 def delete(index_name, force, verbose):
     """Delete index by its name."""
     result = current_search_client.indices.delete(
@@ -165,6 +197,7 @@ def delete(index_name, force, verbose):
 @click.option('--force', is_flag=True, default=False)
 @click.option('--verbose', is_flag=True, default=False)
 @with_appcontext
+@es_version_check
 def put(index_name, doc_type, identifier, body, force, verbose):
     """Index input data."""
     result = current_search_client.index(

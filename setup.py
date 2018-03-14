@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015, 2016, 2017 CERN.
+# Copyright (C) 2015, 2016, 2017, 2018 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -85,7 +85,6 @@ setup_requires = [
 
 install_requires = [
     'Flask>=0.11.1',
-    'invenio-query-parser>=0.4.1',
     'requests>=2.4.0',
 ]
 

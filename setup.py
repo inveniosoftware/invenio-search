@@ -41,11 +41,10 @@ extras_require = {
         'elasticsearch>=5.0.0,<6.0.0',
         'elasticsearch-dsl>=5.1.0,<6.0.0',
     ],
-    # NOTE: Latest version of elasticsearch-dsl is not compatible with ES6 yet.
-    # 'elasticsearch6': [
-    #     'elasticsearch>=6.0.0,<7.0.0',
-    #     'elasticsearch-dsl>=5.4.0.dev0,<7.0.0',
-    # ],
+    'elasticsearch6': [
+        'elasticsearch>=6.0.0,<7.0.0',
+        'elasticsearch-dsl>=6.0.0,<7.0.0',
+    ],
     'records': [
         'invenio-records>=1.0.0a4',
     ],

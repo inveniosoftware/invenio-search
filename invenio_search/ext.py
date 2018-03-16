@@ -26,6 +26,15 @@ from .proxies import current_search_client
 from .utils import build_index_name
 
 
+def _get_indices(tree_or_filename):
+    for name, value in tree_or_filename.items():
+        if isinstance(value, dict):
+            for result in _get_indices(value):
+                yield result
+        else:
+            yield name
+
+
 class _SearchState(object):
     """Store connection to elastic client and registered indexes."""
 
@@ -248,7 +257,7 @@ class _SearchState(object):
 
             if alias:
                 yield alias, self.client.indices.put_alias(
-                    index=list(tree_or_filename.keys()),
+                    index=list(_get_indices(tree_or_filename)),
                     name=alias,
                     ignore=ignore,
                 )
@@ -281,7 +290,7 @@ class _SearchState(object):
             """Delete indexes and aliases by walking DFS."""
             if alias:
                 yield alias, self.client.indices.delete_alias(
-                    index=list(tree_or_filename.keys()),
+                    index=list(_get_indices(tree_or_filename)),
                     name=alias,
                     ignore=ignore,
                 )

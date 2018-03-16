@@ -46,9 +46,9 @@ def test_init(app, template_entrypoints):
             assert len(search.templates.keys()) == 2
             assert 'record-view-v1' in search.templates
             assert 'subdirectory-file-download-v1' in search.templates
-        elif ES_VERSION[0] == 5:
+        else:
             assert len(search.templates.keys()) == 1
-            assert 'record-view-v5' in search.templates
+            assert 'record-view-v{}'.format(ES_VERSION[0]) in search.templates
 
     with app.app_context():
 
@@ -62,7 +62,7 @@ def test_init(app, template_entrypoints):
     script_info = ScriptInfo(create_app=lambda info: app)
 
     with runner.isolated_filesystem():
-        result = runner.invoke(cmd, ['init'],
+        result = runner.invoke(cmd, ['init', '--force'],
                                obj=script_info)
         with app.app_context():
             if ES_VERSION[0] == 2:
@@ -70,9 +70,9 @@ def test_init(app, template_entrypoints):
                     'subdirectory-file-download-v1')
                 assert current_search_client.indices.exists_template(
                     'record-view-v1')
-            elif ES_VERSION[0] == 5:
+            else:
                 assert current_search_client.indices.exists_template(
-                    'record-view-v5')
+                    'record-view-v{}'.format(ES_VERSION[0]))
         assert 0 == result.exit_code
 
     with app.app_context():

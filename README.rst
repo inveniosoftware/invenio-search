@@ -26,6 +26,6 @@ Features:
 - Manages the creation and deletion of indices, aliases and templates.
 - API for providing stable searches (e.g. prevents bouncing of search results).
 - Maps JSONSchema URLs to Elasticsearch indexes.
-- Supports Elasticsearch v2 and v5.
+- Supports Elasticsearch v2, v5 and v6.
 
 Further documentation is available at https://invenio-search.readthedocs.io/.

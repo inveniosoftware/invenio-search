@@ -1,3 +1,10 @@
+..
+    This file is part of Invenio.
+    Copyright (C) 2015-2018 CERN.
+
+    Invenio is free software; you can redistribute it and/or modify it
+    under the terms of the MIT License; see LICENSE file for more details.
+
 ================
  Invenio-Search
 ================
@@ -8,14 +15,8 @@
 .. image:: https://img.shields.io/coveralls/inveniosoftware/invenio-search.svg
         :target: https://coveralls.io/r/inveniosoftware/invenio-search
 
-.. image:: https://img.shields.io/github/tag/inveniosoftware/invenio-search.svg
-        :target: https://github.com/inveniosoftware/invenio-search/releases
-
-.. image:: https://img.shields.io/pypi/dm/invenio-search.svg
-        :target: https://pypi.python.org/pypi/invenio-search
-
-.. image:: https://img.shields.io/github/license/inveniosoftware/invenio-search.svg
-        :target: https://github.com/inveniosoftware/invenio-search/blob/master/LICENSE
+.. image:: https://img.shields.io/pypi/v/invenio-search.svg
+        :target: https://pypi.org/pypi/invenio-search
 
 
 Elasticsearch management for Invenio.

@@ -18,7 +18,7 @@ history = open('CHANGES.rst').read()
 tests_require = [
     'check-manifest>=0.25',
     'coverage>=4.0',
-    'invenio-db[versioning]>=1.0.0a8',
+    'invenio-db[versioning]>=1.0.0',
     'isort>=4.2.15',
     'mock>=1.3.0',
     'pydocstyle>=1.0.0',
@@ -30,7 +30,7 @@ tests_require = [
 extras_require = {
     'docs': [
         'Sphinx>=1.5.6,<1.6',
-        'invenio-accounts>=1.0.0b1',
+        'invenio-accounts>=1.0.0',
     ],
     # Elasticsearch version
     'elasticsearch2': [
@@ -46,7 +46,7 @@ extras_require = {
         'elasticsearch-dsl>=6.0.0,<7.0.0',
     ],
     'records': [
-        'invenio-records>=1.0.0a4',
+        'invenio-records>=1.0.0',
     ],
     'tests': tests_require,
 }
@@ -117,7 +117,6 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: Implementation :: CPython',
-        'Programming Language :: Python :: Implementation :: PyPy',
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
     ],
 )

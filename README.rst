@@ -9,6 +9,9 @@
  Invenio-Search
 ================
 
+.. image:: https://img.shields.io/github/license/inveniosoftware/invenio-search.svg
+        :target: https://github.com/inveniosoftware/invenio-search/blob/master/LICENSE
+
 .. image:: https://img.shields.io/travis/inveniosoftware/invenio-search.svg
         :target: https://travis-ci.org/inveniosoftware/invenio-search
 

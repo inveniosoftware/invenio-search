@@ -28,16 +28,16 @@ def test_init(app, template_entrypoints):
     search.register_mappings('records', 'mock_module.mappings')
 
     assert 'records' in search.aliases
-    assert set(search.aliases['records']) == set([
+    assert set(search.aliases['records']) == {
         'records-authorities',
         'records-bibliographic',
-        'records-default-v1.0.0',
-    ])
-    assert set(search.mappings.keys()) == set([
+        'records-default-v1.0.0'
+    }
+    assert set(search.mappings.keys()) == {
         'records-authorities-authority-v1.0.0',
         'records-bibliographic-bibliographic-v1.0.0',
-        'records-default-v1.0.0',
-    ])
+        'records-default-v1.0.0'
+    }
     assert 6 == search.number_of_indexes
 
     with patch('invenio_search.ext.iter_entry_points',
@@ -50,57 +50,45 @@ def test_init(app, template_entrypoints):
             assert len(search.templates.keys()) == 1
             assert 'record-view-v{}'.format(ES_VERSION[0]) in search.templates
 
-    with app.app_context():
-
-        current_search_client.indices.delete_alias('_all', '_all',
-                                                   ignore=[400, 404])
-        current_search_client.indices.delete('*')
-        aliases = current_search_client.indices.get_alias()
-        assert 0 == len(aliases)
+    current_search_client.indices.delete_alias('_all', '_all', ignore=[400,
+                                                                       404])
+    current_search_client.indices.delete('*')
+    aliases = current_search_client.indices.get_alias()
+    assert 0 == len(aliases)
 
     runner = CliRunner()
     script_info = ScriptInfo(create_app=lambda info: app)
 
     with runner.isolated_filesystem():
-        result = runner.invoke(cmd, ['init', '--force'],
-                               obj=script_info)
-        with app.app_context():
-            if ES_VERSION[0] == 2:
-                assert current_search_client.indices.exists_template(
-                    'subdirectory-file-download-v1')
-                assert current_search_client.indices.exists_template(
-                    'record-view-v1')
-            else:
-                assert current_search_client.indices.exists_template(
-                    'record-view-v{}'.format(ES_VERSION[0]))
+        result = runner.invoke(cmd, ['init', '--force'], obj=script_info)
+        if ES_VERSION[0] == 2:
+            assert current_search_client.indices.exists_template(
+                'subdirectory-file-download-v1')
+            assert current_search_client.indices.exists_template(
+                'record-view-v1')
+        else:
+            assert current_search_client.indices.exists_template(
+                'record-view-v{}'.format(ES_VERSION[0]))
         assert 0 == result.exit_code
 
-    with app.app_context():
-        aliases = current_search_client.indices.get_alias()
-        assert 5 == sum(len(idx.get('aliases', {}))
-                        for idx in aliases.values())
+    aliases = current_search_client.indices.get_alias()
+    assert 5 == sum(len(idx.get('aliases', {})) for idx in aliases.values())
 
-        assert current_search_client.indices.exists(
-            list(search.mappings.keys())
-        )
+    assert current_search_client.indices.exists(list(search.mappings.keys()))
 
     # Clean-up:
-    with app.app_context():
-        result = runner.invoke(cmd, ['destroy'],
-                               obj=script_info)
-        assert 1 == result.exit_code
+    result = runner.invoke(cmd, ['destroy'], obj=script_info)
+    assert 1 == result.exit_code
 
-        result = runner.invoke(cmd, ['destroy', '--yes-i-know'],
-                               obj=script_info)
-        assert 0 == result.exit_code
+    result = runner.invoke(cmd, ['destroy', '--yes-i-know'], obj=script_info)
+    assert 0 == result.exit_code
 
-        aliases = current_search_client.indices.get_alias()
-        assert 0 == len(aliases)
+    aliases = current_search_client.indices.get_alias()
+    assert 0 == len(aliases)
 
 
 def test_list(app):
     """Run listing of mappings."""
-    original = app.config.get('SEARCH_MAPPINGS')
     app.config['SEARCH_MAPPINGS'] = ['records']
     search = app.extensions['invenio-search']
     search.register_mappings('authors', 'mock_module.mappings')
@@ -111,7 +99,7 @@ def test_list(app):
 
     result = runner.invoke(cmd, ['list', '--only-aliases'], obj=script_info)
     # Turn cli outputted str presentation of Python list into a list
-    assert set(ast.literal_eval(result.output)) == set(['records', 'authors'])
+    assert set(ast.literal_eval(result.output)) == {'records', 'authors'}
 
     result = runner.invoke(cmd, ['list'], obj=script_info)
     assert result.output == (

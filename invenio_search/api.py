@@ -15,7 +15,7 @@ from elasticsearch import VERSION as ES_VERSION
 from elasticsearch_dsl import FacetedSearch, Search
 from elasticsearch_dsl.faceted_search import FacetedResponse
 from elasticsearch_dsl.query import Bool, Ids
-from flask import request
+from flask import current_app, request
 
 from .proxies import current_search_client
 
@@ -86,6 +86,11 @@ class RecordsSearch(Search):
         kwargs.setdefault('index', getattr(self.Meta, 'index', None))
         kwargs.setdefault('doc_type', getattr(self.Meta, 'doc_types', None))
         kwargs.setdefault('using', current_search_client)
+        kwargs.setdefault('extra', {})
+
+        min_score = current_app.config.get('SEARCH_RESULTS_MIN_SCORE')
+        if min_score:
+            kwargs['extra'].update(min_score=min_score)
 
         super(RecordsSearch, self).__init__(**kwargs)
 

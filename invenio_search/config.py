@@ -64,3 +64,18 @@ and their mappings for `authors`:
     # and in your config.py
     SEARCH_MAPPINGS = ['records']
 """
+
+SEARCH_RESULTS_MIN_SCORE = None
+"""If set, the `min_score` parameter is added to each search request body.
+
+The `min_score` parameter excludes results which have a `_score` less than
+the minimum specified in `min_score`.
+
+Note that the `max_score` varies depending on the number of results for a given
+search query and it is not absolute value. Therefore, setting `min_score` too
+high can lead to 0 results because it can be higher than any result's `_score`.
+
+Please refer to `Elasticsearch min_score documentation
+<https://www.elastic.co/guide/en/elasticsearch/reference/current/
+search-request-min-score.html>`_ for more information.
+"""

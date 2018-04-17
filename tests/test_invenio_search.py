@@ -72,10 +72,9 @@ def test_client_reference():
 
 def test_default_client(app):
     """Test default client."""
-    with app.app_context():
-        current_search_client.cluster.health(
-            wait_for_status='yellow', request_timeout=1
-        )
+    current_search_client.cluster.health(
+        wait_for_status='yellow', request_timeout=1
+    )
 
 
 @pytest.mark.parametrize(('schema_url', 'result'), [
@@ -145,16 +144,15 @@ def test_whitelisted_aliases(app, aliases_config, expected_aliases):
 
     app.config.update(SEARCH_MAPPINGS=aliases_config)
 
-    with app.app_context():
-        current_search_client.indices.delete_alias('_all', '_all',
-                                                   ignore=[400, 404])
-        current_search_client.indices.delete('*')
-        list(current_search.create(ignore=None))
+    current_search_client.indices.delete_alias('_all', '_all', ignore=[400,
+                                                                       404])
+    current_search_client.indices.delete('*')
+    list(current_search.create(ignore=None))
 
-        aliases = current_search_client.indices.get_alias()
-        if expected_aliases == []:
-            assert 0 == len(aliases)
-        else:
-            assert current_search_client.indices.exists(expected_aliases)
+    aliases = current_search_client.indices.get_alias()
+    if expected_aliases == []:
+        assert 0 == len(aliases)
+    else:
+        assert current_search_client.indices.exists(expected_aliases)
 
     app.config['SEARCH_MAPPINGS'] = orig

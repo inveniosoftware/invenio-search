@@ -8,6 +8,13 @@
 Changes
 =======
 
+Version 1.0.1 (released 2018-06-13)
+
+- Fixes issues with idna/urllib3 dependencies conflicts.
+
+- Adds SEARCH_RESULTS_MIN_SCORE configuration variable to allow excluding
+  search results which have a score less than the specified value.
+
 Version 1.0.0 (released 2018-03-23)
 
 - Initial public release.

@@ -101,3 +101,19 @@ Please refer to `Elasticsearch min_score documentation
 <https://www.elastic.co/guide/en/elasticsearch/reference/current/
 search-request-min-score.html>`_ for more information.
 """
+
+SEARCH_INDEX_PREFIX = ''
+"""Any index and alias will be prefixed with this string.
+
+Useful to host multiple instances of the app on the same elasticsearch cluster,
+for example on one app you can set it to `dev-` and on the other to `prod-`,
+and each will create non-colliding indices prefixed with the corresponding
+stirng.
+
+For example if you want to prefix all your indices and aliases with `prod-`:
+
+.. code-block:: python
+
+    # in your config.py
+    SEARCH_INDEX_PREFIX = 'prod-'
+"""

@@ -10,27 +10,37 @@
 
 import os
 
+from flask import current_app
 
-def build_index_name(*parts):
+
+def prefix_index(app, index):
+    """Prefixes the given index if needed.
+
+    :param app: Flask app to get the config from.
+    :param index: Name of the index to prefix.
+    :returns: A string with the new index name prefixed in needed.
+    """
+    index_prefix = app.config['SEARCH_INDEX_PREFIX']
+    if index.startswith(index_prefix):
+        return index
+
+    return index_prefix + index
+
+
+def build_index_name(app, *parts):
     """Build an index name from parts.
 
     :param parts: Parts that should be combined to make an index name.
     """
-    return os.path.splitext('-'.join([part for part in parts if part]))[0]
+    base_index = os.path.splitext(
+        '-'.join([part for part in parts if part])
+    )[0]
+
+    return prefix_index(app=app, index=base_index)
 
 
 def schema_to_index(schema, index_names=None):
     """Get index/doc_type given a schema URL.
-
-    >>> from invenio_search.utils import schema_to_index
-    >>> schema_to_index('records/record-v1.0.0.json')
-    ('records-record-v1.0.0', 'record-v1.0.0')
-    >>> schema_to_index('default-v1.0.0.json')
-    ('default-v1.0.0', 'default-v1.0.0')
-    >>> schema_to_index('default-v1.0.0.json', index_names=[])
-    (None, None)
-    >>> schema_to_index('invalidextension')
-    (None, None)
 
     :param schema: The schema name
     :param index_names: A list of index name.
@@ -43,10 +53,10 @@ def schema_to_index(schema, index_names=None):
         return (None, None)
 
     if index_names is None:
-        return (build_index_name(*parts), doc_type[0])
+        return (build_index_name(current_app, *parts), doc_type[0])
 
     for start in range(len(parts)):
-        index_name = build_index_name(*parts[start:])
+        index_name = build_index_name(current_app, *parts[start:])
         if index_name in index_names:
             return (index_name, doc_type[0])
 

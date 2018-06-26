@@ -97,7 +97,7 @@ class _SearchState(object):
             package_name = '{}.v{}'.format(package_name, ES_VERSION[0])
 
         def _walk_dir(aliases, *parts):
-            root_name = build_index_name(*parts)
+            root_name = build_index_name(self.app, *parts)
             resource_name = os.path.join(*parts)
 
             if root_name not in aliases:
@@ -106,7 +106,10 @@ class _SearchState(object):
             data = aliases.get(root_name, {})
 
             for filename in resource_listdir(package_name, resource_name):
-                index_name = build_index_name(*(parts + (filename, )))
+                index_name = build_index_name(
+                    self.app,
+                    *(parts + (filename, ))
+                )
                 file_path = os.path.join(resource_name, filename)
 
                 if resource_isdir(package_name, file_path):
@@ -152,7 +155,10 @@ class _SearchState(object):
             resource_name = os.path.join(*parts)
 
             for filename in resource_listdir(module_name, resource_name):
-                template_name = build_index_name(*(parts[1:] + (filename, )))
+                template_name = build_index_name(
+                    self.app,
+                    *(parts[1:] + (filename, ))
+                )
                 file_path = os.path.join(resource_name, filename)
 
                 if resource_isdir(module_name, file_path):

@@ -17,7 +17,6 @@ from flask import Flask
 from mock import patch
 
 from invenio_search import InvenioSearch, current_search, current_search_client
-from invenio_search.utils import schema_to_index
 
 
 def test_version():
@@ -75,19 +74,6 @@ def test_default_client(app):
     current_search_client.cluster.health(
         wait_for_status='yellow', request_timeout=1
     )
-
-
-@pytest.mark.parametrize(('schema_url', 'result'), [
-    ('invalidfileextension',
-     (None, None)),
-    ('records/record-v1.0.0.json',
-     ('records-record-v1.0.0', 'record-v1.0.0')),
-    ('/records/record-v1.0.0.json',
-     ('records-record-v1.0.0', 'record-v1.0.0')),
-])
-def test_schema_to_index(schema_url, result):
-    """Test conversion of schema to index name and document type."""
-    assert result == schema_to_index(schema_url)
 
 
 def test_load_entry_point_group(template_entrypoints):

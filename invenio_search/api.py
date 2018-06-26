@@ -18,6 +18,7 @@ from elasticsearch_dsl.query import Bool, Ids
 from flask import current_app, request
 
 from .proxies import current_search_client
+from .utils import prefix_index
 
 
 class DefaultFilter(object):
@@ -84,6 +85,18 @@ class RecordsSearch(Search):
     def __init__(self, **kwargs):
         """Use Meta to set kwargs defaults."""
         kwargs.setdefault('index', getattr(self.Meta, 'index', None))
+        # elasticsearch_dsl might pass a list or string
+        if isinstance(kwargs['index'], (tuple, list)):
+            kwargs['index'] = [
+                prefix_index(app=current_app, index=index)
+                for index in kwargs['index']
+            ]
+        elif kwargs['index'] is not None:
+            kwargs['index'] = prefix_index(
+                app=current_app,
+                index=kwargs['index'],
+            )
+
         kwargs.setdefault('doc_type', getattr(self.Meta, 'doc_types', None))
         kwargs.setdefault('using', current_search_client)
         kwargs.setdefault('extra', {})
@@ -129,7 +142,7 @@ class RecordsSearch(Search):
         class RecordsFacetedSearch(FacetedSearch):
             """Pass defaults from ``cls.Meta`` object."""
 
-            index = search_._index[0]
+            index = prefix_index(app=current_app, index=search_._index[0])
             doc_types = getattr(search_.Meta, 'doc_types', ['_all'])
             fields = getattr(search_.Meta, 'fields', ('*', ))
             facets = getattr(search_.Meta, 'facets', {})

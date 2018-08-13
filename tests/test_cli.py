@@ -61,6 +61,7 @@ def test_init(app, template_entrypoints):
 
     with runner.isolated_filesystem():
         result = runner.invoke(cmd, ['init', '--force'], obj=script_info)
+        assert result.exit_code == 0
         if ES_VERSION[0] == 2:
             assert current_search_client.indices.exists_template(
                 'subdirectory-file-download-v1')

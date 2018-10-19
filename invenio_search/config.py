@@ -40,6 +40,28 @@ the different nodes. Please see
 for further details.
 """
 
+SEARCH_CLIENT_CONFIG = None
+"""Elasticsearch client configuration.
+
+If provided, this configuration dictionary will be passed to the initialization
+of the :class:`elasticsearch:elasticsearch.Elasticsearch` client instance used
+by the module.
+
+
+If not set, for the ``hosts`` key, :py:data:`.SEARCH_ELASTIC_HOSTS` will be
+used and for the ``connection_class`` key
+:class:`elasticsearch:elasticsearch.connection.RequestsHttpConnection`.
+
+Example value:
+
+.. code-block:: python
+
+   # e.g. for smaller/slower machines or development/CI you might want to be a
+   # bit more relaxed in terms of timeouts and failure retries.
+   dict(timeout=30, max_retries=5,
+   )
+"""
+
 SEARCH_MAPPINGS = None  # loads all mappings and creates aliases for them
 """List of aliases for which, their search mappings should be created.
 

@@ -16,6 +16,8 @@ import os
 import warnings
 
 from elasticsearch import VERSION as ES_VERSION
+from elasticsearch import Elasticsearch
+from elasticsearch.connection import RequestsHttpConnection
 from pkg_resources import iter_entry_points, resource_filename, \
     resource_isdir, resource_listdir
 from werkzeug.utils import cached_property
@@ -186,13 +188,11 @@ class _SearchState(object):
 
     def _client_builder(self):
         """Build Elasticsearch client."""
-        from elasticsearch import Elasticsearch
-        from elasticsearch.connection import RequestsHttpConnection
-
-        return Elasticsearch(
-            hosts=self.app.config.get('SEARCH_ELASTIC_HOSTS'),
-            connection_class=RequestsHttpConnection,
-        )
+        client_config = self.app.config.get('SEARCH_CLIENT_CONFIG') or {}
+        client_config.setdefault(
+            'hosts', self.app.config.get('SEARCH_ELASTIC_HOSTS'))
+        client_config.setdefault('connection_class', RequestsHttpConnection)
+        return Elasticsearch(**client_config)
 
     @property
     def client(self):

@@ -13,6 +13,7 @@ from __future__ import absolute_import, print_function
 
 import pytest
 from elasticsearch import VERSION as ES_VERSION
+from elasticsearch.connection import RequestsHttpConnection
 from flask import Flask
 from mock import patch
 
@@ -37,6 +38,19 @@ def test_init():
     assert 'invenio-search' not in app.extensions
     ext.init_app(app)
     assert 'invenio-search' in app.extensions
+
+
+def test_client_config():
+    """Test Elasticsearch client configuration."""
+    app = Flask('testapp')
+    app.config['SEARCH_CLIENT_CONFIG'] = {'timeout': 30, 'foo': 'bar'}
+    with patch('elasticsearch.Elasticsearch.__init__') as mock_es_init:
+        mock_es_init.return_value = None
+        ext = InvenioSearch(app)
+        es_client = ext.client  # trigger client initialization
+        mock_es_init.assert_called_once_with(
+            hosts=None, connection_class=RequestsHttpConnection,
+            timeout=30, foo='bar')
 
 
 def test_flush_and_refresh(app):

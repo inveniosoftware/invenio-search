@@ -8,6 +8,16 @@
 Changes
 =======
 
+Version 1.0.2 (released 2018-10-23)
+
+- Updates the urllib3 dependency version pin.
+
+- Pins elasticsearch-dsl to <6.2.0, because of a breaking change in the
+  handling of empty queries.
+
+- Adds the SEARCH_CLIENT_CONFIG configuration variable, allowing more complex
+  configuration to be passed to the Elasticsearch client initialization.
+
 Version 1.0.1 (released 2018-06-13)
 
 - Fixes issues with idna/urllib3 dependencies conflicts.

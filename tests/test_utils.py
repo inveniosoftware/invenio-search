@@ -43,13 +43,13 @@ from invenio_search.utils import schema_to_index
     ),
 )
 def test_schema_to_index(schema, expected, index_names, app):
-
+    """Test the expected value of schema to index."""
     result = schema_to_index(schema, index_names=index_names)
     assert result == expected
 
 
 def test_schema_to_index_prefixes_indices(app):
-
+    """Test that prefix is added to the index when creating it."""
     new_conf = {'SEARCH_INDEX_PREFIX': 'prefix-'}
     with patch.dict(app.config, new_conf):
         result = schema_to_index('default-v1.0.0.json')

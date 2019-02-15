@@ -16,15 +16,16 @@ readme = open('README.rst').read()
 history = open('CHANGES.rst').read()
 
 tests_require = [
-    'check-manifest>=0.25',
+    'check-manifest>=0.35',
     'coverage>=4.0',
     'invenio-db[versioning]>=1.0.0',
     'isort>=4.2.15',
     'mock>=1.3.0',
     'pydocstyle>=1.0.0',
     'pytest-cov>=1.8.0',
-    'pytest-pep8>=1.0.6',
-    'pytest>=2.8.0',
+    'pytest-random-order>=0.5.4',
+    "pytest-pep8>=1.0.6",
+    'pytest>=3.8.1,<4',
 ]
 
 extras_require = {
@@ -97,6 +98,9 @@ setup(
     include_package_data=True,
     platforms='any',
     entry_points={
+        'flask.commands': [
+            'index = invenio_search.cli:index'
+        ],
         'invenio_base.api_apps': [
             'invenio_search = invenio_search:InvenioSearch',
         ],

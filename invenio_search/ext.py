@@ -23,9 +23,8 @@ from pkg_resources import iter_entry_points, resource_filename, \
 from werkzeug.utils import cached_property
 
 from . import config
-from .cli import index as index_cmd
 from .proxies import current_search_client
-from .utils import build_index_name
+from .utils import build_index_name, prefix_index
 
 
 def _get_indices(tree_or_filename):
@@ -64,12 +63,18 @@ class _SearchState(object):
 
     @cached_property
     def templates(self):
-        result = None
+        """Generate a dictionary with template names and file paths."""
+        templates = {}
+        result = []
         if self.entry_point_group_templates:
             result = self.load_entry_point_group_templates(
-                self.entry_point_group_templates)
-        return {k: v for d in result for k, v in d.items()} \
-            if result is not None else {}
+                self.entry_point_group_templates) or []
+
+        for template in result:
+            for name, path in template.items():
+                templates[prefix_index(self.app, name)] = path
+
+        return templates
 
     def register_mappings(self, alias, package_name):
         """Register mappings from a package under given alias.
@@ -275,13 +280,27 @@ class _SearchState(object):
         """Yield tuple with registered template and response from client."""
         ignore = ignore or []
 
+        def _replace_prefix(template_path, body):
+            """Replace index prefix in template request body."""
+            pattern = '__SEARCH_INDEX_PREFIX__'
+
+            prefix = self.app.config['SEARCH_INDEX_PREFIX'] or ''
+            if prefix:
+                assert pattern in body, "You are using the prefix `{0}`, "
+                "but the template `{1}` does not contain the "
+                "pattern `{2}`.".format(prefix, template_path, pattern)
+
+            return body.replace(pattern, prefix)
+
         def _put_template(template):
             """Put template in search client."""
-            with open(self.templates[template], 'r') as body:
+            with open(self.templates[template], 'r') as fp:
+                body = fp.read()
+                replaced_body = _replace_prefix(self.templates[template], body)
                 return self.templates[template],\
                     current_search_client.indices.put_template(
                         name=template,
-                        body=json.load(body),
+                        body=json.loads(replaced_body),
                         ignore=ignore,
                 )
 
@@ -338,8 +357,6 @@ class InvenioSearch(object):
         :param app: An instance of :class:`~flask.app.Flask`.
         """
         self.init_config(app)
-
-        app.cli.add_command(index_cmd)
 
         state = _SearchState(
             app,

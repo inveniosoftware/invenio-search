@@ -103,17 +103,28 @@ search-request-min-score.html>`_ for more information.
 """
 
 SEARCH_INDEX_PREFIX = ''
-"""Any index and alias will be prefixed with this string.
+"""Any index, alias and templates will be prefixed with this string.
 
-Useful to host multiple instances of the app on the same elasticsearch cluster,
+Useful to host multiple instances of the app on the same Elasticsearch cluster,
 for example on one app you can set it to `dev-` and on the other to `prod-`,
 and each will create non-colliding indices prefixed with the corresponding
-stirng.
+string.
 
-For example if you want to prefix all your indices and aliases with `prod-`:
+Usage example:
 
 .. code-block:: python
 
     # in your config.py
     SEARCH_INDEX_PREFIX = 'prod-'
+
+For templates, ensure that the prefix `__SEARCH_INDEX_PREFIX__` is added to
+your index names. This pattern will be replaced by the prefix config value.
+
+Usage example in your template.json:
+
+.. code-block:: json
+
+    {
+        "index_patterns": ["__SEARCH_INDEX_PREFIX__myindex-name-*"]
+    }
 """

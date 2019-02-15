@@ -156,3 +156,112 @@ def test_whitelisted_aliases(app, aliases_config, expected_aliases):
         assert current_search_client.indices.exists(expected_aliases)
 
     app.config['SEARCH_MAPPINGS'] = orig
+
+
+def _test_prefix_indices(app, prefix_value):
+    """Assert that each index name contains the prefix."""
+    app.config['SEARCH_INDEX_PREFIX'] = prefix_value
+    search = app.extensions['invenio-search']
+    search.register_mappings('records', 'mock_module.mappings')
+
+    assert set(search.mappings.keys()) == {
+        '{0}records-authorities-authority-v1.0.0'.format(prefix_value or ''),
+        '{0}records-bibliographic-bibliographic-v1.0.0'.format(
+            prefix_value or ''),
+        '{0}records-default-v1.0.0'.format(prefix_value or '')
+    }
+
+    # clean-up in case something failed previously
+    current_search_client.indices.delete('*')
+    # create indices and test
+    list(search.create())
+    assert current_search_client.indices.exists(list(search.mappings.keys()))
+    # clean-up
+    current_search_client.indices.delete('*')
+
+
+def test_indices_prefix_empty_value(app):
+    """Test indices creation with prefix value empty string."""
+    prefix_value = ''
+    _test_prefix_indices(app, prefix_value)
+
+
+def test_indices_prefix_none_value(app):
+    """Test indices creation with a prefix value None."""
+    prefix_value = None
+    _test_prefix_indices(app, prefix_value)
+
+
+def test_indices_prefix_some_value(app):
+    """Test indices creation with a prefix value `myprefix-`."""
+    prefix_value = 'myprefix-'
+    _test_prefix_indices(app, prefix_value)
+
+
+def _test_prefix_templates(app, prefix_value, template_entrypoints):
+    """Assert that templates take into account the prefix name."""
+
+    def _contains_prefix(prefix_value, string_or_list):
+        """Return True if the prefix value is in the input list or string."""
+        if isinstance(string_or_list, list):
+            return all([True for match in string_or_list
+                        if prefix_value in match])
+        else:
+            return prefix_value in string_or_list
+
+    def _test_prefix_replaced_in_body(prefix_value, tpl_key):
+        """Test that the prefix is replaced in the body when defined."""
+        if prefix_value:
+            tpl = current_search_client.indices.get_template(name)
+            assert name in tpl
+            assert _contains_prefix(prefix_value, tpl[name][tpl_key])
+
+    app.config['SEARCH_INDEX_PREFIX'] = prefix_value
+    search = app.extensions['invenio-search']
+    with patch('invenio_search.ext.iter_entry_points',
+               return_value=template_entrypoints('invenio_search.templates')):
+        # create templates
+        list(search.put_templates())
+
+        if ES_VERSION[0] == 2:
+            assert len(search.templates.keys()) == 2
+            name = '{0}record-view-v1'.format(prefix_value or '')
+            assert name in search.templates
+            assert current_search_client.indices.exists_template(name)
+            name = '{0}subdirectory-file-download-v1'.format(
+                prefix_value or '')
+            assert name in search.templates
+            assert current_search_client.indices.exists_template(name)
+            _test_prefix_replaced_in_body(prefix_value, 'template')
+        elif ES_VERSION[0] == 5:
+            assert len(search.templates.keys()) == 1
+            name = '{0}record-view-v{1}'.format(
+                prefix_value or '', ES_VERSION[0])
+            assert name in search.templates
+            assert current_search_client.indices.exists_template(name)
+            _test_prefix_replaced_in_body(prefix_value, 'template')
+        else:
+            assert len(search.templates.keys()) == 1
+            name = '{0}record-view-v{1}'.format(
+                prefix_value or '', ES_VERSION[0])
+            assert name in search.templates
+            assert current_search_client.indices.exists_template(name)
+            _test_prefix_replaced_in_body(prefix_value, 'index_patterns')
+
+
+def test_templates_prefix_empty_value(app, template_entrypoints):
+    """Test templates creation with prefix value empty string."""
+    prefix_value = ''
+    _test_prefix_templates(app, prefix_value, template_entrypoints)
+
+
+def test_templates_prefix_none_value(app, template_entrypoints):
+    """Test templates creation with a prefix value None."""
+    prefix_value = None
+    _test_prefix_templates(app, prefix_value, template_entrypoints)
+
+
+def test_templates_prefix_some_value(app, template_entrypoints):
+    """Test templates creation with a prefix value `myprefix-`."""
+    prefix_value = 'myprefix-'
+    _test_prefix_templates(app, prefix_value, template_entrypoints)

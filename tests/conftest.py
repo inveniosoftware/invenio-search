@@ -29,7 +29,7 @@ sys.path.append(
                  'tests/mock_module'))
 
 
-@pytest.yield_fixture()
+@pytest.fixture()
 def app():
     """Flask application fixture."""
     # Set temporary instance path for sqlite

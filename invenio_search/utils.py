@@ -20,7 +20,8 @@ def prefix_index(app, index):
     :param index: Name of the index to prefix.
     :returns: A string with the new index name prefixed in needed.
     """
-    index_prefix = app.config['SEARCH_INDEX_PREFIX']
+    index_prefix = app.config['SEARCH_INDEX_PREFIX'] or ''
+    # avoid to add the prefix multiple times
     if index.startswith(index_prefix):
         return index
 

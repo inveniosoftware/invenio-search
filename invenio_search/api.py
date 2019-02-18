@@ -84,18 +84,14 @@ class RecordsSearch(Search):
 
     def __init__(self, **kwargs):
         """Use Meta to set kwargs defaults."""
-        kwargs.setdefault('index', getattr(self.Meta, 'index', None))
-        # elasticsearch_dsl might pass a list or string
-        if isinstance(kwargs['index'], (tuple, list)):
-            kwargs['index'] = [
-                prefix_index(app=current_app, index=index)
-                for index in kwargs['index']
-            ]
-        elif kwargs['index'] is not None:
-            kwargs['index'] = prefix_index(
-                app=current_app,
-                index=kwargs['index'],
-            )
+        # at object instantiation, kwargs['index'] is not defined.
+        # Elasticsearch-dsl-py re-instantiated the object at each search
+        # by cloning it and passing as kwargs the list of indices
+        # kwargs['index'] = ['index-name1', 'index-name2']
+        if not kwargs.get('index') and getattr(self.Meta, 'index', None):
+            _index_name = prefix_index(app=current_app,
+                                       index=getattr(self.Meta, 'index', None))
+            kwargs.setdefault('index', _index_name)
 
         kwargs.setdefault('doc_type', getattr(self.Meta, 'doc_types', None))
         kwargs.setdefault('using', current_search_client)

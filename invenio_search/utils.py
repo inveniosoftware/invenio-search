@@ -18,13 +18,9 @@ def prefix_index(app, index):
 
     :param app: Flask app to get the config from.
     :param index: Name of the index to prefix.
-    :returns: A string with the new index name prefixed in needed.
+    :returns: A string with the new index name prefixed if needed.
     """
     index_prefix = app.config['SEARCH_INDEX_PREFIX'] or ''
-    # avoid to add the prefix multiple times
-    if index.startswith(index_prefix):
-        return index
-
     return index_prefix + index
 
 

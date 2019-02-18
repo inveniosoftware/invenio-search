@@ -24,7 +24,7 @@ from werkzeug.utils import cached_property
 
 from . import config
 from .proxies import current_search_client
-from .utils import build_index_name, prefix_index
+from .utils import build_index_name
 
 
 def _get_indices(tree_or_filename):
@@ -72,7 +72,7 @@ class _SearchState(object):
 
         for template in result:
             for name, path in template.items():
-                templates[prefix_index(self.app, name)] = path
+                templates[name] = path
 
         return templates
 

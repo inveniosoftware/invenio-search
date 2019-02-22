@@ -98,9 +98,6 @@ setup(
     include_package_data=True,
     platforms='any',
     entry_points={
-        'flask.commands': [
-            'index = invenio_search.cli:index'
-        ],
         'invenio_base.api_apps': [
             'invenio_search = invenio_search:InvenioSearch',
         ],

@@ -23,6 +23,7 @@ from pkg_resources import iter_entry_points, resource_filename, \
 from werkzeug.utils import cached_property
 
 from . import config
+from .cli import index as index_cmd
 from .proxies import current_search_client
 from .utils import build_index_name
 
@@ -362,6 +363,8 @@ class InvenioSearch(object):
         :param app: An instance of :class:`~flask.app.Flask`.
         """
         self.init_config(app)
+
+        app.cli.add_command(index_cmd)
 
         state = _SearchState(
             app,

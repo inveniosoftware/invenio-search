@@ -158,6 +158,28 @@ def test_whitelisted_aliases(app, aliases_config, expected_aliases):
     app.config['SEARCH_MAPPINGS'] = orig
 
 
+@pytest.mark.parametrize(('aliases_config', 'prefix', 'expected_aliases'), [
+    (['authors'], 'test-', ['test-authors']),
+    (['authors', 'records'], 'dev-', ['dev-records', 'dev-authors']),
+])
+def test_prefix_search_mappings(app, aliases_config, prefix, expected_aliases):
+    """Test that indices are created when prefix & search mappings are set."""
+    app.config.update(
+        SEARCH_MAPPINGS=aliases_config,
+        SEARCH_INDEX_PREFIX=prefix,
+    )
+
+    search = app.extensions['invenio-search']
+    search.register_mappings('records', 'mock_module.mappings')
+    search.register_mappings('authors', 'mock_module.mappings')
+
+    active_aliases = search.active_aliases
+
+    assert len(active_aliases) == len(expected_aliases)
+    for expected_alias in expected_aliases:
+        assert expected_alias in active_aliases
+
+
 def _test_prefix_indices(app, prefix_value):
     """Assert that each index name contains the prefix."""
     app.config['SEARCH_INDEX_PREFIX'] = prefix_value

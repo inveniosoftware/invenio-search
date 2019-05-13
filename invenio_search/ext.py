@@ -25,7 +25,7 @@ from werkzeug.utils import cached_property
 from . import config
 from .cli import index as index_cmd
 from .proxies import current_search_client
-from .utils import build_index_name
+from .utils import build_index_name, prefix_index
 
 
 def _get_indices(tree_or_filename):
@@ -246,7 +246,14 @@ class _SearchState(object):
         `SEARCH_MAPPINGS` config variable. If the `SEARCH_MAPPINGS` is set to
         `None` (the default), all aliases are included.
         """
-        whitelisted_aliases = self.app.config.get('SEARCH_MAPPINGS')
+        search_mappings = self.app.config.get('SEARCH_MAPPINGS')
+        if search_mappings:
+            whitelisted_aliases = [
+                prefix_index(self.app, index) for index in search_mappings
+            ]
+        else:
+            whitelisted_aliases = search_mappings
+
         if whitelisted_aliases is None:
             return self.aliases
         else:

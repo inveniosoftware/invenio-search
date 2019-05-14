@@ -15,4 +15,4 @@ export FLASK_APP=app.py
 [ -e "$DIR/instance" ] && rm -Rf $DIR/instance
 
 # Delete indices
-flask index destroy --yes-i-know
+flask index delete demo* --force --yes-i-know

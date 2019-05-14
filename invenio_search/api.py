@@ -19,7 +19,7 @@ from elasticsearch_dsl.query import Bool, Ids
 from flask import current_app, request
 
 from .proxies import current_search_client
-from .utils import prefix_index
+from .utils import build_alias_name
 
 
 class DefaultFilter(object):
@@ -131,7 +131,7 @@ class BaseRecordsSearch(Search):
         class RecordsFacetedSearch(FacetedSearch):
             """Pass defaults from ``cls.Meta`` object."""
 
-            index = prefix_index(app=current_app, index=search_._index[0])
+            index = build_alias_name(search_._index[0])
             doc_types = getattr(search_.Meta, 'doc_types', ['_all'])
             fields = getattr(search_.Meta, 'fields', ('*', ))
             facets = getattr(search_.Meta, 'facets', {})
@@ -200,22 +200,20 @@ class RecordsSearch(BaseRecordsSearch):
         if not isinstance(_index_param, PrefixedIndexList):
             if isinstance(_index_param, (tuple, list)):
                 _prefixed_index_list = [
-                    prefix_index(app=current_app,
-                                 index=_index) for _index in _index_param]
+                    build_alias_name(_index)
+                    for _index in _index_param
+                ]
                 kwargs.update({'index': _prefixed_index_list})
             elif isinstance(_index_param, six.string_types):
                 _splitted_index = _index_param.strip().split(',')
                 if len(_splitted_index) > 1:
                     _prefix_index_list = [
-                        prefix_index(current_app, _index)
+                        build_alias_name(_index)
                         for _index in _splitted_index]
                     _prefix_index_param = ','.join(_prefix_index_list)
-                    kwargs.update({
-                        'index': _prefix_index_param})
+                    kwargs.update({'index': _prefix_index_param})
                 else:
-                    kwargs.update({
-                        'index': prefix_index(app=current_app,
-                                              index=_index_param)})
+                    kwargs.update({'index': build_alias_name(_index_param)})
                 _index_param = [_index_param]
             self._original_index = _index_param
 

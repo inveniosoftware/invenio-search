@@ -9,7 +9,7 @@
 import pytest
 from mock import patch
 
-from invenio_search.utils import schema_to_index
+from invenio_search.utils import build_index_name, schema_to_index
 
 
 @pytest.mark.parametrize(
@@ -48,10 +48,52 @@ def test_schema_to_index(schema, expected, index_names, app):
     assert result == expected
 
 
-def test_schema_to_index_prefixes_indices(app):
+@pytest.mark.parametrize(('prefix', 'expected'), [
+    ('test-', ('test-default-v1.0.0', 'default-v1.0.0')),
+    (None, ('abc-default-v1.0.0', 'default-v1.0.0')),
+    ('', ('default-v1.0.0', 'default-v1.0.0')),
+])
+def test_schema_to_index_prefixes_indices(app, prefix, expected):
     """Test that prefix is added to the index when creating it."""
-    new_conf = {'SEARCH_INDEX_PREFIX': 'prefix-'}
+    new_conf = {'SEARCH_INDEX_PREFIX': 'abc-'}
     with patch.dict(app.config, new_conf):
-        result = schema_to_index('default-v1.0.0.json')
+        result = schema_to_index('default-v1.0.0.json', prefix=prefix)
 
-        assert result == ('prefix-default-v1.0.0', 'default-v1.0.0')
+        assert result == expected
+
+
+@pytest.mark.parametrize(('parts', 'prefix', 'suffix', 'expected'), [
+    (['records'], '', '', 'records'),
+    (['records'], 'foo-', '', 'foo-records'),
+    (['records', 'record'], 'foo-', '', 'foo-records-record'),
+    (['records', 'record'], '', '-new', 'records-record-new'),
+    (['test', 'recs', 'rec'], 'foo-', '-old', 'foo-test-recs-rec-old'),
+])
+def test_build_suffix_index_name(app, parts, prefix, suffix, expected):
+    app.config.update(SEARCH_INDEX_PREFIX=prefix)
+    assert build_index_name(parts, suffix=suffix, app=app) == expected
+
+
+@pytest.mark.parametrize(('index_names', 'prefix', 'expected'), [
+    (
+        ['default-v1.0.0'],
+        'test-',
+        ('test-default-v1.0.0', 'default-v1.0.0')
+    ),
+    (
+        ['default-v1.0.0'],
+        '',
+        ('default-v1.0.0', 'default-v1.0.0')
+    ),
+])
+def test_schema_to_index_with_names(app, index_names, prefix, expected):
+    """Test that prefix is added to the index when creating it."""
+    new_conf = {'SEARCH_INDEX_PREFIX': prefix}
+    with patch.dict(app.config, new_conf):
+        result = schema_to_index(
+            'default-v1.0.0.json',
+            index_names=index_names,
+            prefix=prefix
+        )
+
+        assert result == expected

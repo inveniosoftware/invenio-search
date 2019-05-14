@@ -9,7 +9,7 @@
 import pytest
 from mock import patch
 
-from invenio_search.utils import schema_to_index
+from invenio_search.utils import build_suffix_index_name, schema_to_index
 
 
 @pytest.mark.parametrize(
@@ -55,3 +55,16 @@ def test_schema_to_index_prefixes_indices(app):
         result = schema_to_index('default-v1.0.0.json')
 
         assert result == ('prefix-default-v1.0.0', 'default-v1.0.0')
+
+
+@pytest.mark.parametrize(('parts', 'prefix', 'suffix', 'expected'), [
+    (['records'], '', '', 'records'),
+    (['records'], 'foo-', '', 'foo-records'),
+    (['records', 'record'], 'foo-', '', 'foo-records-record'),
+    (['records', 'record'], '', '-new', 'records-record-new'),
+    (['test', 'recs', 'rec'], 'foo-', '-old', 'foo-test-recs-rec-old'),
+])
+def test_build_suffix_index_name(app, parts, prefix, suffix, expected):
+    app.config.update(SEARCH_INDEX_PREFIX=prefix)
+
+    assert build_suffix_index_name(app, suffix, *parts) == expected

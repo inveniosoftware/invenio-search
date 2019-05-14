@@ -13,11 +13,13 @@ from __future__ import absolute_import, print_function
 import errno
 import json
 import os
+import time
 import warnings
 
 from elasticsearch import VERSION as ES_VERSION
 from elasticsearch import Elasticsearch
 from elasticsearch.connection import RequestsHttpConnection
+from elasticsearch.exceptions import NotFoundError
 from pkg_resources import iter_entry_points, resource_filename, \
     resource_isdir, resource_listdir
 from werkzeug.utils import cached_property
@@ -25,7 +27,8 @@ from werkzeug.utils import cached_property
 from . import config
 from .cli import index as index_cmd
 from .proxies import current_search_client
-from .utils import build_index_name, prefix_index
+from .utils import build_index_name, build_suffix_index_name, prefix_index, \
+    timestamp_suffix
 
 
 def _get_indices(tree_or_filename):
@@ -58,6 +61,7 @@ class _SearchState(object):
         self.number_of_indexes = 0
         self._client = kwargs.get('client')
         self.entry_point_group_templates = entry_point_group_templates
+        self.current_suffix = None
 
         if entry_point_group_mappings:
             self.load_entry_point_group_mappings(entry_point_group_mappings)
@@ -82,12 +86,25 @@ class _SearchState(object):
 
         return templates
 
-    def register_mappings(self, alias, package_name):
+    def generate_suffix(self, force=False):
+        """Generate a new suffix for the current state.
+
+        :param force: Generate a new suffix even if an old one already exists.
+        """
+        if force or self.current_suffix is None:
+            self.current_suffix = timestamp_suffix()
+
+    def register_mappings(self, alias, package_name, suffix=None):
         """Register mappings from a package under given alias.
 
         :param alias: The alias.
         :param package_name: The package name.
         """
+        if suffix is None:
+            self.generate_suffix()
+        else:
+            self.current_suffix = suffix
+
         # For backwards compatibility, we also allow for ES2 mappings to be
         # placed at the root level of the specified package path, and not in
         # the `<package-path>/v2` directory.
@@ -113,16 +130,9 @@ class _SearchState(object):
             root_name = build_index_name(self.app, *parts)
             resource_name = os.path.join(*parts)
 
-            if root_name not in aliases:
-                self.number_of_indexes += 1
-
             data = aliases.get(root_name, {})
 
             for filename in resource_listdir(package_name, resource_name):
-                index_name = build_index_name(
-                    self.app,
-                    *(parts + (filename, ))
-                )
                 file_path = os.path.join(resource_name, filename)
 
                 if resource_isdir(package_name, file_path):
@@ -133,10 +143,22 @@ class _SearchState(object):
                 if ext not in {'.json', }:
                     continue
 
-                assert index_name not in data, 'Duplicate index'
-                data[index_name] = self.mappings[index_name] = \
-                    resource_filename(
-                        package_name, os.path.join(resource_name, filename))
+                alias_name = build_index_name(
+                    self.app,
+                    *(parts + (filename, ))
+                )
+                index_name = build_suffix_index_name(
+                    self.app,
+                    self.current_suffix,
+                    *(parts + (filename, ))
+                )
+                assert alias_name not in data, 'Duplicate alias'
+                filename = resource_filename(
+                    package_name, os.path.join(resource_name, filename))
+                data[alias_name] = {
+                    index_name: filename
+                }
+                self.mappings[index_name] = filename
                 self.number_of_indexes += 1
 
             aliases[root_name] = data
@@ -272,12 +294,19 @@ class _SearchState(object):
                     for result in _create(value, alias=name):
                         yield result
                 else:
-                    with open(value, 'r') as body:
-                        yield name, self.client.indices.create(
-                            index=name,
-                            body=json.load(body),
-                            ignore=ignore,
-                        )
+                    # To prevent index init --force from creating a suffixed
+                    # index if the current instance is running without suffixes
+                    # make sure there is no index with the same name as the
+                    # alias name (i.e. the index name without the suffix).
+                    alias_parts = name.split('-')[:-1]
+                    alias_name = '-'.join(alias_parts)
+                    if not self.client.indices.exists([alias_name]):
+                        with open(value, 'r') as body:
+                            yield name, self.client.indices.create(
+                                index=name,
+                                body=json.load(body),
+                                ignore=ignore,
+                            )
 
             if alias:
                 yield alias, self.client.indices.put_alias(

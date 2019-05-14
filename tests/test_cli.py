@@ -24,8 +24,9 @@ from invenio_search.proxies import current_search_client
 
 def test_init(app, template_entrypoints):
     """Run client initialization."""
+    suffix = '-abc'
     search = app.extensions['invenio-search']
-    search.register_mappings('records', 'mock_module.mappings')
+    search.register_mappings('records', 'mock_module.mappings', suffix=suffix)
 
     assert 'records' in search.aliases
     assert set(search.aliases['records']) == {
@@ -33,12 +34,18 @@ def test_init(app, template_entrypoints):
         'records-bibliographic',
         'records-default-v1.0.0'
     }
-    assert set(search.mappings.keys()) == {
+    assert set(search.aliases['records']['records-authorities']) == {
         'records-authorities-authority-v1.0.0',
-        'records-bibliographic-bibliographic-v1.0.0',
-        'records-default-v1.0.0'
     }
-    assert 6 == search.number_of_indexes
+    assert set(search.aliases['records']['records-bibliographic']) == {
+        'records-bibliographic-bibliographic-v1.0.0',
+    }
+    assert set(search.mappings.keys()) == {
+        'records-authorities-authority-v1.0.0{}'.format(suffix),
+        'records-bibliographic-bibliographic-v1.0.0{}'.format(suffix),
+        'records-default-v1.0.0{}'.format(suffix)
+    }
+    assert 3 == search.number_of_indexes
 
     with patch('invenio_search.ext.iter_entry_points',
                return_value=template_entrypoints('invenio_search.templates')):
@@ -73,7 +80,7 @@ def test_init(app, template_entrypoints):
         assert 0 == result.exit_code
 
     aliases = current_search_client.indices.get_alias()
-    assert 5 == sum(len(idx.get('aliases', {})) for idx in aliases.values())
+    assert 8 == sum(len(idx.get('aliases', {})) for idx in aliases.values())
 
     assert current_search_client.indices.exists(list(search.mappings.keys()))
 
@@ -92,8 +99,8 @@ def test_list(app):
     """Run listing of mappings."""
     app.config['SEARCH_MAPPINGS'] = ['records']
     search = app.extensions['invenio-search']
-    search.register_mappings('authors', 'mock_module.mappings')
-    search.register_mappings('records', 'mock_module.mappings')
+    search.register_mappings('authors', 'mock_module.mappings', suffix='-abc')
+    search.register_mappings('records', 'mock_module.mappings', suffix='-abc')
 
     runner = CliRunner()
     script_info = ScriptInfo(create_app=lambda info: app)
@@ -106,12 +113,16 @@ def test_list(app):
     assert result.output == (
         u"├──authors\n"
         u"│  └──authors-authors-v1.0.0\n"
+        u"│     └──authors-authors-v1.0.0-abc\n"
         u"└──records *\n"
         u"   ├──records-authorities\n"
         u"   │  └──records-authorities-authority-v1.0.0\n"
+        u"   │     └──records-authorities-authority-v1.0.0-abc\n"
         u"   ├──records-bibliographic\n"
         u"   │  └──records-bibliographic-bibliographic-v1.0.0\n"
-        u"   └──records-default-v1.0.0\n\n"
+        u"   │     └──records-bibliographic-bibliographic-v1.0.0-abc\n"
+        u"   └──records-default-v1.0.0\n"
+        u"      └──records-default-v1.0.0-abc\n\n"
     )
 
 

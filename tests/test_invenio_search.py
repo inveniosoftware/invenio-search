@@ -135,6 +135,17 @@ def test_load_entry_point_group(template_entrypoints):
 ])
 def test_whitelisted_aliases(app, aliases_config, expected_aliases):
     """Test functionality of active aliases configuration variable."""
+    all_aliases = dict(
+        authors=['authors', 'authors-authors-v1.0.0'],
+        records=[
+            'records',
+            'records-default-v1.0.0',
+            'records-authorities',
+            'records-authorities-authority-v1.0.0',
+            'records-bibliographic',
+            'records-bibliographic-bibliographic-v1.0.0',
+        ]
+    )
 
     orig = app.config['SEARCH_MAPPINGS']
 
@@ -153,7 +164,9 @@ def test_whitelisted_aliases(app, aliases_config, expected_aliases):
     if expected_aliases == []:
         assert 0 == len(aliases)
     else:
-        assert current_search_client.indices.exists(expected_aliases)
+        for expected_alias in expected_aliases:
+            all_expected = all_aliases[expected_alias]
+            assert current_search_client.indices.exists(all_expected)
 
     app.config['SEARCH_MAPPINGS'] = orig
 
@@ -183,14 +196,17 @@ def test_prefix_search_mappings(app, aliases_config, prefix, expected_aliases):
 def _test_prefix_indices(app, prefix_value):
     """Assert that each index name contains the prefix."""
     app.config['SEARCH_INDEX_PREFIX'] = prefix_value
+    suffix = '-abc'
     search = app.extensions['invenio-search']
-    search.register_mappings('records', 'mock_module.mappings')
+    search.register_mappings('records', 'mock_module.mappings', suffix=suffix)
 
     assert set(search.mappings.keys()) == {
-        '{0}records-authorities-authority-v1.0.0'.format(prefix_value or ''),
-        '{0}records-bibliographic-bibliographic-v1.0.0'.format(
-            prefix_value or ''),
-        '{0}records-default-v1.0.0'.format(prefix_value or '')
+        '{0}records-authorities-authority-v1.0.0{1}'.format(
+            prefix_value or '', suffix
+        ),
+        '{0}records-bibliographic-bibliographic-v1.0.0{1}'.format(
+            prefix_value or '', suffix),
+        '{0}records-default-v1.0.0{1}'.format(prefix_value or '', suffix)
     }
 
     # clean-up in case something failed previously

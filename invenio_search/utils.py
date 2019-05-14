@@ -9,8 +9,14 @@
 """Utility functions for search engine."""
 
 import os
+import time
 
 from flask import current_app
+
+
+def timestamp_suffix():
+    """Generate a suffix based on the current time."""
+    return '-' + str(int(time.time()))
 
 
 def prefix_index(app, index):
@@ -24,6 +30,17 @@ def prefix_index(app, index):
     return index_prefix + index
 
 
+def suffix_index(app, index, suffix):
+    """Suffixes the given index.
+
+    :param app: Flask app to get the config from.
+    :param index: Name of the index to prefix.
+    :param suffix: The suffix to append to the index name.
+    :returns: A string with the new index name suffixed.
+    """
+    return index + suffix
+
+
 def build_index_name(app, *parts):
     """Build an index name from parts.
 
@@ -32,8 +49,17 @@ def build_index_name(app, *parts):
     base_index = os.path.splitext(
         '-'.join([part for part in parts if part])
     )[0]
-
     return prefix_index(app=app, index=base_index)
+
+
+def build_suffix_index_name(app, suffix, *parts):
+    """Build an index name from parts with a suffix.
+
+    :param parts: Parts that should be combined to make an index name.
+    """
+    index_name = build_index_name(app, *parts)
+
+    return suffix_index(app=app, index=index_name, suffix=suffix)
 
 
 def schema_to_index(schema, index_names=None):

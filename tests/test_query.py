@@ -16,7 +16,7 @@ import hashlib
 from elasticsearch_dsl import Q, Search
 from flask import request
 
-from invenio_search.api import DefaultFilter, RecordsSearch
+from invenio_search.api import BaseRecordsSearch, DefaultFilter, RecordsSearch
 
 
 def test_empty_query(app):
@@ -106,7 +106,7 @@ class SpySearch(Search):
 
 def test_es_preference_param_no_request(app):
     """Test that the preference param is not added when not in a request."""
-    RecordsSearch.__bases__ = (SpySearch,)
+    BaseRecordsSearch.__bases__ = (SpySearch,)
 
     rs = RecordsSearch()
     new_rs = rs.with_preference_param()
@@ -115,7 +115,7 @@ def test_es_preference_param_no_request(app):
 
 def test_es_preference_param(app):
     """Test the preference param is correctly added in a request."""
-    RecordsSearch.__bases__ = (SpySearch,)
+    BaseRecordsSearch.__bases__ = (SpySearch,)
 
     with app.test_request_context('/', headers={'User-Agent': 'Chrome'},
                                   environ_base={'REMOTE_ADDR': '212.54.1.8'}):
@@ -142,3 +142,70 @@ def test_elasticsearch_query_min_score(app):
     search_dict = q.to_dict()
     assert 'min_score' in search_dict
     assert search_dict['min_score'] == app.config['SEARCH_RESULTS_MIN_SCORE']
+
+
+def _test_original_index_is_stored_when_prefixing(q, prefixed_index,
+                                                  original_index):
+    """Test original index is stored."""
+
+    q = q.query(Q('match', title='Higgs'))
+    q = q.sort()
+    search_dict = q.to_dict()
+    assert 'query' in search_dict
+    assert q._index == prefixed_index
+    assert q._original_index == original_index
+
+
+def test_prefix_index_from_meta(app):
+    """Test that index is prefixed when you use `Meta.index` field."""
+    class TestSearch(RecordsSearch):
+        class Meta:
+            index = 'myindex'
+
+    prefix_value = 'myprefix-'
+    index_value = TestSearch.Meta.index
+    app.config['SEARCH_INDEX_PREFIX'] = prefix_value
+
+    prefixed_index = ['{}{}'.format(prefix_value, index_value)]
+    q = TestSearch()
+    _test_original_index_is_stored_when_prefixing(q, prefixed_index,
+                                                  [index_value])
+
+
+def test_prefix_index_from_kwargs(app):
+    """Test that index is prefixed when pass it through kwargs."""
+    prefix_value = 'myprefix-'
+    index_value = 'myindex'
+    app.config['SEARCH_INDEX_PREFIX'] = prefix_value
+
+    prefixed_index = ['{}{}'.format(prefix_value, index_value)]
+    q = RecordsSearch(index=index_value)
+    _test_original_index_is_stored_when_prefixing(q, prefixed_index,
+                                                  [index_value])
+
+
+def test_prefix_index_list(app):
+    """Test that index is prefixed when pass it through kwargs."""
+    prefix_value = 'myprefix-'
+    index_value = ['myindex', 'myanotherindex']
+    app.config['SEARCH_INDEX_PREFIX'] = prefix_value
+
+    prefixed_index = ['{}{}'.format(prefix_value, _index)
+                      for _index in index_value]
+
+    q = RecordsSearch(index=index_value)
+    _test_original_index_is_stored_when_prefixing(q, prefixed_index,
+                                                  index_value)
+
+
+def test_prefix_multi_index_string(app):
+    """Test that index is prefixed when pass it through kwargs."""
+    prefix_value = 'myprefix-'
+    index_value = 'myindex,myanotherindex'
+    app.config['SEARCH_INDEX_PREFIX'] = prefix_value
+
+    prefixed_index = [','.join(['{}{}'.format(prefix_value, _index)
+                                for _index in index_value.split(',')])]
+    q = RecordsSearch(index=index_value)
+    _test_original_index_is_stored_when_prefixing(q, prefixed_index,
+                                                  [index_value])

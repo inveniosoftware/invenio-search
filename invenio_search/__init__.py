@@ -287,7 +287,7 @@ https://www.elastic.co/guide/en/elasticsearch/guide/current/_talking_to_elastics
 
 from __future__ import absolute_import, print_function
 
-from .api import RecordsSearch
+from .api import RecordsSearch, UnPrefixedRecordsSearch
 from .ext import InvenioSearch
 from .proxies import current_search, current_search_client
 from .version import __version__
@@ -296,6 +296,7 @@ __all__ = (
     '__version__',
     'InvenioSearch',
     'RecordsSearch',
+    'UnPrefixedRecordsSearch',
     'current_search',
     'current_search_client',
 )

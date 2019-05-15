@@ -56,7 +56,7 @@ from invenio_accounts import InvenioAccounts
 from invenio_accounts.views import blueprint
 from invenio_db import InvenioDB
 
-from invenio_search import InvenioSearch, RecordsSearch
+from invenio_search import InvenioSearch, RecordsSearch, current_search_client
 
 # Create Flask application
 app = Flask(__name__)
@@ -82,6 +82,22 @@ search = InvenioSearch(app)
 search.register_mappings('demo', 'data')
 
 
+@app.cli.command()
+def fixtures():
+    """Example fixtures."""
+    # Index sample records
+    current_search_client.index(
+        index='demo-default-v1.0.0',
+        body={'title': 'Public', 'body': 'test 1', 'public': 1},
+        doc_type='example' if ES_VERSION[0] < 7 else '_doc'
+    )
+    current_search_client.index(
+        index='demo-default-v1.0.0',
+        body={'title': 'Private', 'body': 'test 2', 'public': 0},
+        doc_type='example' if ES_VERSION[0] < 7 else '_doc'
+    )
+
+
 class ExampleSearch(RecordsSearch):
     """Example search class."""
 
@@ -89,7 +105,6 @@ class ExampleSearch(RecordsSearch):
         """Configuration for ``RecordsSearch`` class."""
 
         index = 'demo'
-        doc_types = ['example']
         fields = ('*', )
         facets = {}
 
@@ -97,9 +112,11 @@ class ExampleSearch(RecordsSearch):
         """Initialize instance."""
         super(ExampleSearch, self).__init__(**kwargs)
         if not current_user.is_authenticated:
-            self.query = self.query._proxied & Q(
-                Bool(filter=[Q('term', public=1)])
-            )
+            if self.query._proxied:
+                self.query = self.query._proxied & Q(
+                    Bool(filter=[Q('term', public=1)]))
+            else:
+                self.query = Q(Bool(filter=[Q('term', public=1)]))
 
 
 @app.route('/', methods=['GET', 'POST'])

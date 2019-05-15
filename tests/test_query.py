@@ -13,6 +13,7 @@ from __future__ import absolute_import, print_function
 
 import hashlib
 
+from elasticsearch import VERSION as ES_VERSION
 from elasticsearch_dsl import Q, Search
 from flask import request
 
@@ -22,10 +23,16 @@ from invenio_search.api import BaseRecordsSearch, DefaultFilter, RecordsSearch
 def test_empty_query(app):
     """Test building an empty query."""
     q = RecordsSearch()
-    assert q.to_dict()['query'] == {'match_all': {}}
+    if ES_VERSION[0] >= 7:
+        q.to_dict() == {}
+    else:
+        q.to_dict() == {'query': {'match_all': {}}}
 
     q = RecordsSearch.faceted_search('')
-    assert q._s.to_dict()['query'] == {'match_all': {}}
+    if ES_VERSION[0] >= 7:
+        q._s.to_dict() == {'highlight': {'fields': {'*': {}}}}
+    else:
+        q._s.to_dict() == {'query': {'match_all': {}}}
 
     q = RecordsSearch()[10]
     assert q.to_dict()['from'] == 10

@@ -46,6 +46,10 @@ extras_require = {
         'elasticsearch>=6.0.0,<7.0.0',
         'elasticsearch-dsl>=6.0.0,<6.2.0',
     ],
+    'elasticsearch7': [
+        'elasticsearch>=7.0.0,<8.0.0',
+        'elasticsearch-dsl>=7.0.0,<8.0.0',
+    ],
     'records': [
         'invenio-records>=1.0.0',
     ],
@@ -55,7 +59,8 @@ extras_require = {
 extras_require['all'] = []
 for name, reqs in extras_require.items():
     if name[0] == ':' or name in (
-            'elasticsearch2', 'elasticsearch5', 'elasticsearch6'):
+            'elasticsearch2', 'elasticsearch5', 'elasticsearch6',
+            'elasticsearch7'):
         continue
     extras_require['all'].extend(reqs)
 

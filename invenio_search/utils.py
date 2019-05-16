@@ -11,7 +11,9 @@
 import os
 import time
 
+import six
 from flask import current_app
+from werkzeug.utils import import_string
 
 
 def timestamp_suffix():
@@ -84,3 +86,17 @@ def schema_to_index(schema, index_names=None):
             return (index_name, doc_type[0])
 
     return (None, None)
+
+
+def obj_or_import_string(value, default=None):
+    """Import string or return object.
+
+    :params value: Import path or class object to instantiate.
+    :params default: Default object to return if the import fails.
+    :returns: The imported object.
+    """
+    if isinstance(value, six.string_types):
+        return import_string(value)
+    elif value:
+        return value
+    return default

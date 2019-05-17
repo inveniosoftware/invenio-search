@@ -11,13 +11,13 @@
 from __future__ import absolute_import, print_function
 
 from datetime import datetime
-
+from elasticsearch import VERSION as ES_VERSION
 from invenio_indexer.api import RecordIndexer
-from invenio_pidstore.models import PersistenIdentifier
 from invenio_search.api import RecordsSearch
 from invenio_search.sync.tasks import run_sync_job
 from invenio_search.proxies import current_search_client
 
+lt_es7 = ES_VERSION[0] < 7
 
 class SyncJob:
     """Index synchronization job base class."""
@@ -43,12 +43,27 @@ class SyncJob:
     def run(self):
         """Run the index sync job."""
 
+        def _get_remaining_records(update_time):
+            """Return all remaining records after `update_time`."""
+            from invenio_pidstore.models import PersistenIdentifier, PIDStatus
+            from invenio_records.models import RecordMetadata
+
+            records_ids = RecordMetadata.query.with_entities(RecordMetadata.id).filter(RecordMetadata.updated >= update_time).all()
+            pids = PersistenIdentifier.query.filter(PersistenIdentifier.update >= update_time).all()
+
+            deleted_records = [str(pid.object_uuid) for pid in pids if pid.status = PIDStatus.deleted]
+            updated_records = [str(recid) for recid in records_ids if recid not in deleted_records]
+
+            return (updated_records, deleted_records)
+
         # determine bounds
-        end_time = datetime.now()
         s = RecordsSearch()
-        s = s.sort('-created')[0]
+        s = s.sort('-updated')[0]
         hits = s.execute()
-        start_time = None if hits.total < 1 else hits.hits[0]['_source']['_created']
+        total = hits.total if lt_es7 : hits.total.value
+
+        start_time = None if total < 1 else hits.hits[0]['_source']['_updated']
+        end_time = datetime.now()
 
         if not start_time:
             # use of reindex api

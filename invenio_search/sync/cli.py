@@ -10,7 +10,10 @@
 
 import click
 
+from flask import current_app
+from flask.cli import with_appcontext
 from invenio_search.cli import index as index_cmd
+from invenio_search.utils import obj_or_import_string
 
 
 @index_cmd.group()
@@ -26,9 +29,16 @@ def init_sync():
 
 
 @sync.command('run')
-def run_sync():
+@click.argument('jobs', nargs=-1)
+@with_appcontext
+def run_sync(jobs):
     """Run current index syncing."""
-    pass
+    for job in jobs:
+        print('Running sync job: {}'.format(job))
+        sync_config = current_app.config['SEARCH_SYNC_JOBS'][job]
+        CurrentSyncJob = obj_or_import_string(sync_config['cls'])
+        sync_job = CurrentSyncJob(**sync_config['params'])
+        sync_job.run()
 
 
 @sync.command('rollover')

@@ -105,11 +105,11 @@ setup(
     entry_points={
         'invenio_base.api_apps': [
             'invenio_search = invenio_search:InvenioSearch',
-            'invenio_search_sync = invenio_search.sync:InvenioSearch',
+            'invenio_search_sync = invenio_search.sync:InvenioIndexSync',
         ],
         'invenio_base.apps': [
             'invenio_search = invenio_search:InvenioSearch',
-            'invenio_search_sync = invenio_search.sync:InvenioSearch',
+            'invenio_search_sync = invenio_search.sync:InvenioIndexSync',
         ],
     },
     extras_require=extras_require,

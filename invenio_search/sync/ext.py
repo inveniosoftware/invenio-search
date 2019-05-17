@@ -10,9 +10,11 @@
 
 from __future__ import absolute_import, print_function
 
+from flask import current_app
 from werkzeug.utils import cached_property
 
 from ..utils import obj_or_import_string
+from . import config
 from .cli import index_cmd
 
 
@@ -33,7 +35,7 @@ class InvenioIndexSync(object):
     def jobs(self):
         """Get all configured sync jobs."""
         jobs_config = current_app.config.get('SEARCH_SYNC_JOBS', {})
-        for job_id, job_cfg in jobs_config.items()
+        for job_id, job_cfg in jobs_config.items():
             job_cfg['cls'] = obj_or_import_string(job_cfg['cls'])
         return jobs_config
 

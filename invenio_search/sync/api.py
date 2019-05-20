@@ -108,3 +108,69 @@ class SyncJob:
                 self.rollover()
             else:
                 pass
+
+
+class SyncJobState:
+    """Synchronization job state.
+
+    The state is stored in ElasticSearch and can be accessed similarly to a
+    python dictionary.
+    """
+
+    INIT_STATE = {
+        'run_count': 0,
+        'last_updated': None,
+    }
+
+    def __init__(self, index, document_id, force=False):
+        """Synchronization job state in ElasticSearch."""
+        self.index = index
+        self.document_id = document_id
+        if not current_search_client.indices.exists(index) or force:
+            self._create()
+
+    @property
+    def state(self):
+        """Get the full state."""
+        return current_search_client.get(
+            index=self.index,
+            id=self.document_id
+        )['_source']
+
+    def __getitem__(self, key):
+        """Get key in state."""
+        return self.state[key]
+
+    def __setitem__(self, key, value):
+        """Set key in state."""
+        state = self.state
+        state[key] = value
+        self._save(state)
+
+    def __delitem__(self, key):
+        """Delete key in state."""
+        state = self.state
+        del state[key]
+        self._save(state)
+
+    def update(self, **changes):
+        """Update multiple keys in the state."""
+        state = self.state
+        for key, value in changes.items():
+            state[key] = value
+        self._save(state)
+
+    def _create(self):
+        """Create state index and the document."""
+        if current_search_client.indices.exists(self.index):
+            current_search_client.indices.delete(self.index)
+        current_search_client.indices.create(self.index)
+        self._save(self.INIT_STATE)
+
+    def _save(self, state):
+        """Save the state to ElasticSearch."""
+        current_search_client.index(
+            index=self.index,
+            id=self.document_id,
+            body=state
+        )

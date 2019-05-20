@@ -139,18 +139,18 @@ class SyncJobState:
     python dictionary.
     """
 
-    INIT_STATE = {
-        'run_count': 0,
-        'last_updated': None,
-    }
-
-    def __init__(self, index, document_id=None, client=None, force=False):
+    def __init__(self, index, document_id=None, client=None, force=False
+                 initial_state=None):
         """Synchronization job state in ElasticSearch."""
         self.index = index
         self.doc_type = 'doc' if lt_es7 else '_doc'
         self.document_id = document_id or 'state'
         self.force = force
         self.client = client or current_search_client
+        self.initial_state = initial_state or {
+            'run_count': 0,
+            'last_updated': None,
+        }
 
     @property
     def state(self):
@@ -194,7 +194,7 @@ class SyncJobState:
         if (self.force or force) and self.client.indices.exists(self.index):
             self.client.indices.delete(self.index)
         self.client.indices.create(self.index)
-        return self._save(self.INIT_STATE)
+        return self._save(self.initial_state)
 
     def _save(self, state):
         """Save the state to ElasticSearch."""

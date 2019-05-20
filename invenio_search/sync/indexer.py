@@ -41,26 +41,28 @@ class SyncIndexer(RecordIndexer):
     def _bulk_op(self, record_id_iterator, op_type, index=None, doc_type=None):
         """Index record in Elasticsearch asynchronously.
 
-        :param record_id_iterator: Iterator that yields record UUIDs.
-        :param op_type: Indexing operation (one of ``index``, ``create``,
-            ``delete`` or ``update``).
+        :param record_id_iterator: Iterator that yields a 3-tuple of
+            op type (``create`` or ``delete``), record UUID and record update
+            timestamp.
+        :param op_type: Not used.
         :param index: The Elasticsearch index. (Default: ``None``)
         :param doc_type: The Elasticsearch doc_type. (Default: ``None``)
         """
+        _ = op_type
         with self.create_producer() as producer:
-            for (rec, updated_timespamp) in record_id_iterator:
+            for op_type, record_id, updated_at in record_id_iterator:
                 producer.publish(dict(
-                    id=str(rec),
+                    id=str(record_id),
+                    updated_at=str(datetime.timestamp(updated_at)),
                     op=op_type,
                     index=index,
                     doc_type=doc_type,
-                    record_updated_time=str(datetime.timestamp(updated_timespamp)),
                 ))
 
     def _get_record(self, payload):
         """Return record to sync."""
         id_ = payload['id']
-        updated_ = datetime.fromtimestamp(float(payload['record_updated_time']))
+        updated_ = datetime.fromtimestamp(float(payload['updated_at']))
         model = RecordMetadata.query.filter_by(id=id_, updated=updated_).one()
         return Record(data=model.json, model=model)
 
@@ -71,7 +73,6 @@ class SyncIndexer(RecordIndexer):
         :returns: Dictionary defining an Elasticsearch bulk 'delete' action.
         """
         index, doc_type = payload.get('index'), payload.get('doc_type')
-        import ipdb; ipdb.set_trace()
         if not (index and doc_type):
             record = self._get_record(payload)
             index, doc_type = self.record_to_index(record)

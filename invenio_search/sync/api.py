@@ -18,96 +18,118 @@ from invenio_search.proxies import current_search_client
 
 lt_es7 = ES_VERSION[0] < 7
 
+
 class SyncJob:
     """Index synchronization job base class."""
 
-    def __init__(self, rollover_threshold, source_indexes=[], dest_indexes=[],
-                 old_es_client={}, new_es_client={}):
+    def __init__(self, rollover_threshold,
+                 source_indexes=None, dest_indexes=None,
+                 old_es_client=None, new_es_client=None):
         """Initialize the job configuration."""
         self.rollover_threshold = rollover_threshold
-        self.source_indexes = source_indexes
-        self.dest_indexes = dest_indexes
-        self.old_es_client = old_es_client
-        self.new_es_client = new_es_client
+        self.source_indexes = source_indexes or []
+        self.dest_indexes = dest_indexes or []
+        self.old_es_client = old_es_client or {}
+        self.new_es_client = new_es_client or {}
+        self._state_client = SyncJobState(
+            index='.invenio-index-sync',
+            client=new_es_client
+            initial_state={
+                'last_record_update': None,
+                'reindex_api_task_id': None,
+                'threshold_reached': False,
+                'rollover_ready': False,
+                'rollover_finished': False,
+                'stats': {},
+            },
+        )
 
-    def iter_docs(self, from_dt=None, until_dt=None):
+    def iter_indexer_ops(self, start_date=None, end_date=None):
         """Iterate over documents that need to be reindexed."""
-        raise NotImplementedError()
+        from datetime import datetime, timedelta
+        from invenio_pidstore.models import PersistentIdentifier, PIDStatus
+        from invenio_records.models import RecordMetadata
+        import sqlalchemy as sa
 
-    def index_docs(self, docs):
-        """Bulk index documents."""
-        raise NotImplementedError()
+        q = db.session.query(
+            RecordMetadata.id.distinct(),
+            RecordMetadata.updated,
+            PersistentIdentifier.status
+        ).join(
+            PersistentIdentifier,
+            RecordMetadata.id == PersistentIdentifier.object_uuid
+        ).filter(
+            PersistentIdentifier.object_type == 'rec',
+            RecordMetadata.updated >= start_date
+        ).yield_per(500)  # TODO: parameterize
+
+        for record_id, rec_updated, pid_status in q:
+            if pid_status == PIDStatus.DELETED:
+                yield 'delete', record_id, rec_updated
+            else:
+                yield 'create', record_id, rec_updated
 
     def rollover(self):
         """Perform a rollover action."""
         raise NotImplementedError()
 
+    @property
+    def state(self):
+        return self._state_client
+
     def run(self):
         """Run the index sync job."""
 
-        def _get_remaining_records(update_time):
-            """Return all remaining records after `update_time`."""
-            from invenio_pidstore.models import PersistentIdentifier, PIDStatus
-            from invenio_records.models import RecordMetadata
-
-            records = [(_rec.id, _rec.updated) for _rec in
-                RecordMetadata.query.filter(RecordMetadata.updated > update_time).all()]
-            deleted_pids = [_pid.object_uuid for _pid in
-                PersistentIdentifier.query.filter_by(status=PIDStatus.DELETED)
-                    .filter(PersistentIdentifier.updated >= update_time).all()]
-
-            updated_records = []
-            deleted_records = []
-
-            for _rec in records:
-                id_ = _rec[0]
-                if id_ in deleted_pids:
-                    deleted_records.append(_rec)
-                else:
-                    updated_records.append(_rec)
-
-            return (updated_records, deleted_records)
-
         # determine bounds
-        search = RecordsSearch(index=self.dest_indexes[0])
-        search = search.sort('-_updated')
-        hits = search.execute()
-        total = len(hits) if lt_es7 else len(hits)
+        start_time = self.state['last_record_update']
 
-        start_time = None if total < 1 else hits[0]['_updated']
 
         if not start_time:
-            # use of reindex api
+            # use reindex api
             print('[*] running reindex')
             old_es_host = '{host}:{port}'.format(**self.old_es_client)
             payload = {
                 "source": {
-                    "remote": {
-                        "host": old_es_host
-                    },
+                    "remote": {"host": old_es_host},
                     "index": self.source_indexes[0]
                 },
-                "dest": {
-                    "index": self.dest_indexes[0]
-                }
+                "dest": {"index": self.dest_indexes[0]}
             }
-            # reindex using ES reindex api
+            # reindex using ES Reindex API synchronously
             current_search_client.reindex(body=payload)
+
+            # TODO: Use this as a state-less way of fiding "start_date"
+            search = RecordsSearch(index=self.dest_indexes[0])
+            search = search.sort('-_updated')
+            hits = search.execute()
+            total = len(hits) if lt_es7 else len(hits)
+            last_record_update = datetime.strptime(
+                hits[0]['_updated'], '%Y-%m-%dT%H:%M:%S.%f')
+            self.state['last_record_update'] = \
+                str(datetime.timestamp(last_record_update))
             print('[*] reindex done')
         else:
-            # Fetch data from start_time until end_time from db
-            (updated_records, deleted_records) = _get_remaining_records(start_time)
+            # Fetch data from start_time from db
             indexer = SyncIndexer()
-            indexer.bulk_index(updated_records)
-            indexer.bulk_delete(deleted_records)
-            indexer.process_bulk_queue()
 
-            total_actions = len(updated_records) + len(deleted_records)
+            last_record_update = datetime.min
+            # Helper closure function to captrue last record update time
+            def _ops_iter():
+                for op, rec_id, rec_updated in self.iter_indexer_ops(start_time):
+                    last_record_update = max(last_record_update, rec_updated)
+                    yield op, rec_id, rec_updated
+
+            # Send indexer actions to special reindex queue
+            indexer._bulk_op(_ops_iter(), None)
+            self.state['last_record_update'] = \
+                    str(datetime.timestamp(last_record_update))
+            # Run synchornous bulk index processing
+            # TODO: make this asynchronous by default
+            succeeded, failed = indexer.process_bulk_queue()
+            total_actions = succeeded + failed
             print('[*] indexed {} record(s)'.format(total_actions))
             if total_actions <= self.rollover_threshold:
                 self.rollover()
-            else:
-                pass
 
 
 class SyncJobState:
@@ -122,20 +144,27 @@ class SyncJobState:
         'last_updated': None,
     }
 
-    def __init__(self, index, document_id, force=False):
+    def __init__(self, index, document_id=None, client=None, force=False):
         """Synchronization job state in ElasticSearch."""
         self.index = index
-        self.document_id = document_id
-        if not current_search_client.indices.exists(index) or force:
-            self._create()
+        self.doc_type = 'doc' if lt_es7 else '_doc'
+        self.document_id = document_id or 'state'
+        self.force = force
+        self.client = client or current_search_client
 
     @property
     def state(self):
         """Get the full state."""
-        return current_search_client.get(
+        _state = self.client.get(
             index=self.index,
-            id=self.document_id
-        )['_source']
+            doc_type=self.doc_type,
+            id=self.document_id,
+            ignore=[404],
+        )
+        if '_source' not in _state:
+            _state = self._create()
+        return _state['_source ']
+
 
     def __getitem__(self, key):
         """Get key in state."""
@@ -160,17 +189,24 @@ class SyncJobState:
             state[key] = value
         self._save(state)
 
-    def _create(self):
+    def _create(self, force=False):
         """Create state index and the document."""
-        if current_search_client.indices.exists(self.index):
-            current_search_client.indices.delete(self.index)
-        current_search_client.indices.create(self.index)
-        self._save(self.INIT_STATE)
+        if (self.force or force) and self.client.indices.exists(self.index):
+            self.client.indices.delete(self.index)
+        self.client.indices.create(self.index)
+        return self._save(self.INIT_STATE)
 
     def _save(self, state):
         """Save the state to ElasticSearch."""
-        current_search_client.index(
+        # TODO: User optimistic concurrency control via "version_type=external_gte"
+        self.client.index(
             index=self.index,
             id=self.document_id,
+            doc_type=self.doc_type,
             body=state
+        )
+        return self.client.get(
+            index=self.index,
+            id=self.document_id,
+            doc_type=self.doc_type,
         )

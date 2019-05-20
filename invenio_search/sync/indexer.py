@@ -10,8 +10,10 @@
 
 from __future__ import absolute_import, print_function
 
+from datetime import datetime
 from invenio_indexer.api import RecordIndexer
 from invenio_indexer.utils import es_bulk_param_compatibility
+from invenio_records.api import Record
 from invenio_records.models import RecordMetadata
 from kombu import Exchange, Queue
 
@@ -31,7 +33,7 @@ class SyncIndexer(RecordIndexer):
         self._queue = SYNC_INDEXER_MQ_QUEUE
         self._routing_key = SYNC_INDEXER_MQ_ROUTING_KEY
         self._exchange = SYNC_INDEXER_MQ_EXCHANGE
-        return super(self, SyncIndexer).__init__(**kwargs)
+        super(SyncIndexer, self).__init__(**kwargs)
 
     #
     # Low-level implementation
@@ -58,7 +60,7 @@ class SyncIndexer(RecordIndexer):
     def _get_record(self, payload):
         """Return record to sync."""
         id_ = payload['id']
-        updated_ = datetime.from_timestamp(float(payload['record_updated_time']))
+        updated_ = datetime.fromtimestamp(float(payload['record_updated_time']))
         model = RecordMetadata.query.filter_by(id=id_, updated=updated_).one()
         return Record(data=model.json, model=model)
 
@@ -69,8 +71,9 @@ class SyncIndexer(RecordIndexer):
         :returns: Dictionary defining an Elasticsearch bulk 'delete' action.
         """
         index, doc_type = payload.get('index'), payload.get('doc_type')
+        import ipdb; ipdb.set_trace()
         if not (index and doc_type):
-            record = self._get_record()
+            record = self._get_record(payload)
             index, doc_type = self.record_to_index(record)
 
         return {
@@ -87,7 +90,7 @@ class SyncIndexer(RecordIndexer):
         :param payload: Decoded message body.
         :returns: Dictionary defining an Elasticsearch bulk 'index' action.
         """
-        record = self._get_record()
+        record = self._get_record(payload)
         index, doc_type = self.record_to_index(record)
 
         arguments = {}

@@ -10,7 +10,6 @@
 
 from __future__ import absolute_import, print_function
 
-from datetime import datetime
 from elasticsearch import VERSION as ES_VERSION
 from invenio_search.api import RecordsSearch
 from invenio_search.sync.indexer import SyncIndexer
@@ -67,9 +66,9 @@ class SyncJob:
                     .filter(PersistentIdentifier.updated >= update_time).all()]
             deleted_recids = [_rec[0] for _rec in deleted_records]
 
-            updated_records = filter(
+            updated_records = list(filter(
                 _check_deleted_records(deleted_recids),
-                records)
+                records))
 
             return (updated_records, deleted_records)
 
@@ -107,7 +106,7 @@ class SyncJob:
             indexer.bulk_delete(deleted_records)
             indexer.process_bulk_queue()
 
-            total_actions = len(updated_records + deleted_records)
+            total_actions = len(updated_records) + len(deleted_records)
             print('[*] indexed {} record(s)'.format(total_actions))
             if total_actions <= self.rollover_threshold:
                 self.rollover()

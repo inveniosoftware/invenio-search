@@ -12,8 +12,8 @@ from __future__ import absolute_import, print_function
 
 from datetime import datetime
 from elasticsearch import VERSION as ES_VERSION
-from invenio_indexer.api import RecordIndexer
 from invenio_search.api import RecordsSearch
+from invenio_search.sync.indexer import SyncIndexer
 from invenio_search.sync.tasks import run_sync_job
 from invenio_search.proxies import current_search_client
 
@@ -51,11 +51,25 @@ class SyncJob:
             from invenio_pidstore.models import PersistentIdentifier, PIDStatus
             from invenio_records.models import RecordMetadata
 
-            records_ids = RecordMetadata.query.with_entities(RecordMetadata.id).filter(RecordMetadata.updated > update_time).all()
-            pids = PersistentIdentifier.query.filter(PersistentIdentifier.updated >= update_time).all()
+            def _check_deleted_records(deleted_recids):
+                """Check deleted records."""
 
-            deleted_records = [pid.object_uuid for pid in pids if pid.status == PIDStatus.DELETED]
-            updated_records = [recid[0] for recid in records_ids if recid[0] not in deleted_records]
+                def _filter_deleted_record(record):
+                    """Filter function to trim deleted records."""
+                    return record[0] not in deleted_recids
+
+                return _filter_deleted_record
+
+            records = [(_rec.id, _rec.updated) for _rec in
+                RecordMetadata.query.filter(RecordMetadata.updated > update_time).all()]
+            deleted_records = [(_rec.object_uuid, _rec.updated) for _rec in
+                PersistentIdentifier.query.filter_by(status=PIDStatus.DELETED)
+                    .filter(PersistentIdentifier.updated >= update_time).all()]
+            deleted_recids = [_rec[0] for _rec in deleted_records]
+
+            updated_records = filter(
+                _check_deleted_records(deleted_recids),
+                records)
 
             return (updated_records, deleted_records)
 
@@ -88,7 +102,7 @@ class SyncJob:
         else:
             # Fetch data from start_time until end_time from db
             (updated_records, deleted_records) = _get_remaining_records(start_time)
-            indexer = RecordIndexer()
+            indexer = SyncIndexer()
             indexer.bulk_index(updated_records)
             indexer.bulk_delete(deleted_records)
             indexer.process_bulk_queue()

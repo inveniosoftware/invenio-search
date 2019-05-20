@@ -50,25 +50,21 @@ class SyncJob:
             from invenio_pidstore.models import PersistentIdentifier, PIDStatus
             from invenio_records.models import RecordMetadata
 
-            def _check_deleted_records(deleted_recids):
-                """Check deleted records."""
-
-                def _filter_deleted_record(record):
-                    """Filter function to trim deleted records."""
-                    return record[0] not in deleted_recids
-
-                return _filter_deleted_record
-
             records = [(_rec.id, _rec.updated) for _rec in
                 RecordMetadata.query.filter(RecordMetadata.updated > update_time).all()]
-            deleted_records = [(_rec.object_uuid, _rec.updated) for _rec in
+            deleted_pids = [_pid.object_uuid for _pid in
                 PersistentIdentifier.query.filter_by(status=PIDStatus.DELETED)
                     .filter(PersistentIdentifier.updated >= update_time).all()]
-            deleted_recids = [_rec[0] for _rec in deleted_records]
 
-            updated_records = list(filter(
-                _check_deleted_records(deleted_recids),
-                records))
+            updated_records = []
+            deleted_records = []
+
+            for _rec in records:
+                id_ = _rec[0]
+                if id_ in deleted_pids:
+                    deleted_records.append(_rec)
+                else:
+                    updated_records.append(_rec)
 
             return (updated_records, deleted_records)
 

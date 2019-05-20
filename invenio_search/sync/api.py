@@ -55,7 +55,7 @@ class SyncJob:
             pids = PersistentIdentifier.query.filter(PersistentIdentifier.updated >= update_time).all()
 
             deleted_records = [pid.object_uuid for pid in pids if pid.status == PIDStatus.DELETED]
-            updated_records = [recid[0] for recid in records_ids if recid not in deleted_records]
+            updated_records = [recid[0] for recid in records_ids if recid[0] not in deleted_records]
 
             return (updated_records, deleted_records)
 

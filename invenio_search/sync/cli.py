@@ -35,14 +35,12 @@ def init_sync(job_id):
 
 @sync.command('run')
 @with_appcontext
-def run_sync():
+@click.argument('job_id')
+def run_sync(job_id):
     """Run current index syncing."""
-    for job in jobs:
-        print('Running sync job: {}'.format(job))
-        sync_config = current_app.config['SEARCH_SYNC_JOBS'][job]
-        CurrentSyncJob = obj_or_import_string(sync_config['cls'])
-        sync_job = CurrentSyncJob(**sync_config['params'])
-        sync_job.run()
+    job = current_index_sync.jobs[job_id]
+    sync_job = job['cls'](**job['params'])
+    sync_job.run()
 
 
 @sync.command('rollover')

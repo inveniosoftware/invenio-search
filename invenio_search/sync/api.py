@@ -45,7 +45,7 @@ class SyncJob:
         self.pid_mappings = pid_mappings
         self.src_es_client = src_es_client
         self.src_es_client['client'] = get_es_client(src_es_client)
-        self._state_client = None
+        self._state = SyncJobState(index=INDEX_SYNC_INDEX)
 
     def _build_index_mapping(self):
         """Build index mapping."""
@@ -95,10 +95,6 @@ class SyncJob:
         if current_search_client.indices.exists(INDEX_SYNC_INDEX):
             raise Exception('The index {} already exists, a job is already active.'.format(INDEX_SYNC_INDEX))
 
-        state = SyncJobState(
-            index=INDEX_SYNC_INDEX
-        )
-
         # Get old indices
         index_mapping = self._build_index_mapping()
 
@@ -124,7 +120,7 @@ class SyncJob:
             'rollover_finished': False,
             'stats': {},
         }
-        state.create(initial_state)
+        self.state.create(initial_state)
 
     def iter_indexer_ops(self, start_date=None, end_date=None):
         """Iterate over documents that need to be reindexed."""
@@ -157,31 +153,33 @@ class SyncJob:
 
     @property
     def state(self):
-        return self._state_client
+        return self._state
 
     def run(self):
         """Run the index sync job."""
         # determine bounds
         start_time = self.state['last_record_update']
+        index_mapping = self.state['index_mapping']
 
-        # if not start_time:
-        #     # use reindex api
-        #     print('[*] running reindex')
-        #     old_es_host = '{host}:{port}'.format(**self.src_es_client['params'])
-        #     payload = {
-        #         "source": {
-        #             "remote": {"host": old_es_host},
-        #             "index": self.source_indexes[0]
-        #         },
-        #         "dest": {"index": self.dest_indexes[0]}
-        #     }
-        #     # Reindex using ES Reindex API synchronously
-        #     # Keep track of the time we issued the reindex command
-        #     start_date = datetime.utcnow()
-        #     current_search_client.reindex(body=payload)
-        #     self.state['last_record_update'] = \
-        #         str(datetime.timestamp(start_date))
-        #     print('[*] reindex done')
+        if not start_time:
+            # use reindex api
+            for doc_type, indexes in index_mapping.items():
+                print('[*] running reindex for doc type: {}'.format(doc_type))
+                old_es_host = '{host}:{port}'.format(**self.src_es_client['params'])
+                payload = {
+                    "source": {
+                        "remote": {"host": old_es_host},
+                        "index": indexes['src']['index']
+                    },
+                    "dest": {"index": indexes['dst']['index']}
+                }
+                # Reindex using ES Reindex API synchronously
+                # Keep track of the time we issued the reindex command
+                start_date = datetime.utcnow()
+                current_search_client.reindex(body=payload)
+                self.state['last_record_update'] = \
+                    str(datetime.timestamp(start_date))
+            print('[*] reindex done')
         # else:
         #     # Fetch data from start_time from db
         #     indexer = SyncIndexer()
@@ -225,7 +223,7 @@ class SyncJobState:
             id=self.document_id,
             ignore=[404],
         )
-        return _state['_source ']
+        return _state['_source']
 
 
     def __getitem__(self, key):

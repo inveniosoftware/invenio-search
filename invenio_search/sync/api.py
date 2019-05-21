@@ -10,6 +10,8 @@
 
 from __future__ import absolute_import, print_function
 
+import json
+
 from datetime import datetime
 
 from elasticsearch import VERSION as ES_VERSION
@@ -44,20 +46,6 @@ class SyncJob:
         self.src_es_client = src_es_client
         self.src_es_client['client'] = get_es_client(src_es_client)
         self._state_client = None
-        # self._state_client = SyncJobState(
-        #     index=INDEX_SYNC_INDEX,
-        #     client=new_es_client,
-        #     initial_state={
-        #         'index_mapping': {},
-        #         'index_suffix': None,
-        #         'last_record_update': None,
-        #         'reindex_api_task_id': None,
-        #         'threshold_reached': False,
-        #         'rollover_ready': False,
-        #         'rollover_finished': False,
-        #         'stats': {},
-        #     },
-        # )
 
     def _build_index_mapping(self):
         """Build index mapping."""
@@ -105,9 +93,7 @@ class SyncJob:
     def init(self):
         # Check if there's an index sync already happening (and bail)
         if current_search_client.indices.exists(INDEX_SYNC_INDEX):
-            raise Exception('The index {} already exists, a job is already running.'.format(INDEX_SYNC_INDEX))
-
-        old_client = self.src_es_client['client']
+            raise Exception('The index {} already exists, a job is already active.'.format(INDEX_SYNC_INDEX))
 
         state = SyncJobState(
             index=INDEX_SYNC_INDEX
@@ -115,21 +101,30 @@ class SyncJob:
 
         # Get old indices
         index_mapping = self._build_index_mapping()
-        print(index_mapping)
 
         # Create new indices
+        for indexes in index_mapping.values():
+            dst = indexes['dst']
+            with open(dst['mapping'], 'r') as mapping_file:
+                mapping = json.loads(mapping_file.read())
+            current_search_client.indices.create(
+                index=dst['index'],
+                body=mapping
+            )
+            print('[*] created index: {index} with mappings {mapping}'.format(**dst))
 
         # Store index mapping in state
-        # state.create({
-        #     'index_mapping': {},
-        #     'index_suffix': None,
-        #     'last_record_update': None,
-        #     'reindex_api_task_id': None,
-        #     'threshold_reached': False,
-        #     'rollover_ready': False,
-        #     'rollover_finished': False,
-        #     'stats': {},
-        # })
+        initial_state = {
+            'index_mapping': index_mapping,
+            'index_suffix': current_search.current_suffix,
+            'last_record_update': None,
+            'reindex_api_task_id': None,
+            'threshold_reached': False,
+            'rollover_ready': False,
+            'rollover_finished': False,
+            'stats': {},
+        }
+        state.create(initial_state)
 
     def iter_indexer_ops(self, start_date=None, end_date=None):
         """Iterate over documents that need to be reindexed."""

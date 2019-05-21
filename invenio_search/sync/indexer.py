@@ -38,32 +38,22 @@ class SyncIndexer(RecordIndexer):
     #
     # Low-level implementation
     #
-    def _bulk_op(self, record_id_iterator, op_type, index=None, doc_type=None):
+    def _bulk_op(self, bulk_ops_iterator, op_type, **kwargs):
         """Index record in Elasticsearch asynchronously.
 
-        :param record_id_iterator: Iterator that yields a 3-tuple of
-            op type (``create`` or ``delete``), record UUID and record update
-            timestamp.
-        :param op_type: Not used.
-        :param index: The Elasticsearch index. (Default: ``None``)
-        :param doc_type: The Elasticsearch doc_type. (Default: ``None``)
+        :param bulk_ops_iterator: Iterator that yields dictionaries with ``op``
+            (``create`` or ``delete``) and ``id`` values.
+        :param kwargs: Not used.
         """
         _ = op_type
         with self.create_producer() as producer:
-            for op_type, record_id, updated_at in record_id_iterator:
-                producer.publish(dict(
-                    id=str(record_id),
-                    updated_at=str(datetime.timestamp(updated_at)),
-                    op=op_type,
-                    index=index,
-                    doc_type=doc_type,
-                ))
+            for op_payload in bulk_ops_iterator:
+                producer.publish(op_payload)
 
     def _get_record(self, payload):
         """Return record to sync."""
         id_ = payload['id']
-        updated_ = datetime.fromtimestamp(float(payload['updated_at']))
-        model = RecordMetadata.query.filter_by(id=id_, updated=updated_).one()
+        model = RecordMetadata.query.filter_by(id=id_).one()
         return Record(data=model.json, model=model)
 
     def _delete_action(self, payload):
@@ -73,10 +63,6 @@ class SyncIndexer(RecordIndexer):
         :returns: Dictionary defining an Elasticsearch bulk 'delete' action.
         """
         index, doc_type = payload.get('index'), payload.get('doc_type')
-        if not (index and doc_type):
-            record = self._get_record(payload)
-            index, doc_type = self.record_to_index(record)
-
         return {
             '_op_type': 'delete',
             '_index': index,
@@ -92,7 +78,7 @@ class SyncIndexer(RecordIndexer):
         :returns: Dictionary defining an Elasticsearch bulk 'index' action.
         """
         record = self._get_record(payload)
-        index, doc_type = self.record_to_index(record)
+        index, doc_type = payload.get('index'), payload.get('doc_type')
 
         arguments = {}
         body = self._prepare_record(record, index, doc_type, arguments)

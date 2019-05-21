@@ -27,14 +27,14 @@ class SyncJob:
                  old_es_client=None, new_es_client=None):
         """Initialize the job configuration."""
         self.rollover_threshold = rollover_threshold
-        self.source_indexes = source_indexes or []
-        self.dest_indexes = dest_indexes or []
         self.old_es_client = old_es_client or {}
         self.new_es_client = new_es_client or {}
         self._state_client = SyncJobState(
             index='.invenio-index-sync',
-            client=new_es_client
+            client=new_es_client,
             initial_state={
+                'index_mapping': {},
+                'index_suffix': None,
                 'last_record_update': None,
                 'reindex_api_task_id': None,
                 'threshold_reached': False,
@@ -43,6 +43,16 @@ class SyncJob:
                 'stats': {},
             },
         )
+
+    def init(self, ):
+        # Check if there's an index sync already happening (and bail)
+
+        # Get old indices
+
+        # Create new indices
+
+        # Store index mapping in state
+        pass
 
     def iter_indexer_ops(self, start_date=None, end_date=None):
         """Iterate over documents that need to be reindexed."""
@@ -53,7 +63,6 @@ class SyncJob:
 
         q = db.session.query(
             RecordMetadata.id.distinct(),
-            RecordMetadata.updated,
             PersistentIdentifier.status
         ).join(
             PersistentIdentifier,
@@ -63,11 +72,11 @@ class SyncJob:
             RecordMetadata.updated >= start_date
         ).yield_per(500)  # TODO: parameterize
 
-        for record_id, rec_updated, pid_status in q:
+        for record_id, pid_status in q:
             if pid_status == PIDStatus.DELETED:
-                yield 'delete', record_id, rec_updated
+                yield {'op': 'delete', 'id': record_id}
             else:
-                yield 'create', record_id, rec_updated
+                yield {'op': 'create', 'id': record_id}
 
     def rollover(self):
         """Perform a rollover action."""
@@ -79,10 +88,8 @@ class SyncJob:
 
     def run(self):
         """Run the index sync job."""
-
         # determine bounds
         start_time = self.state['last_record_update']
-
 
         if not start_time:
             # use reindex api
@@ -95,34 +102,22 @@ class SyncJob:
                 },
                 "dest": {"index": self.dest_indexes[0]}
             }
-            # reindex using ES Reindex API synchronously
+            # Reindex using ES Reindex API synchronously
+            # Keep track of the time we issued the reindex command
+            start_date = datetime.utcnow()
             current_search_client.reindex(body=payload)
-
-            # TODO: Use this as a state-less way of fiding "start_date"
-            search = RecordsSearch(index=self.dest_indexes[0])
-            search = search.sort('-_updated')
-            hits = search.execute()
-            total = len(hits) if lt_es7 else len(hits)
-            last_record_update = datetime.strptime(
-                hits[0]['_updated'], '%Y-%m-%dT%H:%M:%S.%f')
             self.state['last_record_update'] = \
-                str(datetime.timestamp(last_record_update))
+                str(datetime.timestamp(start_date))
             print('[*] reindex done')
         else:
             # Fetch data from start_time from db
             indexer = SyncIndexer()
 
-            last_record_update = datetime.min
-            # Helper closure function to captrue last record update time
-            def _ops_iter():
-                for op, rec_id, rec_updated in self.iter_indexer_ops(start_time):
-                    last_record_update = max(last_record_update, rec_updated)
-                    yield op, rec_id, rec_updated
-
             # Send indexer actions to special reindex queue
-            indexer._bulk_op(_ops_iter(), None)
+            start_date = datetime.utcnow()
+            indexer._bulk_op(self.iter_indexer_ops(start_time), None)
             self.state['last_record_update'] = \
-                    str(datetime.timestamp(last_record_update))
+                    str(datetime.timestamp(start_date))
             # Run synchornous bulk index processing
             # TODO: make this asynchronous by default
             succeeded, failed = indexer.process_bulk_queue()
@@ -139,7 +134,7 @@ class SyncJobState:
     python dictionary.
     """
 
-    def __init__(self, index, document_id=None, client=None, force=False
+    def __init__(self, index, document_id=None, client=None, force=False,
                  initial_state=None):
         """Synchronization job state in ElasticSearch."""
         self.index = index

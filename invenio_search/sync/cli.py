@@ -14,6 +14,7 @@ from flask import current_app
 from flask.cli import with_appcontext
 from invenio_search.cli import index as index_cmd
 from invenio_search.utils import obj_or_import_string
+from .proxies import current_index_sync
 
 
 @index_cmd.group()
@@ -23,9 +24,12 @@ def sync():
 
 
 @sync.command('init')
-def init_sync():
+@click.argument('job_id')
+def init_sync(job_id):
     """Initialize index syncing."""
-    pass
+    job = current_index_sync.jobs[job_id]
+    sync_job = job['cls'](**job['params'])
+    sync_job.init()
 
 
 @sync.command('run')

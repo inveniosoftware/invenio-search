@@ -13,10 +13,12 @@ from __future__ import absolute_import, print_function
 from datetime import datetime
 
 from elasticsearch import VERSION as ES_VERSION
+from flask import current_app
 from invenio_search.api import RecordsSearch
 from invenio_search.sync.indexer import SyncIndexer
 from invenio_search.sync.tasks import run_sync_job
-from invenio_search.proxies import current_search_client
+from invenio_search.proxies import current_search, current_search_client
+from invenio_search.utils import prefix_index
 
 lt_es7 = ES_VERSION[0] < 7
 INDEX_SYNC_INDEX = '.invenio-index-sync'
@@ -41,6 +43,7 @@ class SyncJob:
         self.pid_mappings = pid_mappings
         self.src_es_client = src_es_client
         self.src_es_client['client'] = get_es_client(src_es_client)
+        self._state_client = None
         # self._state_client = SyncJobState(
         #     index=INDEX_SYNC_INDEX,
         #     client=new_es_client,
@@ -56,24 +59,63 @@ class SyncJob:
         #     },
         # )
 
+    def _build_index_mapping(self):
+        """Build index mapping."""
+        old_client = self.src_es_client['client']
+
+        def get_src(name, prefix):
+            index_name = None
+            if old_client.indices.exists(name):
+                index_name = name
+            elif old_client.indices.exists_alias(name):
+                indexes = list(old_client.indices.get_alias(name=name).keys())
+                if not indexes:
+                    raise Exception('no index found for alias: {}'.format(name))
+                index_name = indexes[0]
+            else:
+                raise Exception("alias or index doesn't exist: {}".format(name))
+            return dict(
+                index=index_name,
+                prefix=prefix
+            )
+
+        def get_dst(aliases, prefixed_name):
+            if isinstance(aliases, str):
+                raise Exception('failed to find index with name: {}'.format(prefixed_name))
+            for key, values in aliases.items():
+                if key == prefixed_name:
+                    index, mapping = list(values.items())[0]
+                    return dict(
+                        index=index,
+                        mapping=mapping
+                    )
+                else:
+                    return get_dst(values, prefixed_name)
+
+        index_mapping = {}
+        for pid_type, name in self.pid_mappings.items():
+            mapping = dict(
+                src=get_src(name, self.src_es_client['prefix'] or ''),
+                dst=get_dst(current_search.aliases, prefix_index(current_app, name))
+            )
+
+            index_mapping[pid_type] = mapping
+        return index_mapping
+
     def init(self):
         # Check if there's an index sync already happening (and bail)
         if current_search_client.indices.exists(INDEX_SYNC_INDEX):
             raise Exception('The index {} already exists, a job is already running.'.format(INDEX_SYNC_INDEX))
+
+        old_client = self.src_es_client['client']
 
         state = SyncJobState(
             index=INDEX_SYNC_INDEX
         )
 
         # Get old indices
-        index_mapping = {}
-        for pid_type, name in self.pid_mappings.items():
-            if self.src_es_client['client'].indices.exists(name):
-                pass
-            elif self.src_es_client['client'].indices.exists_alias(name):
-                pass
-            else:
-                raise Exception("alias or index doesn't exist: {}".format(name))
+        index_mapping = self._build_index_mapping()
+        print(index_mapping)
 
         # Create new indices
 

@@ -24,6 +24,7 @@ def sync():
 
 
 @sync.command('init')
+@with_appcontext
 @click.argument('job_id')
 def init_sync(job_id):
     """Initialize index syncing."""
@@ -33,9 +34,8 @@ def init_sync(job_id):
 
 
 @sync.command('run')
-@click.argument('jobs', nargs=-1)
 @with_appcontext
-def run_sync(jobs):
+def run_sync():
     """Run current index syncing."""
     for job in jobs:
         print('Running sync job: {}'.format(job))

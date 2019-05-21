@@ -46,7 +46,7 @@ class InvenioIndexSync(object):
         """
         self.init_config(app)
         app.cli.add_command(index_cmd)
-        app.extensions['invenio-index-search'] = self
+        app.extensions['invenio-index-sync'] = self
 
     @staticmethod
     def init_config(app):

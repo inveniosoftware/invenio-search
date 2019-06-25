@@ -8,6 +8,11 @@
 Changes
 =======
 
+Version 1.1.1 (released 2019-06-25)
+
+- Fixes prefixing for whitelisted aliases and the RecordSearch class.
+- Adds basic Elasticsearch v7 support.
+
 Version 1.1.0 (released 2019-02-25)
 
 - Deprecates Elasticsearch v2

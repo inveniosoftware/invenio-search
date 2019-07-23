@@ -48,8 +48,7 @@ def test_client_config():
         ext = InvenioSearch(app)
         es_client = ext.client  # trigger client initialization
         mock_es_init.assert_called_once_with(
-            hosts=None, connection_class=RequestsHttpConnection,
-            timeout=30, foo='bar')
+            hosts=None, timeout=30, foo='bar')
 
 
 def test_flush_and_refresh(app):

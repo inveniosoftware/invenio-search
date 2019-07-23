@@ -6,61 +6,47 @@
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 
-"""Configuration options for Invenio-Search."""
+"""Configuration options for Invenio-Search.
+
+The documentation for the configuration is in docs/configuration.rst.
+"""
 
 #
 # ELASTIC configuration
 #
 
-SEARCH_ELASTIC_HOSTS = None  # default localhost
-"""Elasticsearch hosts for the client.
-
-By default the client connects to ``localhost:9200``. Below is an example of
-connecting to three hosts via HTTPS with Basic authentication and switching of
-SSL certificate verification:
-
-.. code-block:: python
-
-    params = dict(
-        port=443,
-        http_auth=('myuser', 'mypassword'),
-        use_ssl=True,
-        verify_certs=False,
-    )
-    SEARCH_ELASTIC_HOSTS = [
-        dict(host='node1', **params),
-        dict(host='node2', **params),
-        dict(host='node3', **params),
-    ]
-
-
-The underlying library handles connection pooling and load-balancing between
-the different nodes. Please see
-`Elasticsearch client <https://elasticsearch-py.readthedocs.io/>`_
-for further details.
-"""
-
 SEARCH_CLIENT_CONFIG = None
-"""Elasticsearch client configuration.
+"""Dictionary of options for the Elasticsearch client.
 
-If provided, this configuration dictionary will be passed to the initialization
-of the :class:`elasticsearch:elasticsearch.Elasticsearch` client instance used
-by the module.
+The value of this variable is passed to :py:class:`elasticsearch.Elasticsearch`
+as keyword arguments and is used to configure the client. See the available
+keyword arguments in the two following classes:
 
+- :py:class:`elasticsearch.Elasticsearch`
+- :py:class:`elasticsearch.Transport`
 
-If not set, for the ``hosts`` key, :py:data:`.SEARCH_ELASTIC_HOSTS` will be
-used and for the ``connection_class`` key
-:class:`elasticsearch:elasticsearch.connection.RequestsHttpConnection`.
-
-Example value:
-
-.. code-block:: python
-
-   # e.g. for smaller/slower machines or development/CI you might want to be a
-   # bit more relaxed in terms of timeouts and failure retries.
-   dict(timeout=30, max_retries=5,
-   )
+If you specify the key ``hosts`` in this dictionary, the configuration variable
+:py:class:`~invenio_search.config.SEARCH_ELASTIC_HOSTS` will have no effect.
 """
+
+SEARCH_ELASTIC_HOSTS = None  # default localhost
+"""Elasticsearch hosts.
+
+By default, Invenio connects to ``localhost:9200``.
+
+The value of this variable is a list of dictionaries, where each dictionary
+represents a host. The available keys in each dictionary is determined by the
+connection class:
+
+- :py:class:`elasticsearch.connection.Urllib3HttpConnection` (default)
+- :py:class:`elasticsearch.connection.RequestsHttpConnection`
+
+You can change the connection class via the
+:py:class:`~invenio_search.config.SEARCH_CLIENT_CONFIG`. If you specified the
+``hosts`` key in :py:class:`~invenio_search.config.SEARCH_CLIENT_CONFIG` then
+this configuration variable will have no effect.
+"""
+
 
 SEARCH_MAPPINGS = None  # loads all mappings and creates aliases for them
 """List of aliases for which, their search mappings should be created.

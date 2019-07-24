@@ -7,6 +7,7 @@
 # under the terms of the MIT License; see LICENSE file for more details.
 
 import pytest
+from elasticsearch import VERSION as ES_VERSION
 from mock import patch
 
 from invenio_search.utils import build_index_name, schema_to_index
@@ -45,21 +46,9 @@ from invenio_search.utils import build_index_name, schema_to_index
 def test_schema_to_index(schema, expected, index_names, app):
     """Test the expected value of schema to index."""
     result = schema_to_index(schema, index_names=index_names)
+    if ES_VERSION[0] >= 7 and expected[0]:
+        expected = (expected[0], '_doc')
     assert result == expected
-
-
-@pytest.mark.parametrize(('prefix', 'expected'), [
-    ('test-', ('test-default-v1.0.0', 'default-v1.0.0')),
-    (None, ('abc-default-v1.0.0', 'default-v1.0.0')),
-    ('', ('default-v1.0.0', 'default-v1.0.0')),
-])
-def test_schema_to_index_prefixes_indices(app, prefix, expected):
-    """Test that prefix is added to the index when creating it."""
-    new_conf = {'SEARCH_INDEX_PREFIX': 'abc-'}
-    with patch.dict(app.config, new_conf):
-        result = schema_to_index('default-v1.0.0.json', prefix=prefix)
-
-        assert result == expected
 
 
 @pytest.mark.parametrize(('parts', 'prefix', 'suffix', 'expected'), [
@@ -74,26 +63,11 @@ def test_build_suffix_index_name(app, parts, prefix, suffix, expected):
     assert build_index_name(parts, suffix=suffix, app=app) == expected
 
 
-@pytest.mark.parametrize(('index_names', 'prefix', 'expected'), [
-    (
-        ['default-v1.0.0'],
-        'test-',
-        ('test-default-v1.0.0', 'default-v1.0.0')
-    ),
-    (
-        ['default-v1.0.0'],
-        '',
-        ('default-v1.0.0', 'default-v1.0.0')
-    ),
-])
-def test_schema_to_index_with_names(app, index_names, prefix, expected):
+def test_schema_to_index_with_names(app):
     """Test that prefix is added to the index when creating it."""
-    new_conf = {'SEARCH_INDEX_PREFIX': prefix}
-    with patch.dict(app.config, new_conf):
-        result = schema_to_index(
-            'default-v1.0.0.json',
-            index_names=index_names,
-            prefix=prefix
-        )
-
-        assert result == expected
+    result = schema_to_index(
+        'default-v1.0.0.json',
+        index_names=['default-v1.0.0']
+    )
+    doc_type = '_doc' if ES_VERSION[0] >= 7 else 'default-v1.0.0'
+    assert result == ('default-v1.0.0', doc_type)

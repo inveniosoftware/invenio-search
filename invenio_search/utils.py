@@ -10,8 +10,10 @@
 
 import os
 import time
+import warnings
 
 import six
+from elasticsearch import VERSION as ES_VERSION
 from flask import current_app
 
 from .proxies import current_search, current_search_client
@@ -81,29 +83,34 @@ def build_index_name(index, prefix=None, suffix=None, app=None):
     return index
 
 
-def schema_to_index(schema, index_names=None, prefix=''):
+def schema_to_index(schema, index_names=None):
     """Get index/doc_type given a schema URL.
 
     :param schema: The schema name
     :param index_names: A list of index name.
-    :param prefix: The prefix to prepend to the index name.
     :returns: A tuple containing (index, doc_type).
     """
+    warnings.warn(
+        '"invenio_search.utils.schema_to_index" will be moved to '
+        'invenio-indexer',
+        DeprecationWarning
+    )
     parts = schema.split('/')
     doc_type, ext = os.path.splitext(parts[-1])
     parts[-1] = doc_type
+    if ES_VERSION[0] >= 7:
+        doc_type = '_doc'
 
     if ext not in {'.json', }:
         return (None, None)
 
     if index_names is None:
-        index = build_alias_name(parts, prefix=prefix)
+        index = build_index_from_parts(*parts)
         return index, doc_type
 
     for start in range(len(parts)):
         name = build_index_from_parts(*parts[start:])
         if name in index_names:
-            index = build_alias_name(name, prefix=prefix)
-            return index, doc_type
+            return name, doc_type
 
     return (None, None)

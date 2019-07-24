@@ -29,9 +29,12 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.coverage',
     'sphinx.ext.doctest',
+    'sphinx.ext.graphviz',
     'sphinx.ext.intersphinx',
     'sphinx.ext.viewcode',
 ]
+
+graphviz_output_format = 'svg'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -49,7 +52,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Invenio-Search'
-copyright = u'2015, CERN'
+copyright = u'2019, CERN'
 author = u'CERN'
 
 # The version info for the project you're documenting, acts as replacement for

@@ -21,3 +21,6 @@ appropriate extras dependency for the version of Elasticsearch you use:
 
     $ # For Elasticsearch 6.x:
     $ pip install invenio-search[elasticsearch6]
+
+    $ # For Elasticsearch 7.x:
+    $ pip install invenio-search[elasticsearch7]

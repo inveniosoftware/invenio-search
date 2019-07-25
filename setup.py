@@ -50,9 +50,6 @@ extras_require = {
         'elasticsearch>=7.0.0,<8.0.0',
         'elasticsearch-dsl>=7.0.0,<8.0.0',
     ],
-    'records': [
-        'invenio-records>=1.0.0',
-    ],
     'tests': tests_require,
 }
 
@@ -64,8 +61,6 @@ for name, reqs in extras_require.items():
         continue
     extras_require['all'].extend(reqs)
 
-
-extras_require['tests'] += extras_require['records']
 
 setup_requires = [
     'pytest-runner>=2.6.2',

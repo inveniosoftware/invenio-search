@@ -53,9 +53,9 @@ class _SearchState(object):
         if entry_point_group_mappings:
             self.load_entry_point_group_mappings(entry_point_group_mappings)
 
-        if ES_VERSION[0] == 2:
+        if ES_VERSION[0] in (2, 5):
             warnings.warn(
-                "Elasticsearch v2 support will be removed.",
+                "Elasticsearch v2 and v5 support will be removed.",
                 DeprecationWarning)
 
     @property

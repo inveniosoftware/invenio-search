@@ -8,7 +8,12 @@
 Changes
 =======
 
-Version 1.2.0 (released 2019-07-19)
+Version 1.2.1 (released 2019-07-31)
+
+- Unpins ``urllib3`` and ``idna`` since ``requests`` is not a direct dependency
+  of the package now.
+
+Version 1.2.0 (released 2019-07-29)
 
 - Adds full Elasticsearch v7 support
 - Better prefixing integration

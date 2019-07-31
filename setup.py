@@ -68,11 +68,6 @@ setup_requires = [
 
 install_requires = [
     'Flask>=0.11.1',
-    # "requests" has hard version range dependency on "idna" and "urllib3"
-    # Every time "idna" and "urllib3" are updated, installation breaks because
-    # "requests" dependencies are not resolved properly.
-    'urllib3<1.25,>=1.21.1',  # from "requests"
-    'idna>=2.5,<2.8',  # from "requests"
 ]
 
 packages = find_packages()

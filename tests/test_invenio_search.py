@@ -411,3 +411,51 @@ def test_not_dry_run_and_index_exists(app):
     search.register_mappings('records', 'mock_module.mappings')
     with pytest.raises(IndexAlreadyExistsError):
         list(search.create())
+
+
+def test_create_selected_indexes(app):
+    search = app.extensions['invenio-search']
+    current_search_client.indices.delete('*')
+    search.register_mappings('authors', 'mock_module.mappings')
+    search.register_mappings('records', 'mock_module.mappings')
+    list(search.create(index_list=[
+        'records-bibliographic-bibliographic-v1.0.0'
+    ]))
+    assert search.client.indices.exists(
+        'records-bibliographic-bibliographic-v1.0.0') is True
+    assert search.client.indices.exists_alias(
+        'records-bibliographic-bibliographic-v1.0.0',
+        'records,'
+        'records-bibliographic,'
+        'records-bibliographic-bibliographic-v1.0.0') is True
+    assert search.client.indices.exists('records-default-v1.0.0') is False
+    assert search.client.indices.exists('authors-authors-v1.0.0') is False
+    assert search.client.indices.exists(
+        'records-authorities-authority-v1.0.0') is False
+
+
+def test_delete_selected_indexes(app):
+    search = app.extensions['invenio-search']
+    current_search_client.indices.delete('*')
+    search.register_mappings('authors', 'mock_module.mappings')
+    search.register_mappings('records', 'mock_module.mappings')
+    list(search.create())
+    list(search.delete(index_list=['authors-authors-v1.0.0']))
+    assert search.client.indices.exists('authors-authors-v1.0.0') is False
+    assert search.client.indices.exists('records-default-v1.0.0') is True
+    assert search.client.indices.exists(
+        'records-bibliographic-bibliographic-v1.0.0') is True
+
+
+def test_create_when_indexes_already_exists_with_ignore_existing_true(app):
+    search = app.extensions['invenio-search']
+    current_search_client.indices.delete('*')
+    search.register_mappings('authors', 'mock_module.mappings')
+    search.register_mappings('records', 'mock_module.mappings')
+    list(search.create(index_list=[
+        'authors-authors-v1.0.0',
+        'records-default-v1.0.0'
+    ]))
+    list(search.create(ignore_existing=True))
+    assert search.client.indices.exists(
+        'records-bibliographic-bibliographic-v1.0.0') is True

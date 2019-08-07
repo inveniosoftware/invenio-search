@@ -292,14 +292,18 @@ class _SearchState(object):
                 )
         return index_result, alias_result
 
-    def create(self, ignore=None):
+    def create(self, ignore=None, ignore_existing=False, index_list=None):
         """Yield tuple with created index name and responses from a client."""
         ignore = ignore or []
         new_indices = {}
         actions = []
+        if ignore_existing and not ignore:
+            ignore = [400]
+        elif ignore_existing and 400 not in ignore:
+            ignore.append(400)
 
         def ensure_not_exists(name):
-            if self.client.indices.exists(name):
+            if not ignore_existing and self.client.indices.exists(name):
                 raise IndexAlreadyExistsError(
                     'index/alias with name "{}" already exists'.format(name))
 
@@ -309,6 +313,8 @@ class _SearchState(object):
                 if isinstance(value, dict):
                     _build(value, alias=name)
                 else:
+                    if index_list and name not in index_list:
+                        continue
                     index_result, alias_result = \
                         self.create_index(
                             name,
@@ -332,14 +338,17 @@ class _SearchState(object):
                         ))
             if alias:
                 alias_indices = self._get_indices(tree_or_filename)
-                alias_indices = [new_indices[i] for i in alias_indices]
-                alias_name = build_alias_name(alias, app=self.app)
-                ensure_not_exists(alias_name)
-                actions.append(dict(
-                    type='create_alias',
-                    index=alias_indices,
-                    alias=alias_name
-                ))
+                alias_indices = [
+                    new_indices[i] for i in alias_indices if i in new_indices
+                ]
+                if alias_indices:
+                    alias_name = build_alias_name(alias, app=self.app)
+                    ensure_not_exists(alias_name)
+                    actions.append(dict(
+                        type='create_alias',
+                        index=alias_indices,
+                        alias=alias_name
+                    ))
 
         _build(self.active_aliases)
 
@@ -392,7 +401,7 @@ class _SearchState(object):
         for template in self.templates:
             yield _put_template(template)
 
-    def delete(self, ignore=None):
+    def delete(self, ignore=None, index_list=None):
         """Yield tuple with deleted index name and responses from a client."""
         ignore = ignore or []
 
@@ -404,6 +413,8 @@ class _SearchState(object):
                     for result in _delete(value, alias=name):
                         yield result
                 else:
+                    if index_list and name not in index_list:
+                        continue
                     # Resolve values to suffixed (or not) indices
                     prefixed_index = build_alias_name(name, app=self.app)
                     lookup_response = self.client.indices.get_alias(

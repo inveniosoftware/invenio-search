@@ -8,6 +8,11 @@
 Changes
 =======
 
+Version 1.2.2 (released 2019-08--8)
+
+- Adds option ignore_existing which is ignoring indexes which are already in ES.
+- Adds option to create/delete only selected indexes.
+
 Version 1.2.1 (released 2019-07-31)
 
 - Unpins ``urllib3`` and ``idna`` since ``requests`` is not a direct dependency

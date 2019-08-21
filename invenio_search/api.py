@@ -72,7 +72,7 @@ class BaseRecordsSearch(Search):
     class Meta:
         """Configuration for ``Search`` and ``FacetedSearch`` classes."""
 
-        index = '_all'
+        index = '*'
         doc_types = None
         fields = ('*', )
         facets = {}
@@ -132,7 +132,7 @@ class BaseRecordsSearch(Search):
             """Pass defaults from ``cls.Meta`` object."""
 
             index = build_alias_name(search_._index[0])
-            doc_types = getattr(search_.Meta, 'doc_types', ['_all'])
+            doc_types = getattr(search_.Meta, 'doc_types', ['*'])
             fields = getattr(search_.Meta, 'fields', ('*', ))
             facets = getattr(search_.Meta, 'facets', {})
 

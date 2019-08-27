@@ -122,9 +122,11 @@ def test_load_entry_point_group(template_entrypoints):
     with patch('invenio_search.ext.iter_entry_points',
                return_value=template_entrypoints('invenio_search.templates')):
         if ES_VERSION[0] == 2:
-            assert len(ext.templates.keys()) == 2
+            assert set(ext.templates.keys()) == \
+                {'subdirectory-file-download-v1', 'record-view-v1'}
         elif ES_VERSION[0] == 5:
-            assert len(ext.templates.keys()) == 1
+            assert set(ext.templates.keys()) == \
+                {'record-view-v{}'.format(ES_VERSION[0])}
 
 
 @pytest.mark.parametrize(('aliases_config', 'expected_aliases'), [

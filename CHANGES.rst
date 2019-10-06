@@ -8,7 +8,11 @@
 Changes
 =======
 
-Version 1.2.2 (released 2019-08--8)
+Version 1.2.3 (released 2019-10-07)
+
+- Changes the naming strategy for templates to avoid inclusion of slashes ("/")
+
+Version 1.2.2 (released 2019-08-08)
 
 - Adds option ignore_existing which is ignoring indexes which are already in ES.
 - Adds option to create/delete only selected indexes.

@@ -69,7 +69,7 @@ def init(force):
     """Initialize registered aliases and mappings."""
     click.secho('Creating indexes...', fg='green', bold=True, file=sys.stderr)
     with click.progressbar(
-            current_search.create(ignore=[400] if force else None),
+            current_search.create(ignore_existing=force),
             length=len(current_search.mappings)) as bar:
         for name, response in bar:
             bar.label = name

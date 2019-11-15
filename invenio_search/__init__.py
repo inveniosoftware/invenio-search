@@ -8,15 +8,16 @@
 
 r"""Elasticsearch management for Invenio.
 
-Allows retrieving records from a configurable backend (currently, from
-Elasticsearch).
+Allows retrieving records from a configurable backend (currently Elasticsearch
+is supported).
 
 Initialization
 --------------
 
 To be able to retrieve information from *somewhere*, we first need to setup
 this *somewhere*. So make sure you have the correct version of Elasticsearch
-installed and running (currently, version 6.x and 7.x are supported).
+installed and running (see :ref:`installation` for supported Elasticsearch
+versions).
 
 For running an Elasticsearch instance we recommend using
 `Docker <https://docs.docker.com/install/>`_ and the official images `provided
@@ -287,13 +288,13 @@ Miscellaneous
 
 Elasticsearch version support
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Because of the breaking changes that are introduced in Elasticsearch between
-major versions in relation to mappings, a specific directory structure has to
-be followed, in order to specify which JSON mapping files will be used for
-creating the Elasticsearch indices. For backwards compatibility with existing
-Invenio modules and installations, for Elasticsearch 2, mappings will be loaded
-from the root level of the package directory. You can see a full example in the
-``examples/data`` directory of the Invenio-Search repository:
+Major versions of Elasticsearch can include breaking changes to mappings so
+mappings for each version of Elasticsearch are stored in separate folders.
+Invenio-Search will use these mappings when creating the indices. For backwards
+compatibility with existing Invenio modules and installations, Elasticsearch 2
+mappings will be loaded from the root level of the package directory. You can
+see a full example in the ``examples/data`` directory of the Invenio-Search
+repository:
 
 .. code-block:: console
 
@@ -306,8 +307,16 @@ from the root level of the package directory. You can see a full example in the
     |  +- bibliographic
     |  |  +- bibliographic-v1.0.0.json
     |  +- default-v1.0.0.json
-    +- v5
-    |  +- demo        # Elasticsearch 5 mappings
+    +- v6
+    |  +- demo        # Elasticsearch 6 mappings
+    |  |  +- authorities
+    |  |  |  +- authority-v1.0.0.json
+    |  |  +- bibliographic
+    |  |  |  +- bibliographic-v1.0.0.json
+    |  |  +- default-v1.0.0.json
+    |  +- __init__.py
+    +- v7
+    |  +- demo        # Elasticsearch 7 mappings
     |  |  +- authorities
     |  |  |  +- authority-v1.0.0.json
     |  |  +- bibliographic
@@ -337,17 +346,17 @@ Indexes and aliases
 
     digraph D {
         rankdir="LR"
-        node[shape=record]
+        node[shape=record, fixedsize=true, width=1]
 
         R[label="records", style=rounded]
-        RD[label="records-dataset-v1.0.0", style="rounded,dashed"]
-        RP[label="records-paper-v1.0.0", style="rounded,dashed"]
-        RDI[label="records-dataset-v1.0.0-1564056972"]
-        RPI[label="records-paper-v1.0.0-1564056972"]
+        RD[label="records-dataset-v1.0.0", style="rounded,dashed", width=2.5]
+        RP[label="records-paper-v1.0.0", style="rounded,dashed", width=2.5]
+        RDI[label="records-dataset-v1.0.0-1564056972", width=4]
+        RPI[label="records-paper-v1.0.0-1564056972", width=4]
 
         A[label="authors", style=rounded]
-        AA[label="authors-author-v1.0.0", style="rounded,dashed"]
-        AAI[label="authors-author-v1.0.0-1564056972"]
+        AA[label="authors-author-v1.0.0", style="rounded,dashed", width=2.5]
+        AAI[label="authors-author-v1.0.0-1564056972", width=4]
 
         R -> RDI
         R -> RPI
@@ -387,7 +396,7 @@ to as the indexing will fail if they point to multiple indexes.
 The other type of alias is the **write alias** which is an alias that only
 points to a single index and has the same name as the index without the suffix.
 This alias should be used whenever you need to index something. The name of the
-write alias is the same as the un-prefixed index name, which allows backwards
+write alias is the same as the un-suffixed index name to allow backwards
 compatibilty with previous versions of Invenio-Search.
 
 An **index** ends with a suffix which is the timestamp of the index creation

@@ -5,6 +5,8 @@
     Invenio is free software; you can redistribute it and/or modify it
     under the terms of the MIT License; see LICENSE file for more details.
 
+..  _installation:
+
 Installation
 ============
 
@@ -13,14 +15,11 @@ appropriate extras dependency for the version of Elasticsearch you use:
 
 .. code-block:: console
 
-    $ # For Elasticsearch 2.x:
-    $ pip install invenio-search[elasticsearch2]
-
-    $ # For Elasticsearch 5.x:
-    $ pip install invenio-search[elasticsearch5]
-
     $ # For Elasticsearch 6.x:
     $ pip install invenio-search[elasticsearch6]
 
     $ # For Elasticsearch 7.x:
     $ pip install invenio-search[elasticsearch7]
+
+Elasticsearch v2 and v5 support still exists in Invenio-Search but will be
+deprecated in future releases so using v6 or v7 is recommended.

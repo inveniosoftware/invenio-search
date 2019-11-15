@@ -29,7 +29,7 @@ Clusters
 ~~~~~~~~
 Normally in a production environment, you will run an Elasticsearch cluster on
 one or more dedicated nodes. Following is an example of how you configure
-Invenio to use such as cluster:
+Invenio to use such a cluster:
 
 .. code-block:: python
 
@@ -46,7 +46,7 @@ Basic authentication and SSL
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 By default all traffic to Elasticsearch is via unencrypted HTTP because
 Elasticsearch does not come with built-in support for SSL unless you pay for
-the expensive enterprise X-Pack addition. A cheap alternative to X-Pack, is to
+the enterprise X-Pack addition. A cheaper alternative to X-Pack is to
 simply setup a proxy (e.g. nginx) on each node with SSL and
 HTTP basic authentication support.
 
@@ -118,7 +118,7 @@ of the SSL certificate, using the ``verify_certs`` option:
         # ...
     ]
 
-Above example will also disable the two warnings (``InsecureRequestWarning``
+The above example will also disable the two warnings (``InsecureRequestWarning``
 and a ``UserWarning``) using the ``ssl_show_warn`` option and urllib3 feature.
 Again, we **strongly discourage** you from using this method. The warnings are
 there for a reason!
@@ -177,7 +177,7 @@ features like e.g. custom authentication plugins.
 
 Connection pooling
 ~~~~~~~~~~~~~~~~~~
-By default urllib3 will open up to 10 connections to each node, if your
+By default urllib3 will open up to 10 connections to each node. If your
 application calls for more parallelism, use the ``maxsize`` parameter to raise
 the limit:
 

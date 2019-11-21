@@ -337,6 +337,8 @@ class _SearchState(object):
                     new_indices[name] = index_result[0]
                     if alias_result[0]:
                         ensure_alias_not_exists(alias_result[0])
+                        ensure_index_not_exists(alias_result[0])
+
                         actions.append(dict(
                             type='create_index',
                             index=name,

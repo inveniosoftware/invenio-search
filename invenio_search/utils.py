@@ -51,6 +51,23 @@ def suffix_index(index, suffix=None, app=None):
     return index + suffix
 
 
+def unsuffix_index(index, suffix=None, app=None):
+    """Unsuffixes the given index.
+
+    :param index: Name of the index to prefix.
+    :param suffix: The suffix to remove from the index name.
+    :param app: Flask app to get the "invenio-search" extension from.
+    :returns: A string with the index name unsuffixed.
+    """
+    search_ext = app.extensions['invenio-search'] if app else current_search
+    suffix = suffix if suffix is not None else search_ext.current_suffix
+
+    if index.endswith(suffix):
+        index = index[:-len(suffix)]
+
+    return index
+
+
 def build_index_from_parts(*parts):
     """Build an index name from parts.
 

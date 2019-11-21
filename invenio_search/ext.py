@@ -25,7 +25,7 @@ from . import config
 from .cli import index as index_cmd
 from .errors import IndexAlreadyExistsError
 from .utils import build_alias_name, build_index_from_parts, \
-    build_index_name, timestamp_suffix
+    build_index_name, timestamp_suffix, unsuffix_index
 
 
 class _SearchState(object):
@@ -300,10 +300,24 @@ class _SearchState(object):
         elif ignore_existing and 400 not in ignore:
             ignore.append(400)
 
-        def ensure_not_exists(name):
+        def ensure_index_not_exists(name):
             if not ignore_existing and self.client.indices.exists(name):
                 raise IndexAlreadyExistsError(
-                    'index/alias with name "{}" already exists'.format(name))
+                    'index with name "{}" already exists'.format(name))
+
+        def ensure_alias_not_exists(name, indices=None):
+            if indices:
+                indices = ','.join(indices)
+
+            def _exists_alias(name, index):
+                return self.client.indices.exists_alias(name=name, index=index)
+
+            if not ignore_existing and _exists_alias(name=name, index=indices):
+                raise IndexAlreadyExistsError(
+                    'alias with name "{}" already exists'.format(name))
+
+        def _unsuffix_indices_with_wildcard(indices):
+            return [unsuffix_index(index) + "*" for index in indices]
 
         def _build(tree_or_filename, alias=None):
             """Build a list of index/alias actions to perform."""
@@ -319,10 +333,10 @@ class _SearchState(object):
                             ignore=ignore,
                             dry_run=True
                         )
-                    ensure_not_exists(index_result[0])
+                    ensure_index_not_exists(index_result[0])
                     new_indices[name] = index_result[0]
                     if alias_result[0]:
-                        ensure_not_exists(alias_result[0])
+                        ensure_alias_not_exists(alias_result[0])
                         actions.append(dict(
                             type='create_index',
                             index=name,
@@ -341,7 +355,10 @@ class _SearchState(object):
                 ]
                 if alias_indices:
                     alias_name = build_alias_name(alias, app=self.app)
-                    ensure_not_exists(alias_name)
+                    wildcard_indices = _unsuffix_indices_with_wildcard(
+                        alias_indices
+                    )
+                    ensure_alias_not_exists(alias_name, wildcard_indices)
                     actions.append(dict(
                         type='create_alias',
                         index=alias_indices,

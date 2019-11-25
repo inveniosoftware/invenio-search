@@ -25,7 +25,7 @@ from . import config
 from .cli import index as index_cmd
 from .errors import IndexAlreadyExistsError
 from .utils import build_alias_name, build_index_from_parts, \
-    build_index_name, timestamp_suffix, unsuffix_index
+    build_index_name, suffix_index, timestamp_suffix, unsuffix_index
 
 
 class _SearchState(object):
@@ -316,8 +316,10 @@ class _SearchState(object):
                 raise IndexAlreadyExistsError(
                     'alias with name "{}" already exists'.format(name))
 
-        def _unsuffix_indices_with_wildcard(indices):
-            return [unsuffix_index(index) + "*" for index in indices]
+        def _build_match_any_suffix_indices(indices):
+            return [
+                suffix_index(unsuffix_index(index), "-*") for index in indices
+            ]
 
         def _build(tree_or_filename, alias=None):
             """Build a list of index/alias actions to perform."""
@@ -357,10 +359,10 @@ class _SearchState(object):
                 ]
                 if alias_indices:
                     alias_name = build_alias_name(alias, app=self.app)
-                    wildcard_indices = _unsuffix_indices_with_wildcard(
+                    any_suffix_indices = _build_match_any_suffix_indices(
                         alias_indices
                     )
-                    ensure_alias_not_exists(alias_name, wildcard_indices)
+                    ensure_alias_not_exists(alias_name, any_suffix_indices)
                     actions.append(dict(
                         type='create_alias',
                         index=alias_indices,

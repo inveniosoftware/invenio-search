@@ -65,7 +65,7 @@ def check():
 @click.option('--force', is_flag=True, default=False)
 @click.option(
     '-i',
-    '--index_name',
+    '--index-name',
     'index_list',
     help='List of indexes.',
     multiple=True

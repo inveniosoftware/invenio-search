@@ -87,7 +87,7 @@ def test_init(app, template_entrypoints):
 
     assert current_search_client.indices.exists(list(search.mappings.keys()))
 
-    # Test option --index_name
+    # Test option --index-name
     index = 'records-authorities-authority-v1.0.0'
     suffixed_index = 'records-authorities-authority-v1.0.0-abc'
     expected_aliases = [
@@ -109,7 +109,7 @@ def test_init(app, template_entrypoints):
 
     result = runner.invoke(
         cmd,
-        ['init', '--index_name', index],
+        ['init', '--index-name', index],
         obj=script_info
     )
     assert 0 == result.exit_code

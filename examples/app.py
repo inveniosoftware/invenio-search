@@ -71,6 +71,7 @@ app.config.update(
     SECURITY_PASSWORD_SALT="CHANGE_ME_ALSO",
     SQLALCHEMY_DATABASE_URI=os.getenv('SQLALCHEMY_DATABASE_URI',
                                       'sqlite:///instance/test.db'),
+    SQLALCHEMY_TRACK_MODIFICATIONS=False,
 )
 Menu(app)
 InvenioDB(app)

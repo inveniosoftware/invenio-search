@@ -8,3 +8,4 @@
 
 -e git+git://github.com/elastic/elasticsearch-dsl-py.git#egg=elasticsearch-dsl-py
 -e git+git://github.com/elastic/elasticsearch-py.git#egg=elasticsearch-py
+-e git+https://github.com/inveniosoftware/invenio-base.git#egg=invenio-base

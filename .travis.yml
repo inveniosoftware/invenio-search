@@ -6,9 +6,6 @@
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 
-# Needed in order to use oraclejdk8
-dist: trusty
-
 addons:
   postgresql: 9.4
   apt:
@@ -17,8 +14,6 @@ addons:
 
 notifications:
   email: false
-
-sudo: false
 
 language: python
 
@@ -47,8 +42,8 @@ jdk:
   - "oraclejdk8"
 
 python:
-  - "2.7"
-  - "3.5"
+  - "3.6"
+  - "3.7"
 
 matrix:
   fast_finish: true
@@ -57,6 +52,7 @@ matrix:
     - env: REQUIREMENTS=devel EXTRAS=all,elasticsearch7 ES_URL=$ES7_DOWNLOAD_URL
 
 before_install:
+  - "pip uninstall -y six"
   - "mkdir /tmp/elasticsearch"
   - "wget -O - $ES_URL | tar xz --directory=/tmp/elasticsearch --strip-components=1"
   - "/tmp/elasticsearch/bin/elasticsearch &"
@@ -84,8 +80,9 @@ deploy:
   password:
     secure: "MLyhegsdVnqHPWe7Gruqdsui2wm9pdpCBzXpR8TuhXH/GFbfzFtI+wASroSrVnVvEr1mIHoghmOak0YdBXnbNOw6C3wLZeiNCPdgxtUYETJecxq3d1Cm5XwC57qrHvLTMHhyIqmiqTE9wkjrO2/ltTwd45lhSA64u3M6EBE6RCioiW3gDqzZmIfSFE2m3w4v4Ve+GSuxD8Tazkp56tp4GCI7etyCUOyIhJwCLSJrDweBbaAqGTUgf9cxchftPipcMg+YF9jQwSJnHosn+KBVf0wwMdF29FTUPbhBmDy0UnK0nU2N9Wpuka0uoihFT09VIIeGpD+DTULJ0EXTU7TvDyn8yVbzbzxUyTAXT6A61IU7CN/pqOqhtdFIBDNl1G57Whh5SZtRqTmYnZT2iZrchSc35CZGKoMpISdHWsKvRIVIp0rcQc/q/pn+ee4JccUwQ7e0ffRQLyUCS/lMAJjflvIyVbCmy9dTIVMv4+zCvrriBt7gyKCQJPpw8E9CtaAjRhyWX+9CqeRaykEjl84X3+LmU528ZuOsU9myPhNo0bkTm0cjIBattwpFh7PQNSGEUlL4nRf/gcaPuJ4zBvYoPC2I3GgDsOXvsaJRlKMKnVc/KcWOq/TmK1q10LQjq2s9cDrbIz8tfDc4IS3pLviqKMYM9wNMvjn7WjhF1QfV6bY="
   distributions: "sdist bdist_wheel"
+  skip_existing: true
   on:
     tags: true
-    python: "3.5"
+    python: "3.6"
     repo: inveniosoftware/invenio-search
     condition: $DEPLOY = true

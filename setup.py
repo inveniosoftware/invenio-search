@@ -67,7 +67,7 @@ setup_requires = [
 ]
 
 install_requires = [
-    'Flask>=0.11.1',
+    'invenio-base>=1.2.2',
 ]
 
 packages = find_packages()

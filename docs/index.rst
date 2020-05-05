@@ -19,7 +19,6 @@ Invenio-Search.
    installation
    configuration
    usage
-   examplesapp
 
 
 API Reference

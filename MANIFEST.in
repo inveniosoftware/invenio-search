@@ -18,6 +18,6 @@ include tests/mock_module/mappings/records/authorities/notajson
 include tests/mock_module/mappings/*/records/authorities/notajson
 prune docs/_build
 recursive-include docs *.bat *.py *.rst *.png *.dot Makefile
-recursive-include examples *.json *.py *.sh *.txt
+recursive-include examples *.json *.py
 recursive-include invenio_search *.py
 recursive-include tests *.json *.py *.txt

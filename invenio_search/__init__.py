@@ -277,9 +277,8 @@ Now, you can search for documents with ``test`` in the body.
 
 You should find only one document - the one with ``Public`` title.
 
-This is a very simple example of how to filter out some records. If you want
-to see how to hide some records if the user is not logged in, check out the
-:ref:`examplesapp`. If you want to define role based access rights control,
+This is a very simple example of how to filter out some records.
+If you want to define role based access rights control,
 check the invenio-access_ module.
 
 

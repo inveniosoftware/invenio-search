@@ -8,9 +8,19 @@
 Changes
 =======
 
+Version 1.3.1 (released 2020-05-07)
+
+- Set Sphinx ``<3.0.0`` because of errors related to application context.
+- Stop using example app, keep only files referenced in the docs.
+
 Version 1.3.0 (released 2020-03-10)
 
 - Centralize dependency management via Invenio-Base.
+
+Version 1.2.4 (released 2020-05-07)
+
+- Set Sphinx ``<3.0.0`` because of errors related to application context.
+- Stop using example app, keep only files referenced in the docs.
 
 Version 1.2.3 (released 2019-10-07)
 

@@ -187,39 +187,36 @@ class PrefixedIndexList(list):
     pass
 
 
-class RecordsSearch(BaseRecordsSearch):
-    """Example subclass for searching records using index prefixing."""
+class PrefixedSearchMixin:
+    """Mixing to use index prefixing."""
 
-    def __init__(self, **kwargs):
+    def prefix_index(self, index):
         """Using PrefixedIndexList type to avoid double prefixing."""
         # at object instantiation, kwargs['index'] is not defined.
         # Elasticsearch-dsl-py re-instantiated the object at each search
         # by cloning it and passing as kwargs the list of indices
         # kwargs['index'] = ['index-name1', 'index-name2']
-        _index_param = kwargs.get('index', getattr(self.Meta, 'index', None))
-        if not isinstance(_index_param, PrefixedIndexList):
-            if isinstance(_index_param, (tuple, list)):
+        _index_param = index
+        if not isinstance(index, PrefixedIndexList):
+            if isinstance(index, (tuple, list)):
                 _prefixed_index_list = [
                     build_alias_name(_index)
-                    for _index in _index_param
+                    for _index in index
                 ]
-                kwargs.update({'index': _prefixed_index_list})
-            elif isinstance(_index_param, six.string_types):
-                _splitted_index = _index_param.strip().split(',')
+                index = _prefixed_index_list
+            elif isinstance(index, six.string_types):
+                _splitted_index = index.strip().split(',')
                 if len(_splitted_index) > 1:
                     _prefix_index_list = [
                         build_alias_name(_index)
                         for _index in _splitted_index]
-                    _prefix_index_param = ','.join(_prefix_index_list)
-                    kwargs.update({'index': _prefix_index_param})
+                    index = ','.join(_prefix_index_list)
                 else:
-                    kwargs.update({'index': build_alias_name(_index_param)})
+                    index = build_alias_name(index)
                 _index_param = [_index_param]
             self._original_index = _index_param
 
-        super(RecordsSearch, self).__init__(**kwargs)
-        if self._index:
-            self._index = PrefixedIndexList(self._index)
+        return index
 
     def _clone(self):
         """Clone `_original_index` attribute.
@@ -228,9 +225,90 @@ class RecordsSearch(BaseRecordsSearch):
         to copy over the search object. We override the method so we can
         copy the `_original_index` attribute.
         """
-        s = super(RecordsSearch, self)._clone()
+        s = super(PrefixedSearchMixin, self)._clone()
         s._original_index = self._original_index
         return s
 
 
+class BaseRecordsSearchV2(Search):
+    """Base records search V2."""
+
+    def __init__(self, fields=('*', ), default_filter=None, **kwargs):
+        """Sets the needed args in kwargs for the search."""
+        kwargs.setdefault('index', '*')
+        kwargs.setdefault('doc_type', None)
+        kwargs.setdefault('using', current_search_client)
+        kwargs.setdefault('extra', {})
+
+        min_score = current_app.config.get('SEARCH_RESULTS_MIN_SCORE')
+        if min_score:
+            kwargs['extra'].update(min_score=min_score)
+
+        super(BaseRecordsSearchV2, self).__init__(**kwargs)
+
+        if default_filter:
+            # NOTE: https://github.com/elastic/elasticsearch/issues/21844
+            self.query = Bool(minimum_should_match=MinShouldMatch("0<1"),
+                              filter=default_filter)
+
+    def get_record(self, id_):
+        """Return a record by its identifier.
+
+        :param id_: The record identifier.
+        :returns: The record.
+        """
+        return self.query(Ids(values=[str(id_)]))
+
+    def get_records(self, ids):
+        """Return records by their identifiers.
+
+        :param ids: A list of record identifier.
+        :returns: A list of records.
+        """
+        return self.query(Ids(values=[str(id_) for id_ in ids]))
+
+    def with_preference_param(self, preference):
+        """Add the preference param to the ES request and return a new Search.
+
+        The preference param avoids the bouncing effect with multiple
+        replicas, documented on ES documentation.
+        See: https://www.elastic.co/guide/en/elasticsearch/guide/current
+        /_search_options.html#_preference for more information.
+
+        :param preference: A function that returns the preference value.
+        """
+        return self.params(preference=preference)
+
+
+class RecordsSearch(PrefixedSearchMixin, BaseRecordsSearch):
+    """Prefixed record search class."""
+
+    def __init__(self, **kwargs):
+        """Constructor."""
+        _index = self.prefix_index(
+            index=kwargs.get('index', getattr(self.Meta, 'index', None))
+        )
+        kwargs.update({'index': _index})
+
+        super(RecordsSearch, self).__init__(**kwargs)
+        if self._index:
+            self._index = PrefixedIndexList(self._index)
+
+
+class RecordsSearchV2(PrefixedSearchMixin, BaseRecordsSearchV2):
+    """Prefixed record search class."""
+
+    def __init__(self, **kwargs):
+        """Constructor."""
+        _index = self.prefix_index(
+            index=kwargs.get('index', '*')
+        )
+        kwargs.update({'index': _index})
+
+        super(RecordsSearchV2, self).__init__(**kwargs)
+        if self._index:
+            self._index = PrefixedIndexList(self._index)
+
+
 UnPrefixedRecordsSearch = BaseRecordsSearch
+UnPrefixedRecordsSearchV2 = BaseRecordsSearchV2

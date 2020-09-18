@@ -8,6 +8,11 @@
 Changes
 =======
 
+Version 1.4.0 (released 2020-09-18)
+
+- Adds new search class that can be initialised only from arguments to the
+  constructor.
+
 Version 1.3.1 (released 2020-05-07)
 
 - Set Sphinx ``<3.0.0`` because of errors related to application context.

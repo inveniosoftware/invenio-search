@@ -267,7 +267,7 @@ class BaseRecordsSearchV2(Search):
         """
         return self.query(Ids(values=[str(id_) for id_ in ids]))
 
-    def with_preference_param(self, preference):
+    def with_preference_param(self, preference=None):
         """Add the preference param to the ES request and return a new Search.
 
         The preference param avoids the bouncing effect with multiple
@@ -275,9 +275,11 @@ class BaseRecordsSearchV2(Search):
         See: https://www.elastic.co/guide/en/elasticsearch/guide/current
         /_search_options.html#_preference for more information.
 
-        :param preference: A function that returns the preference value.
+        :param str preference: A preference value.
         """
-        return self.params(preference=preference)
+        if preference:
+            return self.params(preference=preference)
+        return self
 
 
 class RecordsSearch(PrefixedSearchMixin, BaseRecordsSearch):

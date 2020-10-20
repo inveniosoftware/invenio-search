@@ -9,8 +9,6 @@
 
 """Pytest configuration."""
 
-from __future__ import absolute_import, print_function
-
 import os
 import shutil
 import sys
@@ -18,9 +16,6 @@ import tempfile
 
 import pytest
 from flask import Flask
-from invenio_db import InvenioDB
-from sqlalchemy_utils.functions import create_database, database_exists, \
-    drop_database
 
 from invenio_search import InvenioSearch
 

@@ -9,15 +9,13 @@
 
 """Module tests."""
 
-from __future__ import absolute_import, print_function
-
 import hashlib
 from functools import partial
 
 import pytest
 from elasticsearch import VERSION as ES_VERSION
 from elasticsearch_dsl import Q, Search
-from flask import request
+from flask import _request_ctx_stack, has_request_context, request
 
 from invenio_search.api import BaseRecordsSearch, BaseRecordsSearchV2, \
     DefaultFilter, RecordsSearch, RecordsSearchV2
@@ -156,33 +154,39 @@ def test_elasticsearch_query(app):
     ]
 
 
-class SpySearch(Search):
-    exposed_params = {}
+class SpySearch(RecordsSearch):
+    """Is exactly like RecordsSearch but exposes its params."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.exposed_params = {}
 
     def params(self, **kwargs):
-        self.exposed_params.update(kwargs)
-        return super(SpySearch, self).params(**kwargs)
+        new_self = super().params(**kwargs)
+        new_self.exposed_params.update(kwargs)
+        return new_self
 
 
 def test_es_preference_param_no_request(app):
-    """Test that the preference param is not added when not in a request."""
-    BaseRecordsSearch.__bases__ = (SpySearch,)
+    # WARNING: the app fixture *somehow* pushes a request context
+    #          even though it should not. We pop it and push it back later.
+    if _request_ctx_stack.top:
+        prior_request_ctx = _request_ctx_stack.pop()
 
-    rs = RecordsSearch()
-    new_rs = rs.with_preference_param()
-    assert new_rs.exposed_params == {}
+    assert has_request_context() is False
 
-    # NOTE: for RecordsSearchV2 no preference requires no call
+    search = SpySearch().with_preference_param()
+
+    assert {} == search.exposed_params
+
+    _request_ctx_stack.push(prior_request_ctx)
 
 
 def test_es_preference_param(app):
     """Test the preference param is correctly added in a request."""
-    BaseRecordsSearch.__bases__ = (SpySearch,)
-
     with app.test_request_context('/', headers={'User-Agent': 'Chrome'},
                                   environ_base={'REMOTE_ADDR': '212.54.1.8'}):
-        rs = RecordsSearch()
-        new_rs = rs.with_preference_param()
+        new_rs = SpySearch().with_preference_param()
 
         alg = hashlib.md5()
         encoded_user_agent = 'Chrome'.encode('utf8')
@@ -191,14 +195,53 @@ def test_es_preference_param(app):
         alg.update(encoded_user_string.encode('utf8'))
         digest = alg.hexdigest()
 
-        assert new_rs.exposed_params == dict(preference=digest)
+    assert dict(preference=digest) == new_rs.exposed_params
 
-    # Note: V2 does not require a request context
-    BaseRecordsSearchV2.__bases__ = (SpySearch,)
 
-    rs = RecordsSearchV2()
-    new_rs = rs.with_preference_param(preference=1234)
-    assert new_rs.exposed_params == {'preference': 1234}
+# Equivalent tests to test_es_preference_param_no_request and
+# test_es_preference_param for RecordsSearchV2
+class SpySearchV2(RecordsSearchV2):
+    """Is exactly like RecordsSearchV2 but exposes its params."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.exposed_params = {}
+
+    def params(self, **kwargs):
+        new_self = super().params(**kwargs)
+        new_self.exposed_params.update(kwargs)
+        return new_self
+
+
+def test_recordsearchv2_with_preference_param_no_request_no_param(app):
+    # WARNING: the app fixture *somehow* pushes a request context
+    #          even though it should not. We pop it and push it back later.
+    if _request_ctx_stack.top:
+        prior_request_ctx = _request_ctx_stack.pop()
+
+    assert has_request_context() is False
+
+    search = SpySearchV2().with_preference_param()
+
+    assert {} == search.exposed_params
+
+    _request_ctx_stack.push(prior_request_ctx)
+
+
+def test_recordsearchv2_with_preference_param_request_no_param(app):
+    # NOTE: RecordsSearchV2 does not reach for request to generate preference.
+    #       It must be passed preference explicitly.
+    with app.test_request_context('/', headers={'User-Agent': 'Chrome'},
+                                  environ_base={'REMOTE_ADDR': '212.54.1.8'}):
+        search = SpySearchV2().with_preference_param()
+
+    assert {} == search.exposed_params
+
+
+def test_recordsearchv2_with_preference_param(app):
+    search = SpySearchV2().with_preference_param(1234)
+
+    assert {'preference': 1234} == search.exposed_params
 
 
 @pytest.mark.parametrize("search_cls", [RecordsSearch, RecordsSearchV2])

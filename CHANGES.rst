@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 1.4.1 (released 2020-10-19)
+
+- Fix bouncing search results for BaseRecordSearchV2.
+
 Version 1.4.0 (released 2020-09-18)
 
 - Adds new search class that can be initialised only from arguments to the

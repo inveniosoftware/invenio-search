@@ -18,13 +18,13 @@ history = open('CHANGES.rst').read()
 tests_require = [
     'invenio-db[versioning]>=1.0.0',
     'mock>=1.3.0',
-    "pytest-invenio>=1.4.0,<2.0.0"
+    'pytest-invenio>=1.4.0'
 ]
 
 extras_require = {
     'docs': [
-        'Sphinx>=1.8.4,<3',
-        'invenio-accounts>=1.0.0',
+        'Sphinx>=3',
+        'invenio-accounts>=1.4.0',
     ],
     # Elasticsearch version
     'elasticsearch2': [
@@ -60,7 +60,7 @@ setup_requires = [
 ]
 
 install_requires = [
-    'invenio-base>=1.2.2',
+    'invenio-base>=1.2.3',
 ]
 
 packages = find_packages()

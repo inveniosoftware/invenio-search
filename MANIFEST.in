@@ -21,3 +21,4 @@ recursive-include docs *.bat *.py *.rst *.png *.dot Makefile
 recursive-include examples *.json *.py
 recursive-include invenio_search *.py
 recursive-include tests *.json *.py *.txt
+recursive-include .github/workflows *.yml

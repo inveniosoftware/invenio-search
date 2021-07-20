@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 1.4.2 (released 2021-07-20)
+
+- Pin elasticsearch to lower than 7.14 due to built in product check.
+
 Version 1.4.1 (released 2020-10-19)
 
 - Fix bouncing search results for BaseRecordSearchV2.

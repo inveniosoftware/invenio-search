@@ -40,7 +40,7 @@ extras_require = {
         'elasticsearch-dsl>=6.0.0,<6.2.0',
     ],
     'elasticsearch7': [
-        'elasticsearch>=7.0.0,<8.0.0',
+        'elasticsearch>=7.0.0,<7.14',
         'elasticsearch-dsl>=7.0.0,<8.0.0',
     ],
     'tests': tests_require,

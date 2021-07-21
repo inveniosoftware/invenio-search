@@ -87,6 +87,38 @@ def test_init(app, template_entrypoints):
 
     assert current_search_client.indices.exists(list(search.mappings.keys()))
 
+    # Test option --index-name
+    index = 'records-authorities-authority-v1.0.0'
+    suffixed_index = 'records-authorities-authority-v1.0.0-abc'
+    expected_aliases = [
+        'records',
+        'records-authorities',
+        'records-authorities-authority-v1.0.0'
+    ]
+
+    assert current_search_client.indices.exists(suffixed_index)
+    result = runner.invoke(
+        cmd,
+        ['delete', '--verbose', '--yes-i-know', suffixed_index],
+        obj=script_info
+    )
+    assert 0 == result.exit_code
+    assert not current_search_client.indices.exists(suffixed_index)
+    aliases = current_search_client.indices.get_alias()
+    assert suffixed_index not in list(aliases.keys())
+
+    result = runner.invoke(
+        cmd,
+        ['init', '--index-name', index],
+        obj=script_info
+    )
+    assert 0 == result.exit_code
+    assert current_search_client.indices.exists(list(search.mappings.keys()))
+    aliases = current_search_client.indices.get_alias()
+    assert 8 == sum(len(idx.get('aliases', {})) for idx in aliases.values())
+    index_aliases = aliases[suffixed_index]['aliases'].keys()
+    assert expected_aliases == sorted(index_aliases)
+
     # Clean-up:
     result = runner.invoke(cmd, ['destroy'], obj=script_info)
     assert 1 == result.exit_code

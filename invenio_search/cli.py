@@ -63,16 +63,26 @@ def check():
 
 @index.command()
 @click.option('--force', is_flag=True, default=False)
+@click.option(
+    '-i',
+    '--index-name',
+    'index_list',
+    help='List of indexes.',
+    multiple=True
+)
 @with_appcontext
 @es_version_check
-def init(force):
+def init(force, index_list):
     """Initialize registered aliases and mappings."""
+    ignore = [400] if force else None
+
     click.secho('Creating indexes...', fg='green', bold=True, file=sys.stderr)
     with click.progressbar(
-            current_search.create(ignore=[400] if force else None),
+            current_search.create(ignore=ignore, index_list=index_list),
             length=len(current_search.mappings)) as bar:
         for name, response in bar:
             bar.label = name
+
     click.secho('Putting templates...', fg='green', bold=True, file=sys.stderr)
     with click.progressbar(
             current_search.put_templates(ignore=[400] if force else None),

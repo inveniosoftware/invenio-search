@@ -15,12 +15,12 @@ import ast
 
 import pytest
 from click.testing import CliRunner
-from elasticsearch import VERSION as ES_VERSION
-from elasticsearch.exceptions import NotFoundError
 from flask.cli import ScriptInfo
 from mock import patch
 
 from invenio_search.cli import index as cmd
+from invenio_search.compat import VERSION as ES_VERSION
+from invenio_search.compat import NotFoundError
 from invenio_search.proxies import current_search_client
 
 

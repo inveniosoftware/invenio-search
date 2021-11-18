@@ -7,9 +7,8 @@
 # under the terms of the MIT License; see LICENSE file for more details.
 
 import pytest
-from elasticsearch import VERSION as ES_VERSION
-from mock import patch
 
+from invenio_search.compat import VERSION as ES_VERSION
 from invenio_search.utils import build_index_name, schema_to_index
 
 

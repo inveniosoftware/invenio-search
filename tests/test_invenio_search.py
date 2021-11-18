@@ -14,11 +14,11 @@ from __future__ import absolute_import, print_function
 from collections import defaultdict
 
 import pytest
-from elasticsearch import VERSION as ES_VERSION
 from flask import Flask
 from mock import patch
 
 from invenio_search import InvenioSearch, current_search, current_search_client
+from invenio_search.compat import VERSION as ES_VERSION
 from invenio_search.errors import IndexAlreadyExistsError
 
 
@@ -45,7 +45,7 @@ def test_client_config():
     """Test Elasticsearch client configuration."""
     app = Flask('testapp')
     app.config['SEARCH_CLIENT_CONFIG'] = {'timeout': 30, 'foo': 'bar'}
-    with patch('elasticsearch.Elasticsearch.__init__') as mock_es_init:
+    with patch('invenio_search.compat.Elasticsearch.__init__') as mock_es_init:
         mock_es_init.return_value = None
         ext = InvenioSearch(app)
         es_client = ext.client  # trigger client initialization

@@ -12,8 +12,7 @@ import os
 import time
 import warnings
 
-import six
-from elasticsearch import VERSION as ES_VERSION
+from .compat import VERSION as ES_VERSION
 from flask import current_app
 
 from .proxies import current_search, current_search_client
@@ -76,7 +75,7 @@ def build_index_name(index, prefix=None, suffix=None, app=None):
     :param suffix: The suffix to append to the index name.
     :param app: Flask app passed to ``prefix_index`` and ``suffix_index``.
     """
-    if not isinstance(index, six.string_types):
+    if not isinstance(index, str):
         index = build_index_from_parts(*index)
     index = prefix_index(index, prefix=prefix, app=app)
     index = suffix_index(index, suffix=suffix, app=app)

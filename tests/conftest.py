@@ -15,6 +15,7 @@ import sys
 import tempfile
 
 import pytest
+import urllib3
 from flask import Flask
 
 from invenio_search import InvenioSearch
@@ -25,14 +26,43 @@ sys.path.append(
 
 
 @pytest.fixture()
-def app():
+def app_config():
+    if 'OPENSEARCH_CLIENT_URI' not in os.environ:
+        return {}
+
+    params = {}
+    if 'OPENSEARCH_INSECURE' in os.environ:
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        params.update(dict(
+            port=9200,
+            use_ssl=True,
+            http_auth=('admin', 'admin'),
+            verify_certs=False,
+            ssl_show_warn=False,
+        ))
+
+    return {
+        'SEARCH_CLIENT_CONFIG': {
+            'hosts': [
+                'https://admin:admin@localhost:9200',
+            ],
+            'use_ssl': True,
+            'verify_certs': False,
+            'ssl_show_warn': False,
+        }
+    }
+
+@pytest.fixture()
+def app(app_config):
     """Flask application fixture."""
     # Set temporary instance path for sqlite
     instance_path = tempfile.mkdtemp()
     app = Flask('testapp', instance_path=instance_path)
     app.config.update(
         TESTING=True
+
     )
+    app.config.update(app_config)
     InvenioSearch(app)
 
     with app.app_context():

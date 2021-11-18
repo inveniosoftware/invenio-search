@@ -10,15 +10,13 @@
 """Module tests."""
 
 import hashlib
-from functools import partial
 
 import pytest
-from elasticsearch import VERSION as ES_VERSION
-from elasticsearch_dsl import Q, Search
 from flask import _request_ctx_stack, has_request_context, request
 
-from invenio_search.api import BaseRecordsSearch, BaseRecordsSearchV2, \
-    DefaultFilter, RecordsSearch, RecordsSearchV2
+from invenio_search.api import DefaultFilter, RecordsSearch, RecordsSearchV2
+from invenio_search.compat import VERSION as ES_VERSION
+from invenio_search.compat import Q
 
 
 def test_empty_query(app):

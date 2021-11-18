@@ -11,13 +11,10 @@
 import hashlib
 from functools import partial
 
-import six
-from elasticsearch import VERSION as ES_VERSION
-from elasticsearch_dsl import FacetedSearch, Search
-from elasticsearch_dsl.faceted_search import FacetedResponse
-from elasticsearch_dsl.query import Bool, Ids
 from flask import current_app, request
 
+from .compat import VERSION as ES_VERSION
+from .compat import Bool, FacetedResponse, FacetedSearch, Ids, Search
 from .proxies import current_search_client
 from .utils import build_alias_name
 
@@ -204,7 +201,7 @@ class PrefixedSearchMixin:
                     for _index in index
                 ]
                 index = _prefixed_index_list
-            elif isinstance(index, six.string_types):
+            elif isinstance(index, str):
                 _splitted_index = index.strip().split(',')
                 if len(_splitted_index) > 1:
                     _prefix_index_list = [

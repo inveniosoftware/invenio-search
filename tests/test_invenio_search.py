@@ -2,6 +2,7 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2015-2018 CERN.
+# Copyright (C)      2022 TU Wien.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -14,11 +15,11 @@ from __future__ import absolute_import, print_function
 from collections import defaultdict
 
 import pytest
-from elasticsearch import VERSION as ES_VERSION
 from flask import Flask
 from mock import patch
 
 from invenio_search import InvenioSearch, current_search, current_search_client
+from invenio_search.engine import _fixed_search_version
 from invenio_search.errors import IndexAlreadyExistsError
 
 
@@ -46,11 +47,13 @@ def test_client_config():
     """Test Elasticsearch client configuration."""
     app = Flask("testapp")
     app.config["SEARCH_CLIENT_CONFIG"] = {"timeout": 30, "foo": "bar"}
-    with patch("elasticsearch.Elasticsearch.__init__") as mock_es_init:
-        mock_es_init.return_value = None
+
+    # instead of patching ES directly, we go via our transparency module
+    with patch(f"invenio_search.engine.SearchEngine.__init__") as mock_search_init:
+        mock_search_init.return_value = None
         ext = InvenioSearch(app)
         es_client = ext.client  # trigger client initialization
-        mock_es_init.assert_called_once_with(hosts=None, timeout=30, foo="bar")
+        mock_search_init.assert_called_once_with(hosts=None, timeout=30, foo="bar")
 
 
 def test_flush_and_refresh(app):
@@ -111,22 +114,24 @@ def test_load_entry_point_group(template_entrypoints):
     assert len(ext.mappings) == 3
     # Check that mappings are loaded from the correct folder depending on the
     # ES version.
-    if ES_VERSION[0] > 2:
-        mappings_dir = "mock_module/mappings/v{}/records".format(ES_VERSION[0])
+    if _fixed_search_version[0] > 2:
+        mappings_dir = "mock_module/mappings/v{}/records".format(
+            _fixed_search_version[0]
+        )
         assert all(mappings_dir in path for path in ext.mappings.values())
 
     with patch(
         "invenio_search.ext.iter_entry_points",
         return_value=template_entrypoints("invenio_search.templates"),
     ):
-        if ES_VERSION[0] == 2:
+        if _fixed_search_version[0] == 2:
             assert set(ext.templates.keys()) == {
                 "subdirectory-file-download-v1",
                 "record-view-v1",
             }
-        elif ES_VERSION[0] == 5:
+        elif _fixed_search_version[0] == 5:
             assert set(ext.templates.keys()) == {
-                "record-view-v{}".format(ES_VERSION[0])
+                "record-view-v{}".format(_fixed_search_version[0])
             }
 
 
@@ -357,7 +362,7 @@ def _test_prefix_templates(app, prefix_value, template_entrypoints):
         # create templates
         list(search.put_templates())
 
-        if ES_VERSION[0] == 2:
+        if _fixed_search_version[0] == 2:
             assert len(search.templates.keys()) == 2
             name = "record-view-v1"
             prefixed = (prefix_value or "") + name
@@ -369,16 +374,16 @@ def _test_prefix_templates(app, prefix_value, template_entrypoints):
             assert name in search.templates
             assert current_search_client.indices.exists_template(prefixed)
             _test_prefix_replaced_in_body(prefixed, prefix_value, "template")
-        elif ES_VERSION[0] == 5:
+        elif _fixed_search_version[0] == 5:
             assert len(search.templates.keys()) == 1
-            name = "record-view-v{0}".format(ES_VERSION[0])
+            name = "record-view-v{0}".format(_fixed_search_version[0])
             prefixed = (prefix_value or "") + name
             assert name in search.templates
             assert current_search_client.indices.exists_template(prefixed)
             _test_prefix_replaced_in_body(prefixed, prefix_value, "template")
         else:
             assert len(search.templates.keys()) == 1
-            name = "record-view-v{0}".format(ES_VERSION[0])
+            name = "record-view-v{0}".format(_fixed_search_version[0])
             prefixed = (prefix_value or "") + name
             assert name in search.templates
             assert current_search_client.indices.exists_template(prefixed)

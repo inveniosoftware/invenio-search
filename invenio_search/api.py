@@ -2,6 +2,7 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2015-2018 CERN.
+# Copyright (C)      2022 TU Wien.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -12,12 +13,9 @@ import hashlib
 from functools import partial
 
 import six
-from elasticsearch import VERSION as ES_VERSION
-from elasticsearch_dsl import FacetedSearch, Search
-from elasticsearch_dsl.faceted_search import FacetedResponse
-from elasticsearch_dsl.query import Bool, Ids
 from flask import current_app, request
 
+from .engine import _fixed_search_version, dsl
 from .proxies import current_search_client
 from .utils import build_alias_name
 
@@ -66,7 +64,7 @@ class MinShouldMatch(str):
         return False
 
 
-class BaseRecordsSearch(Search):
+class BaseRecordsSearch(dsl.Search):
     """Example subclass for searching records using Elastic DSL."""
 
     class Meta:
@@ -99,7 +97,7 @@ class BaseRecordsSearch(Search):
         default_filter = getattr(self.Meta, "default_filter", None)
         if default_filter:
             # NOTE: https://github.com/elastic/elasticsearch/issues/21844
-            self.query = Bool(
+            self.query = dsl.query.Bool(
                 minimum_should_match=MinShouldMatch("0<1"), filter=default_filter
             )
 
@@ -109,7 +107,7 @@ class BaseRecordsSearch(Search):
         :param id_: The record identifier.
         :returns: The record.
         """
-        return self.query(Ids(values=[str(id_)]))
+        return self.query(dsl.query.Ids(values=[str(id_)]))
 
     def get_records(self, ids):
         """Return records by their identifiers.
@@ -117,7 +115,7 @@ class BaseRecordsSearch(Search):
         :param ids: A list of record identifier.
         :returns: A list of records.
         """
-        return self.query(Ids(values=[str(id_) for id_ in ids]))
+        return self.query(dsl.query.Ids(values=[str(id_) for id_ in ids]))
 
     @classmethod
     def faceted_search(cls, query=None, filters=None, search=None):
@@ -129,7 +127,7 @@ class BaseRecordsSearch(Search):
         """
         search_ = search or cls()
 
-        class RecordsFacetedSearch(FacetedSearch):
+        class RecordsFacetedSearch(dsl.FacetedSearch):
             """Pass defaults from ``cls.Meta`` object."""
 
             index = build_alias_name(search_._index[0])
@@ -142,9 +140,9 @@ class BaseRecordsSearch(Search):
                 # Later versions of `elasticsearch-dsl` (>=5.1.0) changed the
                 # Elasticsearch FacetedResponse class constructor signature.
 
-                if ES_VERSION[0] > 2:
-                    return search_.response_class(FacetedResponse)
-                return search_.response_class(partial(FacetedResponse, self))
+                if _fixed_search_version[0] > 2:
+                    return search_.response_class(dsl.FacetedResponse)
+                return search_.response_class(partial(dsl.FacetedResponse, self))
 
         return RecordsFacetedSearch(query=query, filters=filters or {})
 
@@ -229,7 +227,7 @@ class PrefixedSearchMixin:
         return s
 
 
-class BaseRecordsSearchV2(Search):
+class BaseRecordsSearchV2(dsl.Search):
     """Base records search V2."""
 
     def __init__(self, fields=("*",), default_filter=None, **kwargs):
@@ -247,7 +245,7 @@ class BaseRecordsSearchV2(Search):
 
         if default_filter:
             # NOTE: https://github.com/elastic/elasticsearch/issues/21844
-            self.query = Bool(
+            self.query = dsl.query.Bool(
                 minimum_should_match=MinShouldMatch("0<1"), filter=default_filter
             )
 
@@ -257,7 +255,7 @@ class BaseRecordsSearchV2(Search):
         :param id_: The record identifier.
         :returns: The record.
         """
-        return self.query(Ids(values=[str(id_)]))
+        return self.query(dsl.query.Ids(values=[str(id_)]))
 
     def get_records(self, ids):
         """Return records by their identifiers.
@@ -265,7 +263,7 @@ class BaseRecordsSearchV2(Search):
         :param ids: A list of record identifier.
         :returns: A list of records.
         """
-        return self.query(Ids(values=[str(id_) for id_ in ids]))
+        return self.query(dsl.query.Ids(values=[str(id_) for id_ in ids]))
 
     def with_preference_param(self, preference=None):
         """Add the preference param to the ES request and return a new Search.

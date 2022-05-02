@@ -2,6 +2,7 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2015-2018 CERN.
+# Copyright (C)      2022 TU Wien.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -13,8 +14,6 @@ import hashlib
 from functools import partial
 
 import pytest
-from elasticsearch import VERSION as ES_VERSION
-from elasticsearch_dsl import Q, Search
 from flask import _request_ctx_stack, has_request_context, request
 
 from invenio_search.api import (
@@ -24,6 +23,7 @@ from invenio_search.api import (
     RecordsSearch,
     RecordsSearchV2,
 )
+from invenio_search.engine import _fixed_search_version, dsl
 
 
 def test_empty_query(app):
@@ -31,14 +31,14 @@ def test_empty_query(app):
 
     def _assert_base_search(q):
         """Assert base search queries."""
-        if ES_VERSION[0] >= 7:
+        if _fixed_search_version[0] >= 7:
             q.to_dict() == {}
         else:
             q.to_dict() == {"query": {"match_all": {}}}
 
     def _assert_base_faceted_search(q):
         """Assert base faceted search queries."""
-        if ES_VERSION[0] >= 7:
+        if _fixed_search_version[0] >= 7:
             q._s.to_dict() == {"highlight": {"fields": {"*": {}}}}
         else:
             q._s.to_dict() == {"query": {"match_all": {}}}
@@ -113,7 +113,7 @@ def test_elasticsearch_query(app):
     from flask import g
 
     def filter_():
-        return Q("terms", public=g.public)
+        return dsl.query.Q("terms", public=g.public)
 
     class TestSearch(RecordsSearch):
         class Meta:
@@ -126,7 +126,7 @@ def test_elasticsearch_query(app):
     }
     g.public = 0
     q = TestSearch()
-    q = q.query(Q("match", title="Higgs"))
+    q = q.query(dsl.query.Q("match", title="Higgs"))
     assert q.to_dict()["query"]["bool"]["filter"] == [{"terms": {"public": 0}}]
     assert q.to_dict()["query"]["bool"]["must"] == [{"match": {"title": "Higgs"}}]
 
@@ -141,7 +141,7 @@ def test_elasticsearch_query(app):
     }
     g.public = 0
     q = RecordsSearchV2(default_filter=filter_())
-    q = q.query(Q("match", title="Higgs"))
+    q = q.query(dsl.query.Q("match", title="Higgs"))
     assert q.to_dict()["query"]["bool"]["filter"] == [{"terms": {"public": 0}}]
     assert q.to_dict()["query"]["bool"]["must"] == [{"match": {"title": "Higgs"}}]
 
@@ -249,7 +249,7 @@ def test_elasticsearch_query_min_score(app, search_cls):
     app.config.update(SEARCH_RESULTS_MIN_SCORE=0.1)
 
     q = search_cls()
-    q = q.query(Q("match", title="Higgs"))
+    q = q.query(dsl.query.Q("match", title="Higgs"))
 
     search_dict = q.to_dict()
     assert "min_score" in search_dict
@@ -258,7 +258,7 @@ def test_elasticsearch_query_min_score(app, search_cls):
 
 def _test_original_index_is_stored_when_prefixing(q, prefixed_index, original_index):
     """Test original index is stored."""
-    q = q.query(Q("match", title="Higgs"))
+    q = q.query(dsl.query.Q("match", title="Higgs"))
     q = q.sort()
     search_dict = q.to_dict()
     assert "query" in search_dict

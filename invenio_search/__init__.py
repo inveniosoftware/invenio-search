@@ -2,6 +2,8 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2015-2019 CERN.
+# Copyright (C)      2022 University Münster.
+# Copyright (C)      2022 TU Wien.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -423,6 +425,7 @@ from .ext import InvenioSearch
 from .proxies import current_search, current_search_client
 
 __version__ = "1.4.2"
+
 
 __all__ = (
     "__version__",

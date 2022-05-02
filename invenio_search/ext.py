@@ -2,6 +2,7 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2015-2018 CERN.
+# Copyright (C)      2022 TU Wien.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -15,8 +16,6 @@ import json
 import os
 import warnings
 
-from elasticsearch import VERSION as ES_VERSION
-from elasticsearch import Elasticsearch
 from pkg_resources import (
     iter_entry_points,
     resource_filename,
@@ -27,6 +26,7 @@ from werkzeug.utils import cached_property
 
 from . import config
 from .cli import index as index_cmd
+from .engine import SearchEngine, _fixed_search_version
 from .errors import IndexAlreadyExistsError
 from .utils import (
     build_alias_name,
@@ -64,7 +64,7 @@ class _SearchState(object):
         if entry_point_group_mappings:
             self.load_entry_point_group_mappings(entry_point_group_mappings)
 
-        if ES_VERSION[0] in (2, 5):
+        if _fixed_search_version[0] in (2, 5):
             warnings.warn(
                 "Elasticsearch v2 and v5 support will be removed.", DeprecationWarning
             )
@@ -102,7 +102,7 @@ class _SearchState(object):
         # For backwards compatibility, we also allow for ES2 mappings to be
         # placed at the root level of the specified package path, and not in
         # the `<package-path>/v2` directory.
-        if ES_VERSION[0] == 2:
+        if _fixed_search_version[0] == 2:
             try:
                 resource_listdir(package_name, "v2")
                 package_name += ".v2"
@@ -118,7 +118,7 @@ class _SearchState(object):
                     PendingDeprecationWarning,
                 )
         else:
-            package_name = "{}.v{}".format(package_name, ES_VERSION[0])
+            package_name = "{}.v{}".format(package_name, _fixed_search_version[0])
 
         def _walk_dir(aliases, *parts):
             root_name = build_index_from_parts(*parts)
@@ -158,8 +158,8 @@ class _SearchState(object):
         :param module: The templates module.
         """
         try:
-            resource_listdir(module, "v{}".format(ES_VERSION[0]))
-            module = "{}.v{}".format(module, ES_VERSION[0])
+            resource_listdir(module, "v{}".format(_fixed_search_version[0]))
+            module = "{}.v{}".format(module, _fixed_search_version[0])
         except (OSError, IOError) as ex:
             if getattr(ex, "errno", 0) == errno.ENOENT:
                 raise OSError(
@@ -214,7 +214,7 @@ class _SearchState(object):
         """Build Elasticsearch client."""
         client_config = self.app.config.get("SEARCH_CLIENT_CONFIG") or {}
         client_config.setdefault("hosts", self.app.config.get("SEARCH_ELASTIC_HOSTS"))
-        return Elasticsearch(**client_config)
+        return SearchEngine(**client_config)
 
     @property
     def client(self):
@@ -242,6 +242,14 @@ class _SearchState(object):
         """Get version of Elasticsearch running on the cluster."""
         versionstr = self.client.info()["version"]["number"]
         return [int(x) for x in versionstr.split(".")]
+
+    @property
+    def cluster_distribution(self):
+        """Get the distribution entry (opensearch or elasticsearch) on the cluster."""
+        # OpenSearch provides a "distribution" field containing "opensearch"
+        # Elasticsearch doesn't seem do that
+        # (checked versions: 7.10.2, 7.11.2, 7.17.5, 8.3.1)
+        return self.client.info()["version"].get("distribution", "elasticsearch")
 
     @property
     def active_aliases(self):

@@ -2,6 +2,7 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2015-2018 CERN.
+# Copyright (C)      2022 TU Wien.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -13,9 +14,9 @@ import time
 import warnings
 
 import six
-from elasticsearch import VERSION as ES_VERSION
 from flask import current_app
 
+from .engine import _fixed_search_version
 from .proxies import current_search, current_search_client
 
 
@@ -98,7 +99,7 @@ def schema_to_index(schema, index_names=None):
     parts = schema.split("/")
     doc_type, ext = os.path.splitext(parts[-1])
     parts[-1] = doc_type
-    if ES_VERSION[0] >= 7:
+    if _fixed_search_version[0] >= 7:
         doc_type = "_doc"
 
     if ext not in {

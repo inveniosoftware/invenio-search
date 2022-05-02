@@ -419,6 +419,10 @@ from .ext import InvenioSearch
 from .proxies import current_search, current_search_client
 from .version import __version__
 
+from elasticsearch_dsl import Q, A, TermsFacet, Index, AttrDict, Search
+from elasticsearch import VERSION
+from elasticsearch import Elasticsearch
+
 __all__ = (
     '__version__',
     'InvenioSearch',
@@ -428,4 +432,12 @@ __all__ = (
     'UnPrefixedRecordsSearchV2',
     'current_search',
     'current_search_client',
+    'VERSION',
+    'Elasticsearch',
+    'Q',
+    'A',
+    'TermsFacet',
+    'Index',
+    'AttrDict',
+    'Search',
 )

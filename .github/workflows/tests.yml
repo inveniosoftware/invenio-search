@@ -2,6 +2,7 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2020 CERN.
+# Copyright (C) 2022 Graz University of Technology.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -28,52 +29,13 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-          python-version: [3.6, 3.7, 3.8, 3.9]
-          requirements-level: [min, pypi]
-          db-service: [postgresql9, postgresql13, mysql5, mysql8]
-          search-service: [elasticsearch6, elasticsearch7]
-          exclude:
-          - python-version: 3.8
-            requirements-level: min
-
-          - python-version: 3.9
-            requirements-level: min
-
-          - db-service: postgresql13
-            python-version: 3.6
-
-          - db-service: mysql8
-            python-version: 3.6
-
-          - search-service: elasticsearch7
-            python-version: 3.6
-
-          - search-service: elasticsearch6
-            db-service: postgresql13
-
-          - search-service: elasticsearch6
-            db-service: mysql8
-
-          - search-service: elasticsearch7
-            db-service: postgresql9
-
-          - search-service: elasticsearch7
-            db-service: mysql5
+          python-version: [3.7, 3.8, 3.9]
+          requirements-level: [pypi]
+          db-service: [postgresql13]
+          search-service: [elasticsearch7]
           include:
-          - db-service: postgresql9
-            DB_EXTRAS: "postgresql"
-
           - db-service: postgresql13
             DB_EXTRAS: "postgresql"
-
-          - db-service: mysql5
-            DB_EXTRAS: "mysql"
-
-          - db-service: mysql8
-            DB_EXTRAS: "mysql"
-
-          - search-service: elasticsearch6
-            SEARCH_EXTRAS: "elasticsearch6"
 
           - search-service: elasticsearch7
             SEARCH_EXTRAS: "elasticsearch7"

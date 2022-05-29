@@ -2,6 +2,7 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2015-2018 CERN.
+# Copyright (C) 2022 Graz University of Technology.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -68,7 +69,7 @@ def test_init(app, template_entrypoints):
     assert 0 == len(aliases)
 
     runner = CliRunner()
-    script_info = ScriptInfo(create_app=lambda info: app)
+    script_info = ScriptInfo(create_app=lambda: app)
 
     with runner.isolated_filesystem():
         result = runner.invoke(cmd, ["init", "--force"], obj=script_info)
@@ -110,7 +111,7 @@ def test_list(app):
     search.register_mappings("records", "mock_module.mappings")
 
     runner = CliRunner()
-    script_info = ScriptInfo(create_app=lambda info: app)
+    script_info = ScriptInfo(create_app=lambda: app)
 
     result = runner.invoke(cmd, ["list", "--only-aliases"], obj=script_info)
     # Turn cli outputted str presentation of Python list into a list
@@ -131,7 +132,7 @@ def test_list(app):
 
 def test_check(app):
     runner = CliRunner()
-    script_info = ScriptInfo(create_app=lambda info: app)
+    script_info = ScriptInfo(create_app=lambda: app)
 
     result = runner.invoke(cmd, ["check"], obj=script_info)
     assert result.exit_code == 0
@@ -143,7 +144,7 @@ def test_check(app):
 
 def test_create_put_and_delete(app):
     runner = CliRunner()
-    script_info = ScriptInfo(create_app=lambda info: app)
+    script_info = ScriptInfo(create_app=lambda: app)
     name = "test-index-name"
 
     result = runner.invoke(

@@ -413,20 +413,24 @@ More information about index migrations can be found in the
 
 from __future__ import absolute_import, print_function
 
-from .api import RecordsSearch, RecordsSearchV2, UnPrefixedRecordsSearch, \
-    UnPrefixedRecordsSearchV2
+from .api import (
+    RecordsSearch,
+    RecordsSearchV2,
+    UnPrefixedRecordsSearch,
+    UnPrefixedRecordsSearchV2,
+)
 from .ext import InvenioSearch
 from .proxies import current_search, current_search_client
 
-__version__ = '1.4.2'
+__version__ = "1.4.2"
 
 __all__ = (
-    '__version__',
-    'InvenioSearch',
-    'RecordsSearch',
-    'RecordsSearchV2',
-    'UnPrefixedRecordsSearch',
-    'UnPrefixedRecordsSearchV2',
-    'current_search',
-    'current_search_client',
+    "__version__",
+    "InvenioSearch",
+    "RecordsSearch",
+    "RecordsSearchV2",
+    "UnPrefixedRecordsSearch",
+    "UnPrefixedRecordsSearchV2",
+    "current_search",
+    "current_search_client",
 )

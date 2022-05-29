@@ -88,7 +88,7 @@ Please refer to `Elasticsearch min_score documentation
 search-request-min-score.html>`_ for more information.
 """
 
-SEARCH_INDEX_PREFIX = ''
+SEARCH_INDEX_PREFIX = ""
 """Any index, alias and templates will be prefixed with this string.
 
 Useful to host multiple instances of the app on the same Elasticsearch cluster,

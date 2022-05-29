@@ -20,8 +20,11 @@ from flask import Flask
 from invenio_search import InvenioSearch
 
 sys.path.append(
-    os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
-                 'tests/mock_module'))
+    os.path.join(
+        os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
+        "tests/mock_module",
+    )
+)
 
 
 @pytest.fixture()
@@ -29,10 +32,8 @@ def app():
     """Flask application fixture."""
     # Set temporary instance path for sqlite
     instance_path = tempfile.mkdtemp()
-    app = Flask('testapp', instance_path=instance_path)
-    app.config.update(
-        TESTING=True
-    )
+    app = Flask("testapp", instance_path=instance_path)
+    app.config.update(TESTING=True)
     InvenioSearch(app)
 
     with app.app_context():
@@ -53,6 +54,7 @@ def mock_iter_entry_points_factory(data, mocked_group):
         else:
             for x in iter_entry_points(group=group, name=name):
                 yield x
+
     return entrypoints
 
 
@@ -64,12 +66,12 @@ def template_entrypoints():
     """
     eps = []
     for idx in range(5):
-        event_type_name = 'mock_module'
+        event_type_name = "mock_module"
         from pkg_resources import EntryPoint
+
         entrypoint = EntryPoint(event_type_name, event_type_name)
-        entrypoint.load = lambda: lambda: ['mock_module.templates']
+        entrypoint.load = lambda: lambda: ["mock_module.templates"]
         eps.append(entrypoint)
 
-    entrypoints = mock_iter_entry_points_factory(
-        eps, 'invenio_search.templates')
+    entrypoints = mock_iter_entry_points_factory(eps, "invenio_search.templates")
     return entrypoints

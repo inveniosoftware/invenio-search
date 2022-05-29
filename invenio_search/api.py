@@ -72,9 +72,9 @@ class BaseRecordsSearch(Search):
     class Meta:
         """Configuration for ``Search`` and ``FacetedSearch`` classes."""
 
-        index = '*'
+        index = "*"
         doc_types = None
-        fields = ('*', )
+        fields = ("*",)
         facets = {}
 
         default_filter = None
@@ -85,22 +85,23 @@ class BaseRecordsSearch(Search):
 
     def __init__(self, **kwargs):
         """Use Meta to set kwargs defaults."""
-        kwargs.setdefault('index', getattr(self.Meta, 'index', None))
-        kwargs.setdefault('doc_type', getattr(self.Meta, 'doc_types', None))
-        kwargs.setdefault('using', current_search_client)
-        kwargs.setdefault('extra', {})
+        kwargs.setdefault("index", getattr(self.Meta, "index", None))
+        kwargs.setdefault("doc_type", getattr(self.Meta, "doc_types", None))
+        kwargs.setdefault("using", current_search_client)
+        kwargs.setdefault("extra", {})
 
-        min_score = current_app.config.get('SEARCH_RESULTS_MIN_SCORE')
+        min_score = current_app.config.get("SEARCH_RESULTS_MIN_SCORE")
         if min_score:
-            kwargs['extra'].update(min_score=min_score)
+            kwargs["extra"].update(min_score=min_score)
 
         super(BaseRecordsSearch, self).__init__(**kwargs)
 
-        default_filter = getattr(self.Meta, 'default_filter', None)
+        default_filter = getattr(self.Meta, "default_filter", None)
         if default_filter:
             # NOTE: https://github.com/elastic/elasticsearch/issues/21844
-            self.query = Bool(minimum_should_match=MinShouldMatch("0<1"),
-                              filter=default_filter)
+            self.query = Bool(
+                minimum_should_match=MinShouldMatch("0<1"), filter=default_filter
+            )
 
     def get_record(self, id_):
         """Return a record by its identifier.
@@ -132,9 +133,9 @@ class BaseRecordsSearch(Search):
             """Pass defaults from ``cls.Meta`` object."""
 
             index = build_alias_name(search_._index[0])
-            doc_types = getattr(search_.Meta, 'doc_types', ['*'])
-            fields = getattr(search_.Meta, 'fields', ('*', ))
-            facets = getattr(search_.Meta, 'facets', {})
+            doc_types = getattr(search_.Meta, "doc_types", ["*"])
+            fields = getattr(search_.Meta, "fields", ("*",))
+            facets = getattr(search_.Meta, "facets", {})
 
             def search(self):
                 """Use ``search`` or ``cls()`` instead of default Search."""
@@ -165,18 +166,19 @@ class BaseRecordsSearch(Search):
 
         Taken from Flask Login utils.py.
         """
-        user_agent = request.headers.get('User-Agent')
+        user_agent = request.headers.get("User-Agent")
         if user_agent:
-            user_agent = user_agent.encode('utf-8')
-        return user_agent or ''
+            user_agent = user_agent.encode("utf-8")
+        return user_agent or ""
 
     def _get_user_hash(self):
         """Calculate a digest based on request's User-Agent and IP address."""
         if request:
-            user_hash = '{ip}-{ua}'.format(ip=request.remote_addr,
-                                           ua=self._get_user_agent())
+            user_hash = "{ip}-{ua}".format(
+                ip=request.remote_addr, ua=self._get_user_agent()
+            )
             alg = hashlib.md5()
-            alg.update(user_hash.encode('utf8'))
+            alg.update(user_hash.encode("utf8"))
             return alg.hexdigest()
         return None
 
@@ -199,18 +201,15 @@ class PrefixedSearchMixin:
         _index_param = index
         if not isinstance(index, PrefixedIndexList):
             if isinstance(index, (tuple, list)):
-                _prefixed_index_list = [
-                    build_alias_name(_index)
-                    for _index in index
-                ]
+                _prefixed_index_list = [build_alias_name(_index) for _index in index]
                 index = _prefixed_index_list
             elif isinstance(index, six.string_types):
-                _splitted_index = index.strip().split(',')
+                _splitted_index = index.strip().split(",")
                 if len(_splitted_index) > 1:
                     _prefix_index_list = [
-                        build_alias_name(_index)
-                        for _index in _splitted_index]
-                    index = ','.join(_prefix_index_list)
+                        build_alias_name(_index) for _index in _splitted_index
+                    ]
+                    index = ",".join(_prefix_index_list)
                 else:
                     index = build_alias_name(index)
                 _index_param = [_index_param]
@@ -233,23 +232,24 @@ class PrefixedSearchMixin:
 class BaseRecordsSearchV2(Search):
     """Base records search V2."""
 
-    def __init__(self, fields=('*', ), default_filter=None, **kwargs):
+    def __init__(self, fields=("*",), default_filter=None, **kwargs):
         """Sets the needed args in kwargs for the search."""
-        kwargs.setdefault('index', '*')
-        kwargs.setdefault('doc_type', None)
-        kwargs.setdefault('using', current_search_client)
-        kwargs.setdefault('extra', {})
+        kwargs.setdefault("index", "*")
+        kwargs.setdefault("doc_type", None)
+        kwargs.setdefault("using", current_search_client)
+        kwargs.setdefault("extra", {})
 
-        min_score = current_app.config.get('SEARCH_RESULTS_MIN_SCORE')
+        min_score = current_app.config.get("SEARCH_RESULTS_MIN_SCORE")
         if min_score:
-            kwargs['extra'].update(min_score=min_score)
+            kwargs["extra"].update(min_score=min_score)
 
         super(BaseRecordsSearchV2, self).__init__(**kwargs)
 
         if default_filter:
             # NOTE: https://github.com/elastic/elasticsearch/issues/21844
-            self.query = Bool(minimum_should_match=MinShouldMatch("0<1"),
-                              filter=default_filter)
+            self.query = Bool(
+                minimum_should_match=MinShouldMatch("0<1"), filter=default_filter
+            )
 
     def get_record(self, id_):
         """Return a record by its identifier.
@@ -288,9 +288,9 @@ class RecordsSearch(PrefixedSearchMixin, BaseRecordsSearch):
     def __init__(self, **kwargs):
         """Constructor."""
         _index = self.prefix_index(
-            index=kwargs.get('index', getattr(self.Meta, 'index', None))
+            index=kwargs.get("index", getattr(self.Meta, "index", None))
         )
-        kwargs.update({'index': _index})
+        kwargs.update({"index": _index})
 
         super(RecordsSearch, self).__init__(**kwargs)
         if self._index:
@@ -302,10 +302,8 @@ class RecordsSearchV2(PrefixedSearchMixin, BaseRecordsSearchV2):
 
     def __init__(self, **kwargs):
         """Constructor."""
-        _index = self.prefix_index(
-            index=kwargs.get('index', '*')
-        )
-        kwargs.update({'index': _index})
+        _index = self.prefix_index(index=kwargs.get("index", "*"))
+        kwargs.update({"index": _index})
 
         super(RecordsSearchV2, self).__init__(**kwargs)
         if self._index:

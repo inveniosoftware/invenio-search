@@ -14,7 +14,7 @@ from werkzeug.local import LocalProxy
 
 def _get_current_search():
     """Return current state of the search extension."""
-    return current_app.extensions['invenio-search']
+    return current_app.extensions["invenio-search"]
 
 
 def _get_current_search_client():

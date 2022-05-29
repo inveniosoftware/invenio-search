@@ -21,7 +21,7 @@ from .proxies import current_search, current_search_client
 
 def timestamp_suffix():
     """Generate a suffix based on the current time."""
-    return '-' + str(int(time.time()))
+    return "-" + str(int(time.time()))
 
 
 def prefix_index(index, prefix=None, app=None):
@@ -33,8 +33,9 @@ def prefix_index(index, prefix=None, app=None):
     :returns: A string with the new index name prefixed if needed.
     """
     app = app or current_app
-    index_prefix = (prefix if prefix is not None
-                    else (app.config.get('SEARCH_INDEX_PREFIX')) or '')
+    index_prefix = (
+        prefix if prefix is not None else (app.config.get("SEARCH_INDEX_PREFIX")) or ""
+    )
     return index_prefix + index
 
 
@@ -46,7 +47,7 @@ def suffix_index(index, suffix=None, app=None):
     :param app: Flask app to get the "invenio-search" extension from.
     :returns: A string with the new index name suffixed.
     """
-    search_ext = app.extensions['invenio-search'] if app else current_search
+    search_ext = app.extensions["invenio-search"] if app else current_search
     suffix = suffix if suffix is not None else search_ext.current_suffix
     return index + suffix
 
@@ -56,7 +57,7 @@ def build_index_from_parts(*parts):
 
     :param parts: String values that will be joined by dashes ("-").
     """
-    return '-'.join([part for part in parts if part])
+    return "-".join([part for part in parts if part])
 
 
 def build_alias_name(index, prefix=None, app=None):
@@ -65,7 +66,7 @@ def build_alias_name(index, prefix=None, app=None):
     :param index: Name of the index.
     :param prefix: The prefix to prepend to the index name.
     """
-    return build_index_name(index, prefix=prefix, suffix='', app=app)
+    return build_index_name(index, prefix=prefix, suffix="", app=app)
 
 
 def build_index_name(index, prefix=None, suffix=None, app=None):
@@ -91,17 +92,18 @@ def schema_to_index(schema, index_names=None):
     :returns: A tuple containing (index, doc_type).
     """
     warnings.warn(
-        '"invenio_search.utils.schema_to_index" will be moved to '
-        'invenio-indexer',
-        DeprecationWarning
+        '"invenio_search.utils.schema_to_index" will be moved to ' "invenio-indexer",
+        DeprecationWarning,
     )
-    parts = schema.split('/')
+    parts = schema.split("/")
     doc_type, ext = os.path.splitext(parts[-1])
     parts[-1] = doc_type
     if ES_VERSION[0] >= 7:
-        doc_type = '_doc'
+        doc_type = "_doc"
 
-    if ext not in {'.json', }:
+    if ext not in {
+        ".json",
+    }:
         return (None, None)
 
     if index_names is None:

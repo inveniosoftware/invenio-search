@@ -17,24 +17,35 @@ import warnings
 
 from elasticsearch import VERSION as ES_VERSION
 from elasticsearch import Elasticsearch
-from pkg_resources import iter_entry_points, resource_filename, \
-    resource_isdir, resource_listdir
+from pkg_resources import (
+    iter_entry_points,
+    resource_filename,
+    resource_isdir,
+    resource_listdir,
+)
 from werkzeug.utils import cached_property
 
 from . import config
 from .cli import index as index_cmd
 from .errors import IndexAlreadyExistsError
-from .utils import build_alias_name, build_index_from_parts, \
-    build_index_name, timestamp_suffix
+from .utils import (
+    build_alias_name,
+    build_index_from_parts,
+    build_index_name,
+    timestamp_suffix,
+)
 
 
 class _SearchState(object):
     """Store connection to elastic client and registered indexes."""
 
-    def __init__(self, app,
-                 entry_point_group_mappings=None,
-                 entry_point_group_templates=None,
-                 **kwargs):
+    def __init__(
+        self,
+        app,
+        entry_point_group_mappings=None,
+        entry_point_group_templates=None,
+        **kwargs
+    ):
         """Initialize state.
 
         :param app: An instance of :class:`~flask.app.Flask`.
@@ -46,7 +57,7 @@ class _SearchState(object):
         self.app = app
         self.mappings = {}
         self.aliases = {}
-        self._client = kwargs.get('client')
+        self._client = kwargs.get("client")
         self.entry_point_group_templates = entry_point_group_templates
         self._current_suffix = None
 
@@ -55,8 +66,8 @@ class _SearchState(object):
 
         if ES_VERSION[0] in (2, 5):
             warnings.warn(
-                "Elasticsearch v2 and v5 support will be removed.",
-                DeprecationWarning)
+                "Elasticsearch v2 and v5 support will be removed.", DeprecationWarning
+            )
 
     @property
     def current_suffix(self):
@@ -71,8 +82,10 @@ class _SearchState(object):
         templates = {}
         result = []
         if self.entry_point_group_templates:
-            result = self.load_entry_point_group_templates(
-                self.entry_point_group_templates) or []
+            result = (
+                self.load_entry_point_group_templates(self.entry_point_group_templates)
+                or []
+            )
 
         for template in result:
             for name, path in template.items():
@@ -91,21 +104,21 @@ class _SearchState(object):
         # the `<package-path>/v2` directory.
         if ES_VERSION[0] == 2:
             try:
-                resource_listdir(package_name, 'v2')
-                package_name += '.v2'
+                resource_listdir(package_name, "v2")
+                package_name += ".v2"
             except (OSError, IOError) as ex:
-                if getattr(ex, 'errno', 0) != errno.ENOENT:
+                if getattr(ex, "errno", 0) != errno.ENOENT:
                     raise
                 warnings.warn(
                     "Having mappings in a path which doesn't specify the "
                     "Elasticsearch version is deprecated. Please move your "
                     "mappings to a subfolder named according to the "
                     "Elasticsearch version which your mappings are intended "
-                    "for. (e.g. '{}/v2/{}')".format(
-                        package_name, alias),
-                    PendingDeprecationWarning)
+                    "for. (e.g. '{}/v2/{}')".format(package_name, alias),
+                    PendingDeprecationWarning,
+                )
         else:
-            package_name = '{}.v{}'.format(package_name, ES_VERSION[0])
+            package_name = "{}.v{}".format(package_name, ES_VERSION[0])
 
         def _walk_dir(aliases, *parts):
             root_name = build_index_from_parts(*parts)
@@ -117,19 +130,20 @@ class _SearchState(object):
                 file_path = os.path.join(resource_name, filename)
 
                 if resource_isdir(package_name, file_path):
-                    _walk_dir(data, *(parts + (filename, )))
+                    _walk_dir(data, *(parts + (filename,)))
                     continue
 
                 filename_root, ext = os.path.splitext(filename)
-                if ext not in {'.json', }:
+                if ext not in {
+                    ".json",
+                }:
                     continue
 
-                index_name = build_index_from_parts(
-                    *(parts + (filename_root, ))
-                )
-                assert index_name not in data, 'Duplicate index'
+                index_name = build_index_from_parts(*(parts + (filename_root,)))
+                assert index_name not in data, "Duplicate index"
                 filename = resource_filename(
-                    package_name, os.path.join(resource_name, filename))
+                    package_name, os.path.join(resource_name, filename)
+                )
                 data[index_name] = filename
                 self.mappings[index_name] = filename
 
@@ -144,37 +158,39 @@ class _SearchState(object):
         :param module: The templates module.
         """
         try:
-            resource_listdir(module, 'v{}'.format(ES_VERSION[0]))
-            module = '{}.v{}'.format(module, ES_VERSION[0])
+            resource_listdir(module, "v{}".format(ES_VERSION[0]))
+            module = "{}.v{}".format(module, ES_VERSION[0])
         except (OSError, IOError) as ex:
-            if getattr(ex, 'errno', 0) == errno.ENOENT:
+            if getattr(ex, "errno", 0) == errno.ENOENT:
                 raise OSError(
                     "Please move your templates to a subfolder named "
                     "according to the Elasticsearch version "
                     "which your templates are intended "
-                    "for. (e.g. '{}')".format(version_module))
+                    "for. (e.g. '{}')".format(version_module)
+                )
         result = {}
 
         def _walk_dir(*parts):
             parts = parts or tuple()
-            resource_name = os.path.join(*parts) if parts else ''
+            resource_name = os.path.join(*parts) if parts else ""
 
             for filename in resource_listdir(module, resource_name):
                 file_path = os.path.join(resource_name, filename)
 
                 if resource_isdir(module, file_path):
-                    _walk_dir(*(parts + (filename, )))
+                    _walk_dir(*(parts + (filename,)))
                     continue
 
                 filename_root, ext = os.path.splitext(filename)
-                if ext not in {'.json', }:
+                if ext not in {
+                    ".json",
+                }:
                     continue
 
-                template_name = build_index_from_parts(
-                    *(parts + (filename_root, ))
-                )
+                template_name = build_index_from_parts(*(parts + (filename_root,)))
                 result[template_name] = resource_filename(
-                    module, os.path.join(resource_name, filename))
+                    module, os.path.join(resource_name, filename)
+                )
 
         # Start the recursion here:
         _walk_dir()
@@ -196,9 +212,8 @@ class _SearchState(object):
 
     def _client_builder(self):
         """Build Elasticsearch client."""
-        client_config = self.app.config.get('SEARCH_CLIENT_CONFIG') or {}
-        client_config.setdefault(
-            'hosts', self.app.config.get('SEARCH_ELASTIC_HOSTS'))
+        client_config = self.app.config.get("SEARCH_CLIENT_CONFIG") or {}
+        client_config.setdefault("hosts", self.app.config.get("SEARCH_ELASTIC_HOSTS"))
         return Elasticsearch(**client_config)
 
     @property
@@ -219,15 +234,14 @@ class _SearchState(object):
         prefixed_index = build_alias_name(index, app=self.app)
         self.client.indices.flush(wait_if_ongoing=True, index=prefixed_index)
         self.client.indices.refresh(index=prefixed_index)
-        self.client.cluster.health(
-            wait_for_status='yellow', request_timeout=30)
+        self.client.cluster.health(wait_for_status="yellow", request_timeout=30)
         return True
 
     @property
     def cluster_version(self):
         """Get version of Elasticsearch running on the cluster."""
-        versionstr = self.client.info()['version']['number']
-        return [int(x) for x in versionstr.split('.')]
+        versionstr = self.client.info()["version"]["number"]
+        return [int(x) for x in versionstr.split(".")]
 
     @property
     def active_aliases(self):
@@ -237,12 +251,11 @@ class _SearchState(object):
         `SEARCH_MAPPINGS` config variable. If the `SEARCH_MAPPINGS` is set to
         `None` (the default), all aliases are included.
         """
-        whitelisted_aliases = self.app.config.get('SEARCH_MAPPINGS')
+        whitelisted_aliases = self.app.config.get("SEARCH_MAPPINGS")
         if whitelisted_aliases is None:
             return self.aliases
         else:
-            return {k: v for k, v in self.aliases.items()
-                    if k in whitelisted_aliases}
+            return {k: v for k, v in self.aliases.items() if k in whitelisted_aliases}
 
     def _get_indices(self, tree_or_filename):
         for name, value in tree_or_filename.items():
@@ -252,8 +265,16 @@ class _SearchState(object):
             else:
                 yield name
 
-    def create_index(self, index, mapping_path=None, prefix=None, suffix=None,
-                     create_write_alias=True, ignore=None, dry_run=False):
+    def create_index(
+        self,
+        index,
+        mapping_path=None,
+        prefix=None,
+        suffix=None,
+        create_write_alias=True,
+        ignore=None,
+        dry_run=False,
+    ):
         """Create index with a write alias."""
         mapping_path = mapping_path or self.mappings[index]
 
@@ -265,19 +286,21 @@ class _SearchState(object):
         # index if the current instance is running without suffixes
         # make sure there is no index with the same name as the
         # alias name (i.e. the index name without the suffix).
-        with open(mapping_path, 'r') as body:
+        with open(mapping_path, "r") as body:
             final_index = build_index_name(
-                index, prefix=prefix, suffix=suffix, app=self.app)
+                index, prefix=prefix, suffix=suffix, app=self.app
+            )
             if create_write_alias:
-                final_alias = build_alias_name(
-                    index, prefix=prefix, app=self.app)
+                final_alias = build_alias_name(index, prefix=prefix, app=self.app)
             index_result = (
                 final_index,
                 self.client.indices.create(
                     index=final_index,
                     body=json.load(body),
                     ignore=ignore,
-                ) if not dry_run else None
+                )
+                if not dry_run
+                else None,
             )
             if create_write_alias:
                 alias_result = (
@@ -286,7 +309,9 @@ class _SearchState(object):
                         index=final_index,
                         name=final_alias,
                         ignore=ignore,
-                    ) if not dry_run else None
+                    )
+                    if not dry_run
+                    else None,
                 )
         return index_result, alias_result
 
@@ -303,7 +328,8 @@ class _SearchState(object):
         def ensure_not_exists(name):
             if not ignore_existing and self.client.indices.exists(name):
                 raise IndexAlreadyExistsError(
-                    'index/alias with name "{}" already exists'.format(name))
+                    'index/alias with name "{}" already exists'.format(name)
+                )
 
         def _build(tree_or_filename, alias=None):
             """Build a list of index/alias actions to perform."""
@@ -313,27 +339,26 @@ class _SearchState(object):
                 else:
                     if index_list and name not in index_list:
                         continue
-                    index_result, alias_result = \
-                        self.create_index(
-                            name,
-                            ignore=ignore,
-                            dry_run=True
-                        )
+                    index_result, alias_result = self.create_index(
+                        name, ignore=ignore, dry_run=True
+                    )
                     ensure_not_exists(index_result[0])
                     new_indices[name] = index_result[0]
                     if alias_result[0]:
                         ensure_not_exists(alias_result[0])
-                        actions.append(dict(
-                            type='create_index',
-                            index=name,
-                            create_write_alias=True
-                        ))
+                        actions.append(
+                            dict(
+                                type="create_index", index=name, create_write_alias=True
+                            )
+                        )
                     else:
-                        actions.append(dict(
-                            type='create_index',
-                            index=name,
-                            create_write_alias=False
-                        ))
+                        actions.append(
+                            dict(
+                                type="create_index",
+                                index=name,
+                                create_write_alias=False,
+                            )
+                        )
             if alias:
                 alias_indices = self._get_indices(tree_or_filename)
                 alias_indices = [
@@ -342,28 +367,26 @@ class _SearchState(object):
                 if alias_indices:
                     alias_name = build_alias_name(alias, app=self.app)
                     ensure_not_exists(alias_name)
-                    actions.append(dict(
-                        type='create_alias',
-                        index=alias_indices,
-                        alias=alias_name
-                    ))
+                    actions.append(
+                        dict(type="create_alias", index=alias_indices, alias=alias_name)
+                    )
 
         _build(self.active_aliases)
 
         for action in actions:
-            if action['type'] == 'create_index':
+            if action["type"] == "create_index":
                 index_result, alias_result = self.create_index(
-                    action['index'],
-                    create_write_alias=action.get('create_write_alias', True),
-                    ignore=ignore
+                    action["index"],
+                    create_write_alias=action.get("create_write_alias", True),
+                    ignore=ignore,
                 )
                 yield index_result
                 if alias_result[0]:
                     yield alias_result
-            elif action['type'] == 'create_alias':
-                yield action['alias'], self.client.indices.put_alias(
-                    index=action['index'],
-                    name=action['alias'],
+            elif action["type"] == "create_alias":
+                yield action["alias"], self.client.indices.put_alias(
+                    index=action["index"],
+                    name=action["alias"],
                     ignore=ignore,
                 )
 
@@ -373,9 +396,9 @@ class _SearchState(object):
 
         def _replace_prefix(template_path, body):
             """Replace index prefix in template request body."""
-            pattern = '__SEARCH_INDEX_PREFIX__'
+            pattern = "__SEARCH_INDEX_PREFIX__"
 
-            prefix = self.app.config['SEARCH_INDEX_PREFIX'] or ''
+            prefix = self.app.config["SEARCH_INDEX_PREFIX"] or ""
             if prefix:
                 assert pattern in body, "You are using the prefix `{0}`, "
                 "but the template `{1}` does not contain the "
@@ -385,15 +408,14 @@ class _SearchState(object):
 
         def _put_template(template):
             """Put template in search client."""
-            with open(self.templates[template], 'r') as fp:
+            with open(self.templates[template], "r") as fp:
                 body = fp.read()
                 replaced_body = _replace_prefix(self.templates[template], body)
                 template_name = build_alias_name(template, app=self.app)
-                return self.templates[template],\
-                    self.client.indices.put_template(
-                        name=template_name,
-                        body=json.loads(replaced_body),
-                        ignore=ignore,
+                return self.templates[template], self.client.indices.put_template(
+                    name=template_name,
+                    body=json.loads(replaced_body),
+                    ignore=ignore,
                 )
 
         for template in self.templates:
@@ -416,8 +438,9 @@ class _SearchState(object):
                     # Resolve values to suffixed (or not) indices
                     prefixed_index = build_alias_name(name, app=self.app)
                     lookup_response = self.client.indices.get_alias(
-                        index=prefixed_index, ignore=[404])
-                    if 'error' in lookup_response:
+                        index=prefixed_index, ignore=[404]
+                    )
+                    if "error" in lookup_response:
                         indices_to_delete = []
                     else:
                         indices_to_delete = list(lookup_response.keys())
@@ -429,10 +452,12 @@ class _SearchState(object):
                             ignore=ignore,
                         )
                     else:
-                        warnings.warn((
-                            'Multiple indices found during deletion of '
-                            '{name}: {indices}. Deletion was skipped for them.'
-                        ).format(name=name, indices=indices_to_delete))
+                        warnings.warn(
+                            (
+                                "Multiple indices found during deletion of "
+                                "{name}: {indices}. Deletion was skipped for them."
+                            ).format(name=name, indices=indices_to_delete)
+                        )
 
         for result in _delete(self.active_aliases):
             yield result
@@ -451,10 +476,13 @@ class InvenioSearch(object):
         if app:
             self.init_app(app, **kwargs)
 
-    def init_app(self, app,
-                 entry_point_group_mappings='invenio_search.mappings',
-                 entry_point_group_templates='invenio_search.templates',
-                 **kwargs):
+    def init_app(
+        self,
+        app,
+        entry_point_group_mappings="invenio_search.mappings",
+        entry_point_group_templates="invenio_search.templates",
+        **kwargs
+    ):
         """Flask application initialization.
 
         :param app: An instance of :class:`~flask.app.Flask`.
@@ -469,7 +497,7 @@ class InvenioSearch(object):
             entry_point_group_templates=entry_point_group_templates,
             **kwargs
         )
-        self._state = app.extensions['invenio-search'] = state
+        self._state = app.extensions["invenio-search"] = state
 
     @staticmethod
     def init_config(app):
@@ -478,7 +506,7 @@ class InvenioSearch(object):
         :param app: An instance of :class:`~flask.app.Flask`.
         """
         for k in dir(config):
-            if k.startswith('SEARCH_'):
+            if k.startswith("SEARCH_"):
                 app.config.setdefault(k, getattr(config, k))
 
     def __getattr__(self, name):

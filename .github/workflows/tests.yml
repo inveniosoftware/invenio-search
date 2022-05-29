@@ -30,7 +30,7 @@ jobs:
       matrix:
           python-version: [3.6, 3.7, 3.8, 3.9]
           requirements-level: [min, pypi]
-          db-service: [postgresql9, postgresql11, mysql5, mysql8]
+          db-service: [postgresql9, postgresql13, mysql5, mysql8]
           search-service: [elasticsearch6, elasticsearch7]
           exclude:
           - python-version: 3.8
@@ -39,7 +39,7 @@ jobs:
           - python-version: 3.9
             requirements-level: min
 
-          - db-service: postgresql11
+          - db-service: postgresql13
             python-version: 3.6
 
           - db-service: mysql8
@@ -49,7 +49,7 @@ jobs:
             python-version: 3.6
 
           - search-service: elasticsearch6
-            db-service: postgresql11
+            db-service: postgresql13
 
           - search-service: elasticsearch6
             db-service: mysql8
@@ -63,7 +63,7 @@ jobs:
           - db-service: postgresql9
             DB_EXTRAS: "postgresql"
 
-          - db-service: postgresql11
+          - db-service: postgresql13
             DB_EXTRAS: "postgresql"
 
           - db-service: mysql5
@@ -81,7 +81,7 @@ jobs:
     env:
       DB: ${{ matrix.db-service }}
       SEARCH: ${{ matrix.search-service }}
-      EXTRAS: all,${{ matrix.DB_EXTRAS }},${{ matrix.SEARCH_EXTRAS }}
+      EXTRAS: tests,${{ matrix.SEARCH_EXTRAS }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -96,7 +96,7 @@ jobs:
 
       - name: Generate dependencies
         run: |
-          python -m pip install --upgrade pip setuptools py wheel requirements-builder
+          pip install wheel requirements-builder
           requirements-builder -e "$EXTRAS" --level=${{ matrix.requirements-level }} setup.py > .${{ matrix.requirements-level }}-${{ matrix.python-version }}-requirements.txt
 
       - name: Cache pip

@@ -417,7 +417,8 @@ from .api import RecordsSearch, RecordsSearchV2, UnPrefixedRecordsSearch, \
     UnPrefixedRecordsSearchV2
 from .ext import InvenioSearch
 from .proxies import current_search, current_search_client
-from .version import __version__
+
+__version__ = '1.4.2'
 
 __all__ = (
     '__version__',

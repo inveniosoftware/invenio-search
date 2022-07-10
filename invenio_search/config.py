@@ -16,21 +16,26 @@ The documentation for the configuration is in docs/configuration.rst.
 #
 
 SEARCH_CLIENT_CONFIG = None
-"""Dictionary of options for the Elasticsearch client.
+"""Dictionary of options for the Elasticsearch/OpenSearch client.
 
 The value of this variable is passed to :py:class:`elasticsearch.Elasticsearch`
-as keyword arguments and is used to configure the client. See the available
-keyword arguments in the two following classes:
+(or :py:class:`opensearchpy.OpenSearch`) as keyword arguments and is used to configure
+the client. See the available keyword arguments in the two following classes:
 
 - :py:class:`elasticsearch.Elasticsearch`
 - :py:class:`elasticsearch.Transport`
 
+Or:
+
+- :py:class:`opensearchpy.OpenSearch`
+- :py:class:`opensearchpy.Transport`
+
 If you specify the key ``hosts`` in this dictionary, the configuration variable
-:py:class:`~invenio_search.config.SEARCH_ELASTIC_HOSTS` will have no effect.
+:py:class:`~invenio_search.config.SEARCH_HOSTS` will have no effect.
 """
 
-SEARCH_ELASTIC_HOSTS = None  # default localhost
-"""Elasticsearch hosts.
+SEARCH_HOSTS = None  # default localhost
+"""Search cluster hosts.
 
 By default, Invenio connects to ``localhost:9200``.
 
@@ -46,6 +51,9 @@ You can change the connection class via the
 ``hosts`` key in :py:class:`~invenio_search.config.SEARCH_CLIENT_CONFIG` then
 this configuration variable will have no effect.
 """
+
+SEARCH_ELASTIC_HOSTS = None
+"""Deprecated alias for ``SEARCH_HOSTS``."""
 
 
 SEARCH_MAPPINGS = None  # loads all mappings and creates aliases for them

@@ -211,9 +211,18 @@ class _SearchState(object):
         return result
 
     def _client_builder(self):
-        """Build Elasticsearch client."""
+        """Build search engine (ES/OS) client."""
         client_config = self.app.config.get("SEARCH_CLIENT_CONFIG") or {}
-        client_config.setdefault("hosts", self.app.config.get("SEARCH_ELASTIC_HOSTS"))
+
+        hosts = self.app.config.get("SEARCH_HOSTS")
+        elastic_hosts = self.app.config.get("SEARCH_ELASTIC_HOSTS")
+        if hosts is None and elastic_hosts is not None:
+            warnings.warn(
+                "The variable SEARCH_ELASTIC_HOSTS will be replaced by SEARCH_HOSTS",
+                DeprecationWarning,
+            )
+
+        client_config.setdefault("hosts", hosts or elastic_hosts)
         return SearchEngine(**client_config)
 
     @property

@@ -108,7 +108,7 @@ def test_empty_query(app):
     _assert_highlighting(q)
 
 
-def test_elasticsearch_query(app):
+def test_search_query(app):
     """Test building a real query."""
     from flask import g
 
@@ -244,7 +244,7 @@ def test_recordsearchv2_with_preference_param(app):
 
 
 @pytest.mark.parametrize("search_cls", [RecordsSearch, RecordsSearchV2])
-def test_elasticsearch_query_min_score(app, search_cls):
+def test_search_query_min_score(app, search_cls):
     """Test building a query with min_score."""
     app.config.update(SEARCH_RESULTS_MIN_SCORE=0.1)
 

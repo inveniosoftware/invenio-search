@@ -8,29 +8,30 @@
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 
-r"""Elasticsearch management for Invenio.
+r"""Search management for Invenio (for Elasticsearch and OpenSearch).
 
 Allows retrieving records from a configurable backend (currently Elasticsearch
-is supported).
+and OpenSearch are supported).
 
 Initialization
 --------------
 
 To be able to retrieve information from *somewhere*, we first need to setup
-this *somewhere*. So make sure you have the correct version of Elasticsearch
-installed and running (see :ref:`installation` for supported Elasticsearch
+this *somewhere*. So make sure you have the correct version of ES/OS
+installed and running (see :ref:`installation` for supported ES/OS
 versions).
 
 For running an Elasticsearch instance we recommend using
 `Docker <https://docs.docker.com/install/>`_ and the official images `provided
-by Elastic <https://www.docker.elastic.co/>`_:
+by Elastic <https://www.docker.elastic.co/>`_
+(or the OpenSearch team `<https://hub.docker.com/r/opensearchproject/opensearch>`_):
 
 .. code-block:: console
 
     $ docker run -d \
         -p 9200:9200 \
         -e "discovery.type=single-node" \
-        docker.elastic.co/elasticsearch/elasticsearch-oss:7.2.0
+        docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2
 
 In this case, we are using Elasticsearch v7, so make sure to install
 ``invenio-search`` with the appropriate extras:
@@ -69,9 +70,9 @@ Add the following line at the end of ``app.py`` file that you just created:
     search.register_mappings('demo', 'examples.data')
 
 The above code will search the directory ``examples/data`` and load all the
-mapping files it can find there for Elasticsearch. You can read more about the
-Elasticsearch mappings in `the official documentation <https://www.elastic.co/
-guide/en/elasticsearch/guide/current/mapping-intro.html>`_.
+mapping files it can find there for the configured search engine. You can read more
+about the Elasticsearch mappings in `the official documentation
+<https://www.elastic.co/guide/en/elasticsearch/guide/current/mapping-intro.html>`_.
 
 Now we can finally create the indexes. Each file in the mappings will create a
 new index and a top-level alias with the name ``demo``.
@@ -166,14 +167,16 @@ see how to setup an index and add example data).
 Creating a search page
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Let's create a simple web page where you can send queries to the Elasticsearch
+Let's create a simple web page where you can send queries to the search engine
 and see the results.
 Create a new app.py file with a route.
 
 .. code-block:: python
 
     # app.py
-    from elasticsearch_dsl.query import QueryString
+    # note: 'invenio_search.engine' imports the installed search DSL dependency library
+    #       and makes it available as 'dsl'
+    from invenio_search.engine import dsl
     from flask import Flask, jsonify, request
     from invenio_search import InvenioSearch, RecordsSearch
 
@@ -189,7 +192,7 @@ Create a new app.py file with a route.
     def index():
         search = RecordsSearch()
         if 'q' in request.values:
-            search = search.query(QueryString(query=request.values.get('q')))
+            search = search.query(dsl.QueryString(query=request.values.get('q')))
 
         return jsonify(search.execute().to_dict())
 
@@ -212,8 +215,7 @@ to remove all private documents from the search results (by ``private``
 documents, we understand all the documents that have ``public`` attribute set
 to 0).
 
-Open ``flask shell`` and add one public and one private document to
-Elasticsearch:
+Open ``flask shell`` and add one public and one private document to the search engine:
 
 .. code-block:: python
 
@@ -246,7 +248,7 @@ Now, create a new search class that will return all documents of type
 .. code-block:: python
 
     # app.py
-    from elasticsearch_dsl.query import Bool, Q, QueryString
+    from invenio_search.engine import dsl
 
     class PublicSearch(RecordsSearch):
         class Meta:
@@ -256,8 +258,8 @@ Now, create a new search class that will return all documents of type
 
         def __init__(self, **kwargs):
             super(PublicSearch, self).__init__(**kwargs)
-            self.query = Q(
-                Bool(filter=[Q('term', public=1)])
+            self.query = dsl.Q(
+                dsl.Bool(filter=[dsl.Q('term', public=1)])
             )
 
 Update the ``index`` function and replace the search class with our new
@@ -326,6 +328,8 @@ repository:
     |  +- __init__.py
     +-- __init__.py
 
+Note: To make OpenSearch 1.x support as transparent as possible, it uses the same
+mappings directory as ElasticSearch v7 (of which it is a fork anyway).
 
 Elasticsearch plugins
 ~~~~~~~~~~~~~~~~~~~~~

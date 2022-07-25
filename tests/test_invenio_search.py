@@ -44,7 +44,7 @@ def test_init():
 
 
 def test_client_config():
-    """Test Elasticsearch client configuration."""
+    """Test search (ES/OS) client configuration."""
     app = Flask("testapp")
     app.config["SEARCH_CLIENT_CONFIG"] = {"timeout": 30, "foo": "bar"}
 

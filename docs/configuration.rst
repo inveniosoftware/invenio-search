@@ -8,50 +8,56 @@
 Configuration
 =============
 
-The Elasticsearch client in Invenio is configured using the two configuration
+The search (ES/OS) client in Invenio is configured using the two configuration
 variables :py:class:`~invenio_search.config.SEARCH_CLIENT_CONFIG` and
-:py:class:`~invenio_search.config.SEARCH_ELASTIC_HOSTS`.
+:py:class:`~invenio_search.config.SEARCH_HOSTS`.
 
 Invenio-Search relies on the following two Python packages to integrate with
 Elasticsearch:
 
-- `elasitcsearch <https://pypi.org/project/elasticsearch/>`_
-- `elasitcsearch-dsl <https://pypi.org/project/elasticsearch-dsl/>`_
+- `elasticsearch <https://pypi.org/project/elasticsearch/>`_
+- `elasticsearch-dsl <https://pypi.org/project/elasticsearch-dsl/>`_
+
+Alternatively, it relies on its OpenSearch counterparts:
+
+- `opensearch-py <https://pypi.org/project/opensearch-py/>`_
+- `opensearch-dsl <https://pypi.org/project/opensearch-dsl/>`_
 
 Hosts
 -----
-The hosts which the Elasticsearch client in Invenio should use are configured
+The hosts which the search client in Invenio should use are configured
 using the configuration variable:
 
-.. autodata:: invenio_search.config.SEARCH_ELASTIC_HOSTS
+.. autodata:: invenio_search.config.SEARCH_HOSTS
 
 Clusters
 ~~~~~~~~
-Normally in a production environment, you will run an Elasticsearch cluster on
+Normally in a production environment, you will run a search cluster on
 one or more dedicated nodes. Following is an example of how you configure
 Invenio to use such a cluster:
 
 .. code-block:: python
 
-    SEARCH_ELASTIC_HOSTS = [
+    SEARCH_HOSTS = [
         dict(host='es1.example.org'),
         dict(host='es2.example.org'),
         dict(host='es3.example.org'),
     ]
 
-Elasticsearch will manage a connection pool to all of these hosts, and will
+The search library will manage a connection pool to all of these hosts, and will
 automatically take nodes out if they fail.
 
 Basic authentication and SSL
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-By default all traffic to Elasticsearch is via unencrypted HTTP because
+By default all traffic to Elasticsearch (until v7) is via unencrypted HTTP because
 Elasticsearch does not come with built-in support for SSL unless you pay for
 the enterprise X-Pack addition. A cheaper alternative to X-Pack is to
 simply setup a proxy (e.g. nginx) on each node with SSL and
 HTTP basic authentication support.
 
 Following is an example of how you configure Invenio to use SSL and Basic
-authentication when connecting to Elasticsearch:
+authentication when connecting to Elasticsearch (or OpenSearch with
+``plugins.security.disabled=true``):
 
 .. code-block:: python
 
@@ -60,7 +66,7 @@ authentication when connecting to Elasticsearch:
         http_auth=('myuser', 'mypassword'),
         use_ssl=True,
     )
-    SEARCH_ELASTIC_HOSTS = [
+    SEARCH_HOSTS = [
         dict(host='node1', **params),
         dict(host='node2', **params),
         dict(host='node3', **params),
@@ -69,7 +75,7 @@ authentication when connecting to Elasticsearch:
 Self-signed certificates
 ~~~~~~~~~~~~~~~~~~~~~~~~
 In case you are using self-signed SSL certificates on proxies in front of
-Elasticsearch, you will need to provide the ``ca_certs`` option:
+the search engine, you will need to provide the ``ca_certs`` option:
 
 .. code-block:: python
 
@@ -79,7 +85,7 @@ Elasticsearch, you will need to provide the ``ca_certs`` option:
         use_ssl=True,
         ca_certs='/etc/pki/tls/mycert.pem',
     )
-    SEARCH_ELASTIC_HOSTS = [
+    SEARCH_HOSTS = [
         dict(host='node1', **params),
         # ...
     ]
@@ -113,7 +119,7 @@ of the SSL certificate, using the ``verify_certs`` option:
         verify_certs=False,
         ssl_show_warn=False, # only from 7.x+
     )
-    SEARCH_ELASTIC_HOSTS = [
+    SEARCH_HOSTS = [
         dict(host='node1', **params),
         # ...
     ]
@@ -131,6 +137,11 @@ classes documentation:
 - :py:class:`elasticsearch.connection.Urllib3HttpConnection` (default)
 - :py:class:`elasticsearch.connection.RequestsHttpConnection`
 
+In case of OpenSearch:
+
+- :py:class:`opensearchpy.connection.Urllib3HttpConnection` (default)
+- :py:class:`opensearchpy.connection.RequestsHttpConnection`
+
 Other options include e.g.:
 
 - ``url_prefix``
@@ -140,14 +151,14 @@ Other options include e.g.:
 
 Client options
 --------------
-More advanced options for the Elasticsearch client are configured via the
+More advanced options for the search client are configured via the
 configuration variable:
 
 .. autodata:: invenio_search.config.SEARCH_CLIENT_CONFIG
 
 Timeouts
 ~~~~~~~~
-If you are running Elasticsearch on a smaller/slower machine (e.g. for
+If you are running the search engine on a smaller/slower machine (e.g. for
 development or CI) you might want to be a bit more relaxed in terms of timeouts
 and failure retries:
 
@@ -165,10 +176,12 @@ key (e.g. use requests library instead of urllib3):
 
 .. code-block:: python
 
-    from elasticsearch.connection import RequestsHttpConnection
+    # note: 'invenio_search.engine' imports the installed search dependency library
+    #       and makes it available as 'search'
+    from invenio_search.engine import search
 
     SEARCH_CLIENT_CONFIG = dict(
-        connection_class=RequestsHttpConnection
+        connection_class=search.connection.RequestsHttpConnection
     )
 
 Note, that the default urllib3 connection class is more lightweight and
@@ -191,8 +204,8 @@ the limit:
 Hosts via client config
 ~~~~~~~~~~~~~~~~~~~~~~~
 Note, you may also use :py:class:`~invenio_search.config.SEARCH_CLIENT_CONFIG`
-instead of :py:class:`~invenio_search.config.SEARCH_ELASTIC_HOSTS` to configure
-the Elasticsearch hosts:
+instead of :py:class:`~invenio_search.config.SEARCH_HOSTS` to configure
+the search engine hosts:
 
 .. code-block:: python
 
@@ -209,8 +222,8 @@ Other client options
 For a full list of options for configuring the client, see the transport
 class documentation:
 
-- :py:class:`elasticsearch.Elasticsearch`
-- :py:class:`elasticsearch.Transport`
+- :py:class:`elasticsearch.Elasticsearch` (or :py:class:`opensearchpy.OpenSearch`)
+- :py:class:`elasticsearch.Transport` (or :py:class:`opensearchpy.Transport`)
 
 Other options include e.g.:
 

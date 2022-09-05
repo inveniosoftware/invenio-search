@@ -9,8 +9,6 @@
 
 """Click command-line interface for managing search indexes."""
 
-from __future__ import absolute_import, print_function
-
 import json
 import sys
 from functools import wraps
@@ -42,7 +40,7 @@ def search_version_check(f):
             raise click.ClickException(
                 "Search distribution mismatch. Invenio was installed with "
                 "{expected} support, but the cluster runs {running}.".format(
-                    expected=SEARCH_DISTRIBUTION,
+                    expected=SEARCH_DISTRIBUTION.lower(),
                     running=cluster_distro,
                 )
             )
@@ -52,7 +50,7 @@ def search_version_check(f):
                 "{search} version mismatch. Invenio was installed with "
                 "{search} v{client_ver}.x support, but the cluster runs "
                 "{search} v{cluster_ver}.x.".format(
-                    search=SEARCH_DISTRIBUTION,
+                    search=SEARCH_DISTRIBUTION.lower(),
                     client_ver=client_ver,
                     cluster_ver=cluster_ver,
                 )

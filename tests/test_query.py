@@ -7,23 +7,15 @@
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 
-
 """Module tests."""
-
 import hashlib
-from functools import partial
 
 import pytest
-from flask import _request_ctx_stack, has_request_context, request
+from flask import request
+from mock import patch
 
-from invenio_search.api import (
-    BaseRecordsSearch,
-    BaseRecordsSearchV2,
-    DefaultFilter,
-    RecordsSearch,
-    RecordsSearchV2,
-)
-from invenio_search.engine import _fixed_search_version, dsl
+from invenio_search.api import DefaultFilter, RecordsSearch, RecordsSearchV2
+from invenio_search.engine import dsl
 
 
 def test_empty_query(app):
@@ -31,17 +23,11 @@ def test_empty_query(app):
 
     def _assert_base_search(q):
         """Assert base search queries."""
-        if _fixed_search_version[0] >= 7:
-            q.to_dict() == {}
-        else:
-            q.to_dict() == {"query": {"match_all": {}}}
+        assert q.to_dict() == {}
 
     def _assert_base_faceted_search(q):
         """Assert base faceted search queries."""
-        if _fixed_search_version[0] >= 7:
-            q._s.to_dict() == {"highlight": {"fields": {"*": {}}}}
-        else:
-            q._s.to_dict() == {"query": {"match_all": {}}}
+        assert q._s.to_dict() == {"highlight": {"fields": {"*": {}}}}
 
     def _assert_pagination_sorting(q):
         """Assert pagination and sorting cases."""
@@ -68,6 +54,9 @@ def test_empty_query(app):
 
     def _assert_highlighting(q):
         """Assert query highlighting."""
+        q = q.highlight()
+        assert "highlight" not in q.to_dict()
+
         q = q.highlight("field1", index_options="offsets")
         assert len(q.to_dict()["highlight"]["fields"]) == 1
         assert q.to_dict()["highlight"]["fields"]["field1"] == {
@@ -80,9 +69,6 @@ def test_empty_query(app):
             "index_options": "offsets"
         }
         assert q.to_dict()["highlight"]["fields"]["field2"] == {}
-
-        q = q.highlight()
-        assert "highligth" not in q.to_dict()
 
     # V1
     q = RecordsSearch()
@@ -160,18 +146,12 @@ class SpySearch(RecordsSearch):
 
 
 def test_es_preference_param_no_request(app):
-    # WARNING: the app fixture *somehow* pushes a request context
-    #          even though it should not. We pop it and push it back later.
-    if _request_ctx_stack.top:
-        prior_request_ctx = _request_ctx_stack.pop()
-
-    assert has_request_context() is False
-
-    search = SpySearch().with_preference_param()
-
-    assert {} == search.exposed_params
-
-    _request_ctx_stack.push(prior_request_ctx)
+    # pytest-flask pushes a request context when using the `app` fixture
+    # see `_push_request_context` in pytest-flask
+    # mock the request
+    with patch("invenio_search.api.request", None):
+        search = SpySearch().with_preference_param()
+        assert {} == search.exposed_params
 
 
 def test_es_preference_param(app):
@@ -209,38 +189,15 @@ class SpySearchV2(RecordsSearchV2):
         return new_self
 
 
-def test_recordsearchv2_with_preference_param_no_request_no_param(app):
-    # WARNING: the app fixture *somehow* pushes a request context
-    #          even though it should not. We pop it and push it back later.
-    if _request_ctx_stack.top:
-        prior_request_ctx = _request_ctx_stack.pop()
-
-    assert has_request_context() is False
-
+def test_recordsearchv2_without_preference_param(app):
     search = SpySearchV2().with_preference_param()
-
-    assert {} == search.exposed_params
-
-    _request_ctx_stack.push(prior_request_ctx)
-
-
-def test_recordsearchv2_with_preference_param_request_no_param(app):
-    # NOTE: RecordsSearchV2 does not reach for request to generate preference.
-    #       It must be passed preference explicitly.
-    with app.test_request_context(
-        "/",
-        headers={"User-Agent": "Chrome"},
-        environ_base={"REMOTE_ADDR": "212.54.1.8"},
-    ):
-        search = SpySearchV2().with_preference_param()
-
     assert {} == search.exposed_params
 
 
 def test_recordsearchv2_with_preference_param(app):
-    search = SpySearchV2().with_preference_param(1234)
+    search = SpySearchV2().with_preference_param("1234")
 
-    assert {"preference": 1234} == search.exposed_params
+    assert {"preference": "1234"} == search.exposed_params
 
 
 @pytest.mark.parametrize("search_cls", [RecordsSearch, RecordsSearchV2])

@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015-2018 CERN.
+# Copyright (C) 2015-2022 CERN.
 # Copyright (C) 2022 Graz University of Technology.
 # Copyright (C) 2022 TU Wien.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 
-
 """Test CLI."""
-
-from __future__ import absolute_import, print_function
 
 import ast
 
@@ -21,8 +18,15 @@ from flask.cli import ScriptInfo
 from mock import patch
 
 from invenio_search.cli import index as cmd
-from invenio_search.engine import _fixed_search_version, search
+from invenio_search.engine import ES, OS, SEARCH_DISTRIBUTION, search
 from invenio_search.proxies import current_search_client
+
+
+def _get_version():
+    """Get filename postfix with current ES/OS version."""
+    search_major_version = search.VERSION[0]
+    version = "v{}" if SEARCH_DISTRIBUTION == ES else "os-v{}"
+    return version.format(search_major_version)
 
 
 def test_init(app, template_entrypoints):
@@ -55,15 +59,8 @@ def test_init(app, template_entrypoints):
         "invenio_search.ext.iter_entry_points",
         return_value=template_entrypoints("invenio_search.templates"),
     ):
-        if _fixed_search_version[0] == 2:
-            assert len(search.templates.keys()) == 2
-            assert "record-view-v1" in search.templates
-            assert "subdirectory-file-download-v1" in search.templates
-        else:
-            assert len(search.templates.keys()) == 1
-            assert (
-                "record-view-v{}".format(_fixed_search_version[0]) in search.templates
-            )
+        assert len(search.templates.keys()) == 1
+        assert "record-view-{}".format(_get_version()) in search.templates
 
     current_search_client.indices.delete_alias("_all", "_all", ignore=[400, 404])
     current_search_client.indices.delete("*")
@@ -76,15 +73,9 @@ def test_init(app, template_entrypoints):
     with runner.isolated_filesystem():
         result = runner.invoke(cmd, ["init", "--force"], obj=script_info)
         assert result.exit_code == 0
-        if _fixed_search_version[0] == 2:
-            assert current_search_client.indices.exists_template(
-                "subdirectory-file-download-v1"
-            )
-            assert current_search_client.indices.exists_template("record-view-v1")
-        else:
-            assert current_search_client.indices.exists_template(
-                "record-view-v{}".format(_fixed_search_version[0])
-            )
+        assert current_search_client.indices.exists_template(
+            "record-view-{}".format(_get_version())
+        )
         assert 0 == result.exit_code
 
     aliases = current_search_client.indices.get_alias()
@@ -139,12 +130,13 @@ def test_check(app):
     result = runner.invoke(cmd, ["check"], obj=script_info)
     assert result.exit_code == 0
 
+    wrong_version = search.VERSION[0] + 1
     with patch(
         "invenio_search.cli.search.VERSION",
-        return_value=(_fixed_search_version[0] + 1, 0, 0),
+        return_value=(wrong_version, 0, 0),
     ):
         result = runner.invoke(cmd, ["check"], obj=script_info)
-        assert result.exit_code != 0
+        assert result.exit_code > 0
 
 
 def test_create_put_and_delete(app):
@@ -166,7 +158,9 @@ def test_create_put_and_delete(app):
     assert result.exit_code == 0
     assert name in list(current_search_client.indices.get("*").keys())
 
-    doc_type = "_doc" if _fixed_search_version[0] > 5 else "recid"
+    is_OS = SEARCH_DISTRIBUTION == OS
+    is_ES = SEARCH_DISTRIBUTION == ES
+    doc_type = "_doc" if is_OS or (is_ES and search.VERSION[0] > 5) else "recid"
     result = runner.invoke(
         cmd,
         [

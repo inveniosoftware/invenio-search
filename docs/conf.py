@@ -9,8 +9,6 @@
 
 """Sphinx configuration."""
 
-from __future__ import print_function
-
 from invenio_search import __version__
 
 # -- General configuration ------------------------------------------------

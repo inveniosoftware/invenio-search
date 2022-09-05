@@ -1,0 +1,47 @@
+{
+  "index_patterns": ["__SEARCH_INDEX_PREFIX__events-stats-record-view-*"],
+  "settings": {
+    "index": {
+      "refresh_interval": "5s"
+    }
+  },
+  "mappings": {
+    "_source": {
+      "enabled": false
+    },
+    "date_detection": false,
+    "numeric_detection": false,
+    "properties": {
+      "@timestamp": {
+        "type": "date"
+      },
+      "id": {
+        "type": "text",
+        "index": false
+      },
+      "type": {
+        "type": "text",
+        "index": false
+      },
+      "value": {
+        "type": "text",
+        "index": false
+      },
+      "labels": {
+        "type": "text",
+        "index": false
+      },
+      "country": {
+        "type": "text",
+        "index": false
+      },
+      "visitor_id": {
+        "type": "text",
+        "index": false
+      }
+    }
+  },
+  "aliases": {
+    "__SEARCH_INDEX_PREFIX__events-recordview": {}
+  }
+}

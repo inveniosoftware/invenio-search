@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015-2018 CERN.
+# Copyright (C) 2015-2022 CERN.
 # Copyright (C)      2022 TU Wien.
 #
 # Invenio is free software; you can redistribute it and/or modify it
@@ -10,12 +10,10 @@
 """Search engine API."""
 
 import hashlib
-from functools import partial
 
-import six
 from flask import current_app, request
 
-from .engine import _fixed_search_version, dsl
+from .engine import dsl
 from .proxies import current_search_client
 from .utils import build_alias_name
 
@@ -137,12 +135,7 @@ class BaseRecordsSearch(dsl.Search):
 
             def search(self):
                 """Use ``search`` or ``cls()`` instead of default Search."""
-                # Later versions of `elasticsearch-dsl` (>=5.1.0) changed the
-                # Elasticsearch FacetedResponse class constructor signature.
-
-                if _fixed_search_version[0] > 2:
-                    return search_.response_class(dsl.FacetedResponse)
-                return search_.response_class(partial(dsl.FacetedResponse, self))
+                return search_.response_class(dsl.FacetedResponse)
 
         return RecordsFacetedSearch(query=query, filters=filters or {})
 
@@ -201,7 +194,7 @@ class PrefixedSearchMixin:
             if isinstance(index, (tuple, list)):
                 _prefixed_index_list = [build_alias_name(_index) for _index in index]
                 index = _prefixed_index_list
-            elif isinstance(index, six.string_types):
+            elif isinstance(index, str):
                 _splitted_index = index.strip().split(",")
                 if len(_splitted_index) > 1:
                     _prefix_index_list = [
@@ -228,7 +221,10 @@ class PrefixedSearchMixin:
 
 
 class BaseRecordsSearchV2(dsl.Search):
-    """Base records search V2."""
+    """Base records search V2.
+
+    Apply configuration via kwargs instead of Meta class as in BaseRecordsSearch.
+    """
 
     def __init__(self, fields=("*",), default_filter=None, **kwargs):
         """Sets the needed args in kwargs for the search."""
@@ -296,7 +292,11 @@ class RecordsSearch(PrefixedSearchMixin, BaseRecordsSearch):
 
 
 class RecordsSearchV2(PrefixedSearchMixin, BaseRecordsSearchV2):
-    """Prefixed record search class."""
+    """Prefixed record search class.
+
+    Enhanced version of RecordsSearch class to be able to inject configuration
+    via kwargs, instead of using a Meta class.
+    """
 
     def __init__(self, **kwargs):
         """Constructor."""

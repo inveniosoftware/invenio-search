@@ -9,9 +9,6 @@
 
 """Invenio module for information retrieval."""
 
-from __future__ import absolute_import, print_function
-
-import errno
 import json
 import os
 import warnings
@@ -26,7 +23,7 @@ from werkzeug.utils import cached_property
 
 from . import config
 from .cli import index as index_cmd
-from .engine import SearchEngine, _fixed_search_version
+from .engine import ES, OS, SEARCH_DISTRIBUTION, SearchEngine, search
 from .errors import IndexAlreadyExistsError
 from .utils import (
     build_alias_name,
@@ -64,11 +61,6 @@ class _SearchState(object):
         if entry_point_group_mappings:
             self.load_entry_point_group_mappings(entry_point_group_mappings)
 
-        if _fixed_search_version[0] in (2, 5):
-            warnings.warn(
-                "Elasticsearch v2 and v5 support will be removed.", DeprecationWarning
-            )
-
     @property
     def current_suffix(self):
         """Return the current suffix."""
@@ -93,32 +85,49 @@ class _SearchState(object):
 
         return templates
 
+    @staticmethod
+    def _get_mappings_module(module):
+        """Resolves the module where to find search mappings/templates.
+
+        Finds the module that contains the search mappings/templates based
+        on the current installed search distribution.
+
+        :param module: the module/package name.
+        """
+        search_major_version = search.VERSION[0]
+        if SEARCH_DISTRIBUTION == ES:
+            subfolder = "v{}".format(search_major_version)
+        elif SEARCH_DISTRIBUTION == OS:
+            subfolder = "os-v{}".format(search_major_version)
+
+            # Make sure that the OpenSearch mappings are in the folder.
+            # The fallback can be removed after transition to OpenSearch.
+            try:
+                resource_listdir(module, subfolder)
+            except FileNotFoundError:
+                # fallback to ES folder with a warning if `os-vx` is not found
+                subfolder = "v7"
+                warnings.warn(
+                    "OpenSearch v{version} mappings files not found, falling back to Elasticsearch v7 mappings for module {module}. Please add the missing OpenSearch os-v{version} mappings.".format(
+                        module=module,
+                        version=search_major_version,
+                    )
+                )
+        else:
+            # should never happen
+            raise RuntimeError(
+                "Unknown search distribution {}".format(SEARCH_DISTRIBUTION)
+            )
+
+        return "{}.{}".format(module, subfolder)
+
     def register_mappings(self, alias, package_name):
         """Register mappings from a package under given alias.
 
         :param alias: The alias.
         :param package_name: The package name.
         """
-        # For backwards compatibility, we also allow for ES2 mappings to be
-        # placed at the root level of the specified package path, and not in
-        # the `<package-path>/v2` directory.
-        if _fixed_search_version[0] == 2:
-            try:
-                resource_listdir(package_name, "v2")
-                package_name += ".v2"
-            except (OSError, IOError) as ex:
-                if getattr(ex, "errno", 0) != errno.ENOENT:
-                    raise
-                warnings.warn(
-                    "Having mappings in a path which doesn't specify the "
-                    "Elasticsearch version is deprecated. Please move your "
-                    "mappings to a subfolder named according to the "
-                    "Elasticsearch version which your mappings are intended "
-                    "for. (e.g. '{}/v2/{}')".format(package_name, alias),
-                    PendingDeprecationWarning,
-                )
-        else:
-            package_name = "{}.v{}".format(package_name, _fixed_search_version[0])
+        package_name = self._get_mappings_module(package_name)
 
         def _walk_dir(aliases, *parts):
             root_name = build_index_from_parts(*parts)
@@ -157,17 +166,7 @@ class _SearchState(object):
 
         :param module: The templates module.
         """
-        try:
-            resource_listdir(module, "v{}".format(_fixed_search_version[0]))
-            module = "{}.v{}".format(module, _fixed_search_version[0])
-        except (OSError, IOError) as ex:
-            if getattr(ex, "errno", 0) == errno.ENOENT:
-                raise OSError(
-                    "Please move your templates to a subfolder named "
-                    "according to the Elasticsearch version "
-                    "which your templates are intended "
-                    "for. (e.g. '{}')".format(version_module)
-                )
+        module = self._get_mappings_module(module)
         result = {}
 
         def _walk_dir(*parts):
@@ -256,7 +255,7 @@ class _SearchState(object):
     def cluster_distribution(self):
         """Get the distribution entry (opensearch or elasticsearch) on the cluster."""
         # OpenSearch provides a "distribution" field containing "opensearch"
-        # Elasticsearch doesn't seem do that
+        # Elasticsearch doesn't seem to do that
         # (checked versions: 7.10.2, 7.11.2, 7.17.5, 8.3.1)
         return self.client.info()["version"].get("distribution", "elasticsearch")
 

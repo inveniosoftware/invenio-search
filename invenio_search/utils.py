@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015-2018 CERN.
+# Copyright (C) 2015-2022 CERN.
 # Copyright (C)      2022 TU Wien.
 #
 # Invenio is free software; you can redistribute it and/or modify it
@@ -9,15 +9,11 @@
 
 """Utility functions for search engine."""
 
-import os
 import time
-import warnings
 
-import six
 from flask import current_app
 
-from .engine import _fixed_search_version
-from .proxies import current_search, current_search_client
+from .proxies import current_search
 
 
 def timestamp_suffix():
@@ -78,42 +74,8 @@ def build_index_name(index, prefix=None, suffix=None, app=None):
     :param suffix: The suffix to append to the index name.
     :param app: Flask app passed to ``prefix_index`` and ``suffix_index``.
     """
-    if not isinstance(index, six.string_types):
+    if not isinstance(index, str):
         index = build_index_from_parts(*index)
     index = prefix_index(index, prefix=prefix, app=app)
     index = suffix_index(index, suffix=suffix, app=app)
     return index
-
-
-def schema_to_index(schema, index_names=None):
-    """Get index/doc_type given a schema URL.
-
-    :param schema: The schema name
-    :param index_names: A list of index name.
-    :returns: A tuple containing (index, doc_type).
-    """
-    warnings.warn(
-        '"invenio_search.utils.schema_to_index" will be moved to ' "invenio-indexer",
-        DeprecationWarning,
-    )
-    parts = schema.split("/")
-    doc_type, ext = os.path.splitext(parts[-1])
-    parts[-1] = doc_type
-    if _fixed_search_version[0] >= 7:
-        doc_type = "_doc"
-
-    if ext not in {
-        ".json",
-    }:
-        return (None, None)
-
-    if index_names is None:
-        index = build_index_from_parts(*parts)
-        return index, doc_type
-
-    for start in range(len(parts)):
-        name = build_index_from_parts(*parts[start:])
-        if name in index_names:
-            return name, doc_type
-
-    return (None, None)

@@ -289,13 +289,11 @@ check the invenio-access_ module.
 Miscellaneous
 -------------
 
-Elasticsearch version support
+OpenSearch/Elasticsearch version support
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Major versions of Elasticsearch can include breaking changes to mappings so
-mappings for each version of Elasticsearch are stored in separate folders.
-Invenio-Search will use these mappings when creating the indices. For backwards
-compatibility with existing Invenio modules and installations, Elasticsearch 2
-mappings will be loaded from the root level of the package directory. You can
+Major versions of OpenSearch/Elasticsearch can include breaking changes to mappings so
+mappings for each version of OpenSearch/Elasticsearch are stored in separate folders.
+Invenio-Search will use these mappings when creating the indices. You can
 see a full example in the ``examples/data`` directory of the Invenio-Search
 repository:
 
@@ -304,14 +302,8 @@ repository:
     $ tree --dirsfirst examples/data
 
     examples/data
-    +- demo            # Elasticsearch 2 mappings
-    |  +- authorities
-    |  |  +- authority-v1.0.0.json
-    |  +- bibliographic
-    |  |  +- bibliographic-v1.0.0.json
-    |  +- default-v1.0.0.json
-    +- v6
-    |  +- demo        # Elasticsearch 6 mappings
+    +- os-v1
+    |  +- demo        # OpenSearch 1 mappings
     |  |  +- authorities
     |  |  |  +- authority-v1.0.0.json
     |  |  +- bibliographic
@@ -327,9 +319,6 @@ repository:
     |  |  +- default-v1.0.0.json
     |  +- __init__.py
     +-- __init__.py
-
-Note: To make OpenSearch 1.x support as transparent as possible, it uses the same
-mappings directory as ElasticSearch v7 (of which it is a fork anyway).
 
 Elasticsearch plugins
 ~~~~~~~~~~~~~~~~~~~~~
@@ -416,8 +405,6 @@ More information about index migrations can be found in the
 `Invenio-Index-Migrator
 <https://github.com/inveniosoftware/invenio-index-migrator>`_.
 """
-
-from __future__ import absolute_import, print_function
 
 from .api import (
     RecordsSearch,

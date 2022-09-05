@@ -10,8 +10,6 @@
 
 """Module tests."""
 
-from __future__ import absolute_import, print_function
-
 from collections import defaultdict
 
 import pytest
@@ -19,8 +17,15 @@ from flask import Flask
 from mock import patch
 
 from invenio_search import InvenioSearch, current_search, current_search_client
-from invenio_search.engine import _fixed_search_version
+from invenio_search.engine import ES, SEARCH_DISTRIBUTION, search
 from invenio_search.errors import IndexAlreadyExistsError
+
+
+def _get_version():
+    """Get filename postfix with current ES/OS version."""
+    search_major_version = search.VERSION[0]
+    version = "v{}" if SEARCH_DISTRIBUTION == ES else "os-v{}"
+    return version.format(search_major_version)
 
 
 def test_version():
@@ -112,27 +117,12 @@ def test_load_entry_point_group(template_entrypoints):
     with patch("invenio_search.ext.iter_entry_points", mock_entry_points_mappings):
         ext.load_entry_point_group_mappings(entry_point_group_mappings=ep_group)
     assert len(ext.mappings) == 3
-    # Check that mappings are loaded from the correct folder depending on the
-    # ES version.
-    if _fixed_search_version[0] > 2:
-        mappings_dir = "mock_module/mappings/v{}/records".format(
-            _fixed_search_version[0]
-        )
-        assert all(mappings_dir in path for path in ext.mappings.values())
 
     with patch(
         "invenio_search.ext.iter_entry_points",
         return_value=template_entrypoints("invenio_search.templates"),
     ):
-        if _fixed_search_version[0] == 2:
-            assert set(ext.templates.keys()) == {
-                "subdirectory-file-download-v1",
-                "record-view-v1",
-            }
-        elif _fixed_search_version[0] == 5:
-            assert set(ext.templates.keys()) == {
-                "record-view-v{}".format(_fixed_search_version[0])
-            }
+        assert set(ext.templates.keys()) == {"record-view-{}".format(_get_version())}
 
 
 @pytest.mark.parametrize(
@@ -362,32 +352,12 @@ def _test_prefix_templates(app, prefix_value, template_entrypoints):
         # create templates
         list(search.put_templates())
 
-        if _fixed_search_version[0] == 2:
-            assert len(search.templates.keys()) == 2
-            name = "record-view-v1"
-            prefixed = (prefix_value or "") + name
-            assert name in search.templates
-            assert current_search_client.indices.exists_template(prefixed)
-            _test_prefix_replaced_in_body(prefixed, prefix_value, "template")
-            name = "subdirectory-file-download-v1"
-            prefixed = (prefix_value or "") + name
-            assert name in search.templates
-            assert current_search_client.indices.exists_template(prefixed)
-            _test_prefix_replaced_in_body(prefixed, prefix_value, "template")
-        elif _fixed_search_version[0] == 5:
-            assert len(search.templates.keys()) == 1
-            name = "record-view-v{0}".format(_fixed_search_version[0])
-            prefixed = (prefix_value or "") + name
-            assert name in search.templates
-            assert current_search_client.indices.exists_template(prefixed)
-            _test_prefix_replaced_in_body(prefixed, prefix_value, "template")
-        else:
-            assert len(search.templates.keys()) == 1
-            name = "record-view-v{0}".format(_fixed_search_version[0])
-            prefixed = (prefix_value or "") + name
-            assert name in search.templates
-            assert current_search_client.indices.exists_template(prefixed)
-            _test_prefix_replaced_in_body(prefixed, prefix_value, "index_patterns")
+        assert len(search.templates.keys()) == 1
+        name = "record-view-{0}".format(_get_version())
+        prefixed = (prefix_value or "") + name
+        assert name in search.templates
+        assert current_search_client.indices.exists_template(prefixed)
+        _test_prefix_replaced_in_body(prefixed, prefix_value, "index_patterns")
 
         # clean-up
         current_search_client.indices.delete_template("*")

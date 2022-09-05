@@ -21,9 +21,5 @@ appropriate extras dependency for the version of Elasticsearch or OpenSearch you
     $ # For OpenSearch 1.x:
     $ pip install invenio-search[opensearch1]
 
-Note that Elasticsearch v2 and v5 support still exists in Invenio-Search but will be
-deprecated in future releases so using ESv7 or OSv1 is recommended.
-
 Also note that installing multiple conflicting dependencies (e.g.
-`invenio-search[opensearch1,elasticsearch7]`) will result in undefined behavior and
-should be avoided!
+`invenio-search[opensearch1,elasticsearch7]`) will result in an error at runtime.

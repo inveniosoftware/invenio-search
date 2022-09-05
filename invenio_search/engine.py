@@ -20,31 +20,34 @@ vs. OpenSearch) more transparent.
 ES = "Elasticsearch"
 OS = "OpenSearch"
 
-
 try:
-    import elasticsearch as search
-    import elasticsearch_dsl as dsl
-
-    SearchEngine = search.Elasticsearch
-    SEARCH_DISTRIBUTION = ES
-    _fixed_search_version = search.VERSION
-
+    # fail if both ES and OS packages are installed
+    import elasticsearch
+    import elasticsearch_dsl
+    import opensearch_dsl
+    import opensearchpy
 except ModuleNotFoundError:
-    import opensearch_dsl as dsl
-    import opensearchpy as search
+    # only one or zero are installed
 
-    SearchEngine = search.OpenSearch
-    SEARCH_DISTRIBUTION = OS
-    _fixed_search_version = search.VERSION
+    try:
+        import elasticsearch as search
+        import elasticsearch_dsl as dsl
 
-    # FIXME:
-    # to make the transition as transparent as possible for now,
-    # we make OS 1.x look like ES 7.x (of which it is a fork anyway).
-    # for later versions of OS, this should be reworked properly!
-    # NOTE:
-    # `invenio_cli.engine.search.VERSION` will still have the original value
-    if search.VERSION[0] == 1:
-        _fixed_search_version = (7, *search.VERSION[1:])
+        SearchEngine = search.Elasticsearch
+        SEARCH_DISTRIBUTION = ES
+
+    except ModuleNotFoundError:
+        import opensearch_dsl as dsl
+        import opensearchpy as search
+
+        SearchEngine = search.OpenSearch
+        SEARCH_DISTRIBUTION = OS
+
+else:
+    # no exception raised, both are installed. Fail.
+    raise ImportError(
+        "Elasticsearch and OpenSearch libraries cannot be installed both at the same time. Please uninstall the one that you are not using."
+    )
 
 
 def check_search_version(distribution, version):
@@ -85,6 +88,8 @@ def uses_es7():
 
 
 __all__ = (
+    "ES",
+    "OS",
     "SEARCH_DISTRIBUTION",
     "SearchEngine",
     "check_es_version",

@@ -32,35 +32,35 @@ def _get_version():
 def test_init(app, template_entrypoints):
     """Run client initialization."""
     suffix = "-abc"
-    search = app.extensions["invenio-search"]
-    search._current_suffix = suffix
-    search.register_mappings("records", "mock_module.mappings")
+    invenio_search = app.extensions["invenio-search"]
+    invenio_search._current_suffix = suffix
+    invenio_search.register_mappings("records", "mock_module.mappings")
 
-    assert "records" in search.aliases
-    assert set(search.aliases["records"]) == {
+    assert "records" in invenio_search.aliases
+    assert set(invenio_search.aliases["records"]) == {
         "records-authorities",
         "records-bibliographic",
         "records-default-v1.0.0",
     }
-    assert set(search.aliases["records"]["records-authorities"]) == {
+    assert set(invenio_search.aliases["records"]["records-authorities"]) == {
         "records-authorities-authority-v1.0.0",
     }
-    assert set(search.aliases["records"]["records-bibliographic"]) == {
+    assert set(invenio_search.aliases["records"]["records-bibliographic"]) == {
         "records-bibliographic-bibliographic-v1.0.0",
     }
-    assert set(search.mappings.keys()) == {
+    assert set(invenio_search.mappings.keys()) == {
         "records-authorities-authority-v1.0.0",
         "records-bibliographic-bibliographic-v1.0.0",
         "records-default-v1.0.0",
     }
-    assert 3 == len(search.mappings)
+    assert 3 == len(invenio_search.mappings)
 
     with patch(
         "invenio_search.ext.iter_entry_points",
         return_value=template_entrypoints("invenio_search.templates"),
     ):
-        assert len(search.templates.keys()) == 1
-        assert "record-view-{}".format(_get_version()) in search.templates
+        assert len(invenio_search.templates.keys()) == 1
+        assert "record-view-{}".format(_get_version()) in invenio_search.templates
 
     current_search_client.indices.delete_alias("_all", "_all", ignore=[400, 404])
     current_search_client.indices.delete("*")
@@ -81,7 +81,7 @@ def test_init(app, template_entrypoints):
     aliases = current_search_client.indices.get_alias()
     assert 8 == sum(len(idx.get("aliases", {})) for idx in aliases.values())
 
-    assert current_search_client.indices.exists(list(search.mappings.keys()))
+    assert current_search_client.indices.exists(list(invenio_search.mappings.keys()))
 
     # Clean-up:
     result = runner.invoke(cmd, ["destroy"], obj=script_info)
@@ -98,10 +98,10 @@ def test_list(app):
     """Run listing of mappings."""
     suffix = "-abc"
     app.config["SEARCH_MAPPINGS"] = ["records"]
-    search = app.extensions["invenio-search"]
-    search._current_suffix = suffix
-    search.register_mappings("authors", "mock_module.mappings")
-    search.register_mappings("records", "mock_module.mappings")
+    invenio_search = app.extensions["invenio-search"]
+    invenio_search._current_suffix = suffix
+    invenio_search.register_mappings("authors", "mock_module.mappings")
+    invenio_search.register_mappings("records", "mock_module.mappings")
 
     runner = CliRunner()
     script_info = ScriptInfo(create_app=lambda: app)

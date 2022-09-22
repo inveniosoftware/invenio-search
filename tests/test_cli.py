@@ -177,7 +177,7 @@ def test_create_put_and_delete(app):
     )
     assert result.exit_code == 0
     current_search_client.get(index=name, doc_type=doc_type, id=1)
-    with pytest.raises(search.exceptions.NotFoundError):
+    with pytest.raises(search.NotFoundError):
         current_search_client.get(index=name, doc_type=doc_type, id=2)
 
     result = runner.invoke(

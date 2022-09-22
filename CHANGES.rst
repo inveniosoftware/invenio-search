@@ -8,6 +8,11 @@
 Changes
 =======
 
+Version 2.0.0 (released 2022-09-22)
+
+- Removes Elasticsearch < v7
+- Adds support for OpenSearch v1
+
 Version 1.4.2 (released 2021-07-20)
 
 - Pin elasticsearch to lower than 7.14 due to built in product check.

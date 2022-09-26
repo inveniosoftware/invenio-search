@@ -32,7 +32,7 @@ jobs:
           python-version: [3.7, 3.8, 3.9]
           requirements-level: [pypi]
           db-service: [postgresql13]
-          search-service: [elasticsearch7, opensearch1]
+          search-service: [elasticsearch7,opensearch2]
           include:
           - db-service: postgresql13
             DB_EXTRAS: "postgresql"
@@ -40,8 +40,8 @@ jobs:
           - search-service: elasticsearch7
             SEARCH_EXTRAS: "elasticsearch7"
 
-          - search-service: opensearch1
-            SEARCH_EXTRAS: "opensearch1"
+          - search-service: opensearch2
+            SEARCH_EXTRAS: "opensearch2"
 
     env:
       DB: ${{ matrix.db-service }}

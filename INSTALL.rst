@@ -19,7 +19,7 @@ appropriate extras dependency for the version of Elasticsearch or OpenSearch you
     $ pip install invenio-search[elasticsearch7]
 
     $ # For OpenSearch 1.x:
-    $ pip install invenio-search[opensearch1]
+    $ pip install invenio-search[opensearch2]
 
 Also note that installing multiple conflicting dependencies (e.g.
-`invenio-search[opensearch1,elasticsearch7]`) will result in an error at runtime.
+`invenio-search[opensearch2,elasticsearch7]`) will result in an error at runtime.

@@ -160,13 +160,11 @@ def test_create_put_and_delete(app):
 
     is_OS = SEARCH_DISTRIBUTION == OS
     is_ES = SEARCH_DISTRIBUTION == ES
-    doc_type = "_doc" if is_OS or (is_ES and search.VERSION[0] > 5) else "recid"
     result = runner.invoke(
         cmd,
         [
             "put",
             name,
-            doc_type,
             "--verbose",
             "--identifier",
             1,
@@ -176,9 +174,10 @@ def test_create_put_and_delete(app):
         obj=script_info,
     )
     assert result.exit_code == 0
-    current_search_client.get(index=name, doc_type=doc_type, id=1)
+
+    current_search_client.get(index=name, id=1)
     with pytest.raises(search.NotFoundError):
-        current_search_client.get(index=name, doc_type=doc_type, id=2)
+        current_search_client.get(index=name, id=2)
 
     result = runner.invoke(
         cmd,

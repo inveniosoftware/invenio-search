@@ -290,7 +290,7 @@ Miscellaneous
 -------------
 
 OpenSearch/Elasticsearch version support
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Major versions of OpenSearch/Elasticsearch can include breaking changes to mappings so
 mappings for each version of OpenSearch/Elasticsearch are stored in separate folders.
 Invenio-Search will use these mappings when creating the indices. You can

@@ -69,7 +69,6 @@ class BaseRecordsSearch(dsl.Search):
         """Configuration for ``Search`` and ``FacetedSearch`` classes."""
 
         index = "*"
-        doc_types = None
         fields = ("*",)
         facets = {}
 
@@ -82,7 +81,6 @@ class BaseRecordsSearch(dsl.Search):
     def __init__(self, **kwargs):
         """Use Meta to set kwargs defaults."""
         kwargs.setdefault("index", getattr(self.Meta, "index", None))
-        kwargs.setdefault("doc_type", getattr(self.Meta, "doc_types", None))
         kwargs.setdefault("using", current_search_client)
         kwargs.setdefault("extra", {})
 
@@ -129,7 +127,6 @@ class BaseRecordsSearch(dsl.Search):
             """Pass defaults from ``cls.Meta`` object."""
 
             index = build_alias_name(search_._index[0])
-            doc_types = getattr(search_.Meta, "doc_types", ["*"])
             fields = getattr(search_.Meta, "fields", ("*",))
             facets = getattr(search_.Meta, "facets", {})
 
@@ -229,7 +226,6 @@ class BaseRecordsSearchV2(dsl.Search):
     def __init__(self, fields=("*",), default_filter=None, **kwargs):
         """Sets the needed args in kwargs for the search."""
         kwargs.setdefault("index", "*")
-        kwargs.setdefault("doc_type", None)
         kwargs.setdefault("using", current_search_client)
         kwargs.setdefault("extra", {})
 

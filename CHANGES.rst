@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 2.1.0 (released 2022-10-03)
+
+- Adds support for OpenSearch v2
+
 Version 2.0.0 (released 2022-09-22)
 
 - Removes Elasticsearch < v7

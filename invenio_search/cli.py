@@ -145,6 +145,7 @@ def create(index_name, body, force, verbose):
 def update(index_name):
     """Update mappings of existing index."""
     current_search.update_mapping(index_name)
+    click.secho(f"Mapping of index {index_name} updated successfully.", fg="green")
 
 
 @index.command("list")

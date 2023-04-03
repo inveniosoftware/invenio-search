@@ -13,6 +13,7 @@ import json
 import os
 import warnings
 
+import dictdiffer
 from pkg_resources import (
     iter_entry_points,
     resource_filename,
@@ -23,8 +24,8 @@ from werkzeug.utils import cached_property
 
 from . import config
 from .cli import index as index_cmd
-from .engine import ES, OS, SEARCH_DISTRIBUTION, SearchEngine, search, dsl
-from .errors import IndexAlreadyExistsError
+from .engine import ES, OS, SEARCH_DISTRIBUTION, SearchEngine, dsl, search
+from .errors import IndexAlreadyExistsError, NotAllowedMappingUpdate
 from .utils import (
     build_alias_name,
     build_index_from_parts,
@@ -405,20 +406,37 @@ class _SearchState(object):
                     name=action["alias"],
                     ignore=ignore,
                 )
+
     def update_mapping(self, index):
         """Update mapping of the existing index."""
         mapping_path = self.mappings[index]
-        final_index = build_alias_name(index)
+        index_alias_name = build_alias_name(index)
 
-        index_ = self.client.indices.get(final_index)
-        full_index_name = list(index_.keys())[0]
+        # get api returns only dicts
+        index_dict = self.client.indices.get(index_alias_name)
+        index_keys = list(index_dict.keys())
+
+        # make sure only one index exists
+        assert len(index_keys) == 1
+
+        full_index_name = index_keys[0]
+
+        old_mapping = index_dict[full_index_name]["mappings"]
+
+        # need to initialise Index class to use the .put_mapping API wrapper method
         index_ = dsl.Index(full_index_name, using=self.client)
 
         with open(mapping_path, "r") as body:
             mapping = json.load(body)["mappings"]
-            # raises 400 if the mapping cannot be updated
-            # (f.e. type changes or index needs to be closed)
-            index_.put_mapping(using=self.client, body=mapping)
+            changes = dictdiffer.diff(old_mapping, mapping)
+
+            # allow only additions to mappings (backwards compatibility is kept)
+            if all([change == "add" for change in changes]):
+                # raises 400 if the mapping cannot be updated
+                # (f.e. type changes or index needs to be closed)
+                index_.put_mapping(using=self.client, body=mapping)
+            else:
+                raise NotAllowedMappingUpdate(list(changes))
 
     def put_templates(self, ignore=None):
         """Yield tuple with registered template and response from client."""

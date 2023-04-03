@@ -9,7 +9,7 @@
 
 
 """Module tests."""
-
+import json
 from collections import defaultdict
 
 import pytest
@@ -18,7 +18,7 @@ from mock import patch
 
 from invenio_search import InvenioSearch, current_search, current_search_client
 from invenio_search.engine import ES, SEARCH_DISTRIBUTION, search
-from invenio_search.errors import IndexAlreadyExistsError
+from invenio_search.errors import IndexAlreadyExistsError, NotAllowedMappingUpdate
 
 
 def _get_version():
@@ -107,7 +107,6 @@ def test_load_entry_point_group(template_entrypoints):
         assert group == ep_group
 
         class ep(object):
-
             name = "records"
             module_name = "mock_module.mappings"
 
@@ -448,3 +447,46 @@ def test_create_when_indexes_already_exists_with_ignore_existing_true(app):
         search.client.indices.exists("records-bibliographic-bibliographic-v1.0.0")
         is True
     )
+
+
+def test_update_mappings(app):
+    """Test if mapping gets correctly updated."""
+
+    mapping_path = "tests/mock_module/mappings/os-v2/records/default-v1.0.0.json"
+    current_search_client.indices.delete("*")
+
+    with open(mapping_path, "r") as body:
+        initial_mapping = json.load(body)
+
+    current_search_client.indices.create(
+        index="records-default-v1.0.0", body=initial_mapping
+    )
+    current_search.register_mappings("records", "mock_module.mappings")
+    assert current_search_client.indices.exists("records-default-v1.0.0") is True
+
+    try:
+        # change mapping
+        with open(mapping_path, "w") as mapping_file:
+            # test addition
+            new_mapping = {"mappings": {"properties": {"title": {"type": "keyword"}}}}
+            json_mapping = json.dumps(new_mapping)
+            mapping_file.write(json_mapping)
+
+        current_search.update_mapping("records-default-v1.0.0")
+
+        with open(mapping_path, "w") as mapping_file:
+            # test change
+            new_mapping = {"mappings": {"properties": {"abstract": {"type": "text"}}}}
+            json_mapping = json.dumps(new_mapping)
+            mapping_file.write(json_mapping)
+
+    except NotAllowedMappingUpdate:
+        with pytest.raises(NotAllowedMappingUpdate):
+            current_search.update_mapping("records-default-v1.0.0")
+
+    finally:
+        # recover initial state of the file
+        with open(mapping_path, "w") as mapping_file:
+            # reset test files
+            json_obj = json.dumps(initial_mapping)
+            mapping_file.write(json_obj)

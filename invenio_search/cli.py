@@ -138,6 +138,15 @@ def create(index_name, body, force, verbose):
         click.echo(json.dumps(result))
 
 
+@index.command()
+@click.argument("index_name")
+@with_appcontext
+@search_version_check
+def update(index_name):
+    """Update mappings of existing index."""
+    current_search.update_mapping(index_name)
+
+
 @index.command("list")
 @click.option("-a", "--only-active", is_flag=True, default=False)
 @click.option("--only-aliases", is_flag=True, default=False)

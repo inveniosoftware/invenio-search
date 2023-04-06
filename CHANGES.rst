@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 2.2.0 (released 2023-04-06)
+
+- cli: adds interface for updating mappings
+
 Version 2.1.0 (released 2022-10-03)
 
 - Adds support for OpenSearch v2

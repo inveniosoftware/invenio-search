@@ -415,7 +415,7 @@ from .api import (
 from .ext import InvenioSearch
 from .proxies import current_search, current_search_client
 
-__version__ = "2.1.0"
+__version__ = "2.2.0"
 
 
 __all__ = (

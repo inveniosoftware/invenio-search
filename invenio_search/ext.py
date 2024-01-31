@@ -428,15 +428,18 @@ class _SearchState(object):
 
         with open(mapping_path, "r") as body:
             mapping = json.load(body)["mappings"]
-            changes = dictdiffer.diff(old_mapping, mapping)
+            changes = list(dictdiffer.diff(old_mapping, mapping))
 
             # allow only additions to mappings (backwards compatibility is kept)
-            if all([change == "add" for change in changes]):
+            if all([change[0] == "add" for change in changes]):
                 # raises 400 if the mapping cannot be updated
                 # (f.e. type changes or index needs to be closed)
                 index_.put_mapping(using=self.client, body=mapping)
             else:
-                raise NotAllowedMappingUpdate(list(changes))
+                error_msg = ("Only additions are allowed when updating mappings to keep backwards compatibility."
+                             "This mapping has {0} non addition changes.\n\nFull list of changes: {1}"
+                             .format(len([change for change in changes if change[0] != "add"]), changes))
+                raise NotAllowedMappingUpdate(error_msg)
 
     def put_templates(self, ignore=None):
         """Yield tuple with registered template and response from client."""

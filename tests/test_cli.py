@@ -76,13 +76,28 @@ def test_init(app, template_entrypoints):
         assert current_search_client.indices.exists_template(
             "record-view-{}".format(_get_version())
         )
-        assert 0 == result.exit_code
+        assert (
+            len(
+                current_search_client.cluster.get_component_template()[
+                    "component_templates"
+                ]
+            )
+            == 2
+        )
+        assert current_search_client.cluster.exists_component_template("record_base")
+
+        assert (
+            len(current_search_client.indices.get_index_template()["index_templates"])
+            == 1
+        )
+        assert current_search_client.indices.exists_index_template(
+            "index_template_example"
+        )
 
     aliases = current_search_client.indices.get_alias()
     assert 8 == sum(len(idx.get("aliases", {})) for idx in aliases.values())
 
     assert current_search_client.indices.exists(list(invenio_search.mappings.keys()))
-
     # Clean-up:
     result = runner.invoke(cmd, ["destroy"], obj=script_info)
     assert 1 == result.exit_code

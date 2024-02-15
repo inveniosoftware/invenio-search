@@ -311,24 +311,28 @@ class _SearchState(object):
                 final_alias = build_alias_name(index, prefix=prefix, app=self.app)
             index_result = (
                 final_index,
-                self.client.indices.create(
-                    index=final_index,
-                    body=json.load(body),
-                    ignore=ignore,
-                )
-                if not dry_run
-                else None,
+                (
+                    self.client.indices.create(
+                        index=final_index,
+                        body=json.load(body),
+                        ignore=ignore,
+                    )
+                    if not dry_run
+                    else None
+                ),
             )
             if create_write_alias:
                 alias_result = (
                     final_alias,
-                    self.client.indices.put_alias(
-                        index=final_index,
-                        name=final_alias,
-                        ignore=ignore,
-                    )
-                    if not dry_run
-                    else None,
+                    (
+                        self.client.indices.put_alias(
+                            index=final_index,
+                            name=final_alias,
+                            ignore=ignore,
+                        )
+                        if not dry_run
+                        else None
+                    ),
                 )
         return index_result, alias_result
 
@@ -429,14 +433,15 @@ class _SearchState(object):
         with open(mapping_path, "r") as body:
             mapping = json.load(body)["mappings"]
             changes = dictdiffer.diff(old_mapping, mapping)
+            list_of_changes = list(changes)
 
             # allow only additions to mappings (backwards compatibility is kept)
-            if all([change == "add" for change in changes]):
+            if all([change == "add" for change in list_of_changes]):
                 # raises 400 if the mapping cannot be updated
                 # (f.e. type changes or index needs to be closed)
                 index_.put_mapping(using=self.client, body=mapping)
             else:
-                raise NotAllowedMappingUpdate(list(changes))
+                raise NotAllowedMappingUpdate(list_of_changes)
 
     def put_templates(self, ignore=None):
         """Yield tuple with registered template and response from client."""

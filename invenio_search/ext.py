@@ -42,7 +42,7 @@ class _SearchState(object):
         app,
         entry_point_group_mappings=None,
         entry_point_group_templates=None,
-        **kwargs
+        **kwargs,
     ):
         """Initialize state.
 
@@ -405,10 +405,13 @@ class _SearchState(object):
                 if alias_result[0]:
                     yield alias_result
             elif action["type"] == "create_alias":
-                yield action["alias"], self.client.indices.put_alias(
-                    index=action["index"],
-                    name=action["alias"],
-                    ignore=ignore,
+                yield (
+                    action["alias"],
+                    self.client.indices.put_alias(
+                        index=action["index"],
+                        name=action["alias"],
+                        ignore=ignore,
+                    ),
                 )
 
     def update_mapping(self, index):
@@ -436,7 +439,7 @@ class _SearchState(object):
             list_of_changes = list(changes)
 
             # allow only additions to mappings (backwards compatibility is kept)
-            if all([change == "add" for change in list_of_changes]):
+            if all([change[0] == "add" for change in list_of_changes]):
                 # raises 400 if the mapping cannot be updated
                 # (f.e. type changes or index needs to be closed)
                 index_.put_mapping(using=self.client, body=mapping)
@@ -453,9 +456,11 @@ class _SearchState(object):
 
             prefix = self.app.config["SEARCH_INDEX_PREFIX"] or ""
             if prefix:
-                assert pattern in body, "You are using the prefix `{0}`, "
-                "but the template `{1}` does not contain the "
-                "pattern `{2}`.".format(prefix, template_path, pattern)
+                assert pattern in body, (
+                    "You are using the prefix `{0}`, "
+                    "but the template `{1}` does not contain the "
+                    "pattern `{2}`.".format(prefix, template_path, pattern)
+                )
 
             return body.replace(pattern, prefix)
 
@@ -500,9 +505,12 @@ class _SearchState(object):
                     if len(indices_to_delete) == 0:
                         pass
                     elif len(indices_to_delete) == 1:
-                        yield name, self.client.indices.delete(
-                            index=indices_to_delete[0],
-                            ignore=ignore,
+                        yield (
+                            name,
+                            self.client.indices.delete(
+                                index=indices_to_delete[0],
+                                ignore=ignore,
+                            ),
                         )
                     else:
                         warnings.warn(
@@ -534,7 +542,7 @@ class InvenioSearch(object):
         app,
         entry_point_group_mappings="invenio_search.mappings",
         entry_point_group_templates="invenio_search.templates",
-        **kwargs
+        **kwargs,
     ):
         """Flask application initialization.
 
@@ -548,7 +556,7 @@ class InvenioSearch(object):
             app,
             entry_point_group_mappings=entry_point_group_mappings,
             entry_point_group_templates=entry_point_group_templates,
-            **kwargs
+            **kwargs,
         )
         self._state = app.extensions["invenio-search"] = state
 

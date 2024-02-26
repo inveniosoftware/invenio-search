@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 2.3.0 (released 2024-02-26)
+
+- search: Add options for component_templates and index_templates
+
 Version 2.2.1 (released 2024-02-19)
 
 - ext: fix update mapping comparison

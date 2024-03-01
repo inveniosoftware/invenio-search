@@ -452,24 +452,32 @@ class _SearchState(object):
             else:
                 raise NotAllowedMappingUpdate(list(changes))
 
-    def _replace_prefix(self, template_path, body):
+    def _replace_prefix(self, template_path, body, enforce_prefix):
         """Replace index prefix in template request body."""
         pattern = "__SEARCH_INDEX_PREFIX__"
 
         prefix = self.app.config["SEARCH_INDEX_PREFIX"] or ""
         if prefix:
-            assert pattern in body, (
-                "You are using the prefix `{0}`, but the template `{1}` does not "
-                "contain the pattern `{2}`."
-            ).format(prefix, template_path, pattern)
+            message = f"You are using the prefix `{prefix}`, but the template `{template_path}` does not contain the pattern `{pattern}`."
+            if enforce_prefix:
+                assert pattern in body, message
+            else:
+                warnings.warn(message)
+
         return body.replace(pattern, prefix)
 
-    def _put_template(self, template_name, template_file, put_function, ignore):
-        """Put template in search client."""
+    def _put_template(
+        self, template_name, template_file, put_function, ignore, enforce_prefix=True
+    ):
+        """Put template in search client.
+
+        If enforce_prefix is set to True, and the setting INVENIO_SEARCH_PREFIX_INDEX exists, then the function will
+        fail if the template does not use the prefix
+        """
         ignore = ignore or []
         with open(template_file, "r") as fp:
             body = fp.read()
-            replaced_body = self._replace_prefix(template_file, body)
+            replaced_body = self._replace_prefix(template_file, body, enforce_prefix)
             template_name = build_alias_name(template_name, app=self.app)
             return template_file, put_function(
                 name=template_name,
@@ -494,6 +502,7 @@ class _SearchState(object):
                 self.component_templates[template],
                 self.client.cluster.put_component_template,
                 ignore,
+                enforce_prefix=False,
             )
 
     def put_index_templates(self, ignore=None):

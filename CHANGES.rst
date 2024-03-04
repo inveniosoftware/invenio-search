@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 2.3.1 (released 2024-03-04)
+
+- search: The component_templates do not need to specify the SEARCH_INDEX_PREFIX
+
 Version 2.3.0 (released 2024-02-26)
 
 - search: Add options for component_templates and index_templates

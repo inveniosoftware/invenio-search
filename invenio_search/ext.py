@@ -450,7 +450,12 @@ class _SearchState(object):
                 # (f.e. type changes or index needs to be closed)
                 index_.put_mapping(using=self.client, body=mapping)
             else:
-                raise NotAllowedMappingUpdate(list(changes))
+                non_add_changes = [change for change in changes if change[0] != "add"]
+                raise NotAllowedMappingUpdate(
+                    "Only additions are allowed when updating mappings to keep backwards compatibility. "
+                    f"This mapping has {len(non_add_changes)} non addition changes.\n\n"
+                    f"Full list of changes: {changes}"
+                )
 
     def _replace_prefix(self, template_path, body, enforce_prefix):
         """Replace index prefix in template request body."""

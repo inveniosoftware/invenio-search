@@ -1,0 +1,11 @@
+{
+  "template": {
+    "mappings": {
+      "properties": {
+        "date_created": {
+          "type": "date"
+        }
+      }
+    }
+  }
+}

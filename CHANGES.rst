@@ -1,12 +1,24 @@
 ..
     This file is part of Invenio.
-    Copyright (C) 2015-2020 CERN.
+    Copyright (C) 2015-2024 CERN.
 
     Invenio is free software; you can redistribute it and/or modify it
     under the terms of the MIT License; see LICENSE file for more details.
 
 Changes
 =======
+
+Version 2.3.1 (released 2024-03-04)
+
+- search: The component_templates do not need to specify the SEARCH_INDEX_PREFIX
+
+Version 2.3.0 (released 2024-02-26)
+
+- search: Add options for component_templates and index_templates
+
+Version 2.2.1 (released 2024-02-19)
+
+- ext: fix update mapping comparison
 
 Version 2.2.0 (released 2023-04-06)
 

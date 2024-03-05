@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015-2018 CERN.
+# Copyright (C) 2015-2024 CERN.
 # Copyright (C)      2022 TU Wien.
 #
 # Invenio is free software; you can redistribute it and/or modify it
@@ -82,20 +82,45 @@ def check():
 @search_version_check
 def init(force):
     """Initialize registered aliases and mappings."""
-    click.secho("Creating indexes...", fg="green", bold=True, file=sys.stderr)
-    with click.progressbar(
-        current_search.create(ignore=[400] if force else None),
-        length=len(current_search.mappings),
-    ) as bar:
-        for name, response in bar:
-            bar.label = name
-    click.secho("Putting templates...", fg="green", bold=True, file=sys.stderr)
-    with click.progressbar(
-        current_search.put_templates(ignore=[400] if force else None),
-        length=len(current_search.templates),
-    ) as bar:
-        for response in bar:
-            bar.label = response
+    actions = [
+        {
+            "title": "Putting templates",
+            "function": current_search.put_templates,
+            "items": current_search.templates,
+        },
+        {
+            "title": "Putting component templates",
+            "function": current_search.put_component_templates,
+            "items": current_search.component_templates,
+        },
+        {
+            "title": "Putting index templates",
+            "function": current_search.put_index_templates,
+            "items": current_search.index_templates,
+        },
+        {
+            "title": "Creating indexes",
+            "function": current_search.create,
+            "items": current_search.mappings,
+        },
+    ]
+    for action in actions:
+        if len(action["items"]) == 0:
+            click.secho(
+                "There is no need for '" + action["title"] + "' (no items specified)",
+                fg="green",
+                bold=True,
+                file=sys.stderr,
+            )
+            continue
+
+        click.secho(action["title"] + "...", fg="green", bold=True, file=sys.stderr)
+        with click.progressbar(
+            action["function"](ignore=[400] if force else None),
+            length=len(action["items"]),
+        ) as bar:
+            for name, response in bar:
+                bar.label = name
 
 
 @index.command()

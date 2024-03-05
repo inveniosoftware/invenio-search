@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015-2018 CERN.
+# Copyright (C) 2015-2024 CERN.
 # Copyright (C)      2022 TU Wien.
 #
 # Invenio is free software; you can redistribute it and/or modify it
@@ -42,7 +42,9 @@ class _SearchState(object):
         app,
         entry_point_group_mappings=None,
         entry_point_group_templates=None,
-        **kwargs
+        entry_point_group_component_templates=None,
+        entry_point_group_index_templates=None,
+        **kwargs,
     ):
         """Initialize state.
 
@@ -57,6 +59,10 @@ class _SearchState(object):
         self.aliases = {}
         self._client = kwargs.get("client")
         self.entry_point_group_templates = entry_point_group_templates
+        self.entry_point_group_component_templates = (
+            entry_point_group_component_templates
+        )
+        self.entry_point_group_index_templates = entry_point_group_index_templates
         self._current_suffix = None
 
         if entry_point_group_mappings:
@@ -69,22 +75,40 @@ class _SearchState(object):
             self._current_suffix = timestamp_suffix()
         return self._current_suffix
 
-    @cached_property
-    def templates(self):
-        """Generate a dictionary with template names and file paths."""
-        templates = {}
+    def _collect_templates(self, entrypoint_group):
+        """Load actions from an entry point group."""
         result = []
-        if self.entry_point_group_templates:
-            result = (
-                self.load_entry_point_group_templates(self.entry_point_group_templates)
-                or []
-            )
 
+        for ep in iter_entry_points(group=entrypoint_group):
+            loaded_ep = ep.load()
+
+            if callable(loaded_ep):
+                with self.app.app_context():
+                    for template_dir in loaded_ep():
+                        result.append(self.register_templates(template_dir))
+            else:
+                result.append(self.register_templates(ep.module_name))
+
+        templates = {}
         for template in result:
             for name, path in template.items():
                 templates[name] = path
-
         return templates
+
+    @cached_property
+    def templates(self):
+        """Generate a dictionary with template names and file paths."""
+        return self._collect_templates(self.entry_point_group_templates)
+
+    @cached_property
+    def component_templates(self):
+        """Generate a dictionary with component template names and file paths."""
+        return self._collect_templates(self.entry_point_group_component_templates)
+
+    @cached_property
+    def index_templates(self):
+        """Generate a dictionary with index template names and file paths."""
+        return self._collect_templates(self.entry_point_group_index_templates)
 
     @staticmethod
     def _get_mappings_module(module):
@@ -173,7 +197,6 @@ class _SearchState(object):
         def _walk_dir(*parts):
             parts = parts or tuple()
             resource_name = os.path.join(*parts) if parts else ""
-
             for filename in resource_listdir(module, resource_name):
                 file_path = os.path.join(resource_name, filename)
 
@@ -200,15 +223,6 @@ class _SearchState(object):
         """Load actions from an entry point group."""
         for ep in iter_entry_points(group=entry_point_group_mappings):
             self.register_mappings(ep.name, ep.module_name)
-
-    def load_entry_point_group_templates(self, entry_point_group_templates):
-        """Load actions from an entry point group."""
-        result = []
-        for ep in iter_entry_points(group=entry_point_group_templates):
-            with self.app.app_context():
-                for template_dir in ep.load()():
-                    result.append(self.register_templates(template_dir))
-        return result
 
     def _client_builder(self):
         """Build search engine (ES/OS) client."""
@@ -296,9 +310,7 @@ class _SearchState(object):
         mapping_path = mapping_path or self.mappings[index]
 
         final_alias = None
-        final_index = None
-        index_result = None, None
-        alias_result = None, None
+        alias_result = None
         # To prevent index init --force from creating a suffixed
         # index if the current instance is running without suffixes
         # make sure there is no index with the same name as the
@@ -310,27 +322,25 @@ class _SearchState(object):
             if create_write_alias:
                 final_alias = build_alias_name(index, prefix=prefix, app=self.app)
             index_result = (
-                final_index,
                 self.client.indices.create(
                     index=final_index,
                     body=json.load(body),
                     ignore=ignore,
                 )
                 if not dry_run
-                else None,
+                else None
             )
             if create_write_alias:
                 alias_result = (
-                    final_alias,
                     self.client.indices.put_alias(
                         index=final_index,
                         name=final_alias,
                         ignore=ignore,
                     )
                     if not dry_run
-                    else None,
+                    else None
                 )
-        return index_result, alias_result
+        return (final_index, index_result), (final_alias, alias_result)
 
     def create(self, ignore=None, ignore_existing=False, index_list=None):
         """Yield tuple with created index name and responses from a client."""
@@ -401,10 +411,13 @@ class _SearchState(object):
                 if alias_result[0]:
                     yield alias_result
             elif action["type"] == "create_alias":
-                yield action["alias"], self.client.indices.put_alias(
-                    index=action["index"],
-                    name=action["alias"],
-                    ignore=ignore,
+                yield (
+                    action["alias"],
+                    self.client.indices.put_alias(
+                        index=action["index"],
+                        name=action["alias"],
+                        ignore=ignore,
+                    ),
                 )
 
     def update_mapping(self, index):
@@ -428,49 +441,83 @@ class _SearchState(object):
 
         with open(mapping_path, "r") as body:
             mapping = json.load(body)["mappings"]
-            changes = list(dictdiffer.diff(old_mapping, mapping))
+            changes = dictdiffer.diff(old_mapping, mapping)
+            list_of_changes = list(changes)
 
             # allow only additions to mappings (backwards compatibility is kept)
-            if all([change[0] == "add" for change in changes]):
+            if all([change[0] == "add" for change in list_of_changes]):
                 # raises 400 if the mapping cannot be updated
                 # (f.e. type changes or index needs to be closed)
                 index_.put_mapping(using=self.client, body=mapping)
             else:
-                error_msg = ("Only additions are allowed when updating mappings to keep backwards compatibility."
-                             "This mapping has {0} non addition changes.\n\nFull list of changes: {1}"
-                             .format(len([change for change in changes if change[0] != "add"]), changes))
-                raise NotAllowedMappingUpdate(error_msg)
+                non_add_changes = [change for change in changes if change[0] != "add"]
+                raise NotAllowedMappingUpdate(
+                    f"Only additions are allowed when updating mappings to keep backwards compatibility."
+                    f"This mapping has {len(non_add_changes)} non addition changes.\n\n"
+                    f"Full list of changes: {changes}"
+                )
+
+    def _replace_prefix(self, template_path, body, enforce_prefix):
+        """Replace index prefix in template request body."""
+        pattern = "__SEARCH_INDEX_PREFIX__"
+
+        prefix = self.app.config["SEARCH_INDEX_PREFIX"] or ""
+        if prefix:
+            message = f"You are using the prefix `{prefix}`, but the template `{template_path}` does not contain the pattern `{pattern}`."
+            if enforce_prefix:
+                assert pattern in body, message
+            else:
+                warnings.warn(message)
+
+        return body.replace(pattern, prefix)
+
+    def _put_template(
+        self, template_name, template_file, put_function, ignore, enforce_prefix=True
+    ):
+        """Put template in search client.
+
+        If enforce_prefix is set to True, and the setting INVENIO_SEARCH_PREFIX_INDEX exists, then the function will
+        fail if the template does not use the prefix
+        """
+        ignore = ignore or []
+        with open(template_file, "r") as fp:
+            body = fp.read()
+            replaced_body = self._replace_prefix(template_file, body, enforce_prefix)
+            template_name = build_alias_name(template_name, app=self.app)
+            return template_file, put_function(
+                name=template_name,
+                body=json.loads(replaced_body),
+                ignore=ignore,
+            )
 
     def put_templates(self, ignore=None):
         """Yield tuple with registered template and response from client."""
-        ignore = ignore or []
-
-        def _replace_prefix(template_path, body):
-            """Replace index prefix in template request body."""
-            pattern = "__SEARCH_INDEX_PREFIX__"
-
-            prefix = self.app.config["SEARCH_INDEX_PREFIX"] or ""
-            if prefix:
-                assert pattern in body, "You are using the prefix `{0}`, "
-                "but the template `{1}` does not contain the "
-                "pattern `{2}`.".format(prefix, template_path, pattern)
-
-            return body.replace(pattern, prefix)
-
-        def _put_template(template):
-            """Put template in search client."""
-            with open(self.templates[template], "r") as fp:
-                body = fp.read()
-                replaced_body = _replace_prefix(self.templates[template], body)
-                template_name = build_alias_name(template, app=self.app)
-                return self.templates[template], self.client.indices.put_template(
-                    name=template_name,
-                    body=json.loads(replaced_body),
-                    ignore=ignore,
-                )
-
         for template in self.templates:
-            yield _put_template(template)
+            yield self._put_template(
+                template,
+                self.templates[template],
+                self.client.indices.put_template,
+                ignore,
+            )
+
+    def put_component_templates(self, ignore=None):
+        for template in self.component_templates:
+            yield self._put_template(
+                template,
+                self.component_templates[template],
+                self.client.cluster.put_component_template,
+                ignore,
+                enforce_prefix=False,
+            )
+
+    def put_index_templates(self, ignore=None):
+        for template in self.index_templates:
+            yield self._put_template(
+                template,
+                self.index_templates[template],
+                self.client.indices.put_index_template,
+                ignore,
+            )
 
     def delete(self, ignore=None, index_list=None):
         """Yield tuple with deleted index name and responses from a client."""
@@ -498,9 +545,12 @@ class _SearchState(object):
                     if len(indices_to_delete) == 0:
                         pass
                     elif len(indices_to_delete) == 1:
-                        yield name, self.client.indices.delete(
-                            index=indices_to_delete[0],
-                            ignore=ignore,
+                        yield (
+                            name,
+                            self.client.indices.delete(
+                                index=indices_to_delete[0],
+                                ignore=ignore,
+                            ),
                         )
                     else:
                         warnings.warn(
@@ -532,7 +582,9 @@ class InvenioSearch(object):
         app,
         entry_point_group_mappings="invenio_search.mappings",
         entry_point_group_templates="invenio_search.templates",
-        **kwargs
+        entry_point_group_component_templates="invenio_search.component_templates",
+        entry_point_group_index_templates="invenio_search.index_templates",
+        **kwargs,
     ):
         """Flask application initialization.
 
@@ -546,7 +598,9 @@ class InvenioSearch(object):
             app,
             entry_point_group_mappings=entry_point_group_mappings,
             entry_point_group_templates=entry_point_group_templates,
-            **kwargs
+            entry_point_group_component_templates=entry_point_group_component_templates,
+            entry_point_group_index_templates=entry_point_group_index_templates,
+            **kwargs,
         )
         self._state = app.extensions["invenio-search"] = state
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015-2018 CERN.
+# Copyright (C) 2015-2024 CERN.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -27,8 +27,21 @@ sys.path.append(
 )
 
 
+@pytest.fixture(scope="module")
+def extra_entry_points():
+    """Define the extra points for the configuration of the component_templates."""
+    return {
+        "invenio_search.component_templates": [
+            "records = mock_module.component_templates",
+        ],
+        "invenio_search.index_templates": [
+            "records = mock_module.index_templates",
+        ],
+    }
+
+
 @pytest.fixture()
-def app():
+def app(entry_points):
     """Flask application fixture."""
     # Set temporary instance path for sqlite
     instance_path = tempfile.mkdtemp()

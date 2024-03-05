@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015-2019 CERN.
+# Copyright (C) 2015-2024 CERN.
 # Copyright (C)      2022 University Münster.
 # Copyright (C)      2022 TU Wien.
 #
@@ -415,7 +415,7 @@ from .api import (
 from .ext import InvenioSearch
 from .proxies import current_search, current_search_client
 
-__version__ = "2.2.0"
+__version__ = "2.3.1"
 
 
 __all__ = (

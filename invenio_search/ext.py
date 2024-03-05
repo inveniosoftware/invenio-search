@@ -452,7 +452,7 @@ class _SearchState(object):
             else:
                 non_add_changes = [change for change in changes if change[0] != "add"]
                 raise NotAllowedMappingUpdate(
-                    f"Only additions are allowed when updating mappings to keep backwards compatibility."
+                    "Only additions are allowed when updating mappings to keep backwards compatibility. "
                     f"This mapping has {len(non_add_changes)} non addition changes.\n\n"
                     f"Full list of changes: {changes}"
                 )

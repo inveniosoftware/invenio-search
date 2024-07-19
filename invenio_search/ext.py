@@ -83,9 +83,8 @@ class _SearchState(object):
             loaded_ep = ep.load()
 
             if callable(loaded_ep):
-                with self.app.app_context():
-                    for template_dir in loaded_ep():
-                        result.append(self.register_templates(template_dir))
+                for template_dir in loaded_ep():
+                    result.append(self.register_templates(template_dir))
             else:
                 result.append(self.register_templates(ep.module_name))
 

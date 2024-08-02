@@ -10,10 +10,43 @@
 """Utility functions for search engine."""
 
 import time
+from collections.abc import Container
+from fnmatch import fnmatch
 
 from flask import current_app
 
 from .proxies import current_search
+
+
+class DynamicPathMatchSet(Container):
+    """Set allowing wildcard matches for dynamic tempalte key paths."""
+
+    def __init__(self, dynamic_templates=None):
+        """Initialize the set from a mapping's dynamic templates."""
+        self.include = set()
+        self.exclude = set()
+        if dynamic_templates:
+            for dynamic_template in dynamic_templates:
+                self.add(dynamic_template)
+
+    def add(self, dynamic_template):
+        """Add dynamic template to set."""
+        for cfg in dynamic_template.values():
+            path_match = cfg.get("path_match", [])
+            if isinstance(path_match, str):
+                path_match = [path_match]
+            self.include.update(path_match)
+
+            path_unmatch = cfg.get("path_unmatch", [])
+            if isinstance(path_unmatch, str):
+                path_unmatch = [path_unmatch]
+            self.exclude.update(path_unmatch)
+
+    def __contains__(self, key):
+        """Use ``fnmatch`` to check included and excluded keys."""
+        is_included = any(fnmatch(key, pattern) for pattern in self.include)
+        is_excluded = any(fnmatch(key, pattern) for pattern in self.exclude)
+        return is_included and not is_excluded
 
 
 def timestamp_suffix():

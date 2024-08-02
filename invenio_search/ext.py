@@ -27,6 +27,7 @@ from .cli import index as index_cmd
 from .engine import ES, OS, SEARCH_DISTRIBUTION, SearchEngine, dsl, search
 from .errors import IndexAlreadyExistsError, NotAllowedMappingUpdate
 from .utils import (
+    DynamicPathMatchSet,
     build_alias_name,
     build_index_from_parts,
     build_index_name,
@@ -441,7 +442,13 @@ class _SearchState(object):
 
         with open(mapping_path, "r") as body:
             mapping = json.load(body)["mappings"]
-            changes = dictdiffer.diff(old_mapping, mapping)
+
+            changes = dictdiffer.diff(
+                old_mapping,
+                mapping,
+                # ignore dynamic template mapping keys
+                ignore=DynamicPathMatchSet(mapping.get("dynamic_templates")),
+            )
             list_of_changes = list(changes)
 
             # allow only additions to mappings (backwards compatibility is kept)

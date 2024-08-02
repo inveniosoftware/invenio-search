@@ -8,6 +8,11 @@
 Changes
 =======
 
+Version v2.4.0 (released 2024-08-02)
+
+- cli: add "--check/--no-check" flag for mapping updates
+- ext: report attempted mappings update on failure (#224)
+
 Version 2.3.1 (released 2024-03-04)
 
 - search: The component_templates do not need to specify the SEARCH_INDEX_PREFIX

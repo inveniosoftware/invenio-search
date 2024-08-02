@@ -165,11 +165,12 @@ def create(index_name, body, force, verbose):
 
 @index.command()
 @click.argument("index_name")
+@click.option("--check/--no-check", is_flag=True, default=True)
 @with_appcontext
 @search_version_check
-def update(index_name):
+def update(index_name, check=True):
     """Update mappings of existing index."""
-    current_search.update_mapping(index_name)
+    current_search.update_mapping(index_name, check=check)
     click.secho(f"Mapping of index {index_name} updated successfully.", fg="green")
 
 

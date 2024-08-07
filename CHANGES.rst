@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version v2.4.1 (released 2024-08-07)
+
+- fix: avoid closing db session
+
 Version v2.4.0 (released 2024-08-02)
 
 - cli: add "--check/--no-check" flag for mapping updates

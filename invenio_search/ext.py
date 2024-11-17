@@ -120,9 +120,9 @@ class _SearchState(object):
         """
         search_major_version = search.VERSION[0]
         if SEARCH_DISTRIBUTION == ES:
-            subfolder = "v{}".format(search_major_version)
+            subfolder = f"v{search_major_version}"
         elif SEARCH_DISTRIBUTION == OS:
-            subfolder = "os-v{}".format(search_major_version)
+            subfolder = f"os-v{search_major_version}"
 
             # Make sure that the OpenSearch mappings are in the folder.
             # The fallback can be removed after transition to OpenSearch.
@@ -139,11 +139,9 @@ class _SearchState(object):
                 )
         else:
             # should never happen
-            raise RuntimeError(
-                "Unknown search distribution {}".format(SEARCH_DISTRIBUTION)
-            )
+            raise RuntimeError(f"Unknown search distribution {SEARCH_DISTRIBUTION}")
 
-        return "{}.{}".format(module, subfolder)
+        return f"{module}.{subfolder}"
 
     def register_mappings(self, alias, package_name):
         """Register mappings from a package under given alias.

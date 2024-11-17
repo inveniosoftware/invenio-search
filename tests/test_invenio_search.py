@@ -9,6 +9,7 @@
 
 
 """Module tests."""
+
 import json
 from collections import defaultdict
 
@@ -54,7 +55,7 @@ def test_client_config():
     app.config["SEARCH_CLIENT_CONFIG"] = {"timeout": 30, "foo": "bar"}
 
     # instead of patching ES directly, we go via our transparency module
-    with patch(f"invenio_search.engine.SearchEngine.__init__") as mock_search_init:
+    with patch("invenio_search.engine.SearchEngine.__init__") as mock_search_init:
         mock_search_init.return_value = None
         ext = InvenioSearch(app)
         es_client = ext.client  # trigger client initialization
@@ -121,7 +122,7 @@ def test_load_entry_point_group(template_entrypoints):
         "invenio_search.ext.iter_entry_points",
         return_value=template_entrypoints("invenio_search.templates"),
     ):
-        assert set(ext.templates.keys()) == {"record-view-{}".format(_get_version())}
+        assert set(ext.templates.keys()) == {f"record-view-{_get_version()}"}
 
 
 @pytest.mark.parametrize(
@@ -203,7 +204,7 @@ def test_creating_alias_existing_index(
         current_search_client.indices.create(index=create_index)
         new_indexes.append(create_index)
     if create_alias:
-        write_alias_index = "{}-suffix".format(create_alias)
+        write_alias_index = f"{create_alias}-suffix"
         current_search_client.indices.create(index=write_alias_index)
         new_indexes.append(write_alias_index)
         current_search_client.indices.put_alias(
@@ -352,7 +353,7 @@ def _test_prefix_templates(app, prefix_value, template_entrypoints):
         list(search.put_templates())
 
         assert len(search.templates.keys()) == 1
-        name = "record-view-{0}".format(_get_version())
+        name = f"record-view-{_get_version()}"
         prefixed = (prefix_value or "") + name
         assert name in search.templates
         assert current_search_client.indices.exists_template(prefixed)

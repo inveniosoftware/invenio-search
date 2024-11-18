@@ -111,12 +111,16 @@ def test_load_entry_point_group(template_entrypoints):
             name = "records"
             module_name = "mock_module.mappings"
 
-        yield ep
+            def load(self):
+                return None
 
-    assert len(ext.mappings) == 0
+        yield ep()
+
+    # One mapping is already registered from the "mock_module:mock_mapping" entry point
+    assert len(ext.mappings) == 1
     with patch("invenio_search.ext.iter_entry_points", mock_entry_points_mappings):
         ext.load_entry_point_group_mappings(entry_point_group_mappings=ep_group)
-    assert len(ext.mappings) == 3
+    assert len(ext.mappings) == 4
 
     with patch(
         "invenio_search.ext.iter_entry_points",
@@ -161,7 +165,7 @@ def test_whitelisted_aliases(app, aliases_config, expected_aliases):
     current_search_client.indices.delete("*")
     list(current_search.create(ignore=None))
 
-    aliases = current_search_client.indices.get_alias()
+    aliases = current_search_client.indices.get_alias(expand_wildcards="open")
     if expected_aliases == []:
         assert 0 == len(aliases)
     else:
@@ -195,6 +199,10 @@ def test_creating_alias_existing_index(
 ):
     """Test creating new alias and index where there already exists one."""
     search = app.extensions["invenio-search"]
+    # Clear mappings
+    search.mappings = {}
+    search.aliases = {}
+
     search.register_mappings("authors", "mock_module.mappings")
     search._current_suffix = suffix
     current_search_client.indices.delete_alias("_all", "_all", ignore=[400, 404])
@@ -270,37 +278,36 @@ def _test_prefix_indices(app, prefix_value):
     search._current_suffix = suffix
     search.register_mappings("records", "mock_module.mappings")
 
+    auth_idx = {f"{prefix}records-authorities-authority-v1.0.0{suffix}"}
+    bib_idx = {f"{prefix}records-bibliographic-bibliographic-v1.0.0{suffix}"}
+    default_idx = {f"{prefix}records-default-v1.0.0{suffix}"}
+    org_idx = {f"{prefix}organizations-organization-v1.0.0{suffix}"}
+    record_indices = auth_idx | bib_idx | default_idx
+    all_indices = record_indices | org_idx
+
     # clean-up in case something failed previously
     current_search_client.indices.delete("*")
     # create indices and test
     list(search.create())
-    es_indices = current_search_client.indices.get_alias()
 
-    def _f(name):  # formatting helper
-        return name.format(p=prefix, s=suffix)
-
-    assert set(es_indices.keys()) == {
-        _f("{p}records-authorities-authority-v1.0.0{s}"),
-        _f("{p}records-bibliographic-bibliographic-v1.0.0{s}"),
-        _f("{p}records-default-v1.0.0{s}"),
-    }
+    es_indices = current_search_client.indices.get_alias(expand_wildcards="open")
+    assert set(es_indices.keys()) == all_indices
     # Build set of aliases
     es_aliases = defaultdict(set)
     for index, info in es_indices.items():
         for alias in info.get("aliases", {}):
             es_aliases[alias].add(index)
 
-    auth_idx = {_f("{p}records-authorities-authority-v1.0.0{s}")}
-    bib_idx = {_f("{p}records-bibliographic-bibliographic-v1.0.0{s}")}
-    default_idx = {_f("{p}records-default-v1.0.0{s}")}
-    all_indices = auth_idx | bib_idx | default_idx
     assert es_aliases == {
-        _f("{p}records-authorities-authority-v1.0.0"): auth_idx,
-        _f("{p}records-bibliographic-bibliographic-v1.0.0"): bib_idx,
-        _f("{p}records-default-v1.0.0"): default_idx,
-        _f("{p}records-authorities"): auth_idx,
-        _f("{p}records-bibliographic"): bib_idx,
-        _f("{p}records"): all_indices,
+        f"{prefix}records-authorities-authority-v1.0.0": auth_idx,
+        f"{prefix}records-bibliographic-bibliographic-v1.0.0": bib_idx,
+        f"{prefix}records-default-v1.0.0": default_idx,
+        f"{prefix}records-authorities": auth_idx,
+        f"{prefix}records-bibliographic": bib_idx,
+        f"{prefix}records": record_indices,
+        f"{prefix}organizations-organization-v1.0.0": org_idx,
+        f"{prefix}organizations-organization": org_idx,
+        f"{prefix}organizations": org_idx,
     }
     # clean-up
     current_search_client.indices.delete("*")

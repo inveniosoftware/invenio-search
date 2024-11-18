@@ -219,7 +219,12 @@ class _SearchState(object):
     def load_entry_point_group_mappings(self, entry_point_group_mappings):
         """Load actions from an entry point group."""
         for ep in iter_entry_points(group=entry_point_group_mappings):
-            self.register_mappings(ep.name, ep.module_name)
+            # Load the entry point using .load() and register the mappings
+            ep_value = ep.load()
+            if callable(ep_value):
+                ep_value(self)
+            else:
+                self.register_mappings(ep.name, ep.module_name)
 
     def _client_builder(self):
         """Build search engine (ES/OS) client."""
@@ -296,7 +301,7 @@ class _SearchState(object):
     def create_index(
         self,
         index,
-        mapping_path=None,
+        mapping=None,
         prefix=None,
         suffix=None,
         create_write_alias=True,
@@ -304,39 +309,41 @@ class _SearchState(object):
         dry_run=False,
     ):
         """Create index with a write alias."""
-        mapping_path = mapping_path or self.mappings[index]
+        mapping = mapping or self.mappings[index]
+
+        if isinstance(mapping, dict):
+            mapping_body = mapping
+        # Load mapping from file
+        elif isinstance(mapping, str):
+            with open(mapping, "r") as mapping_body:
+                mapping_body = json.load(mapping_body)
 
         final_alias = None
         alias_result = None
-        # To prevent index init --force from creating a suffixed
-        # index if the current instance is running without suffixes
-        # make sure there is no index with the same name as the
-        # alias name (i.e. the index name without the suffix).
-        with open(mapping_path, "r") as body:
-            final_index = build_index_name(
-                index, prefix=prefix, suffix=suffix, app=self.app
+        final_index = build_index_name(
+            index, prefix=prefix, suffix=suffix, app=self.app
+        )
+        if create_write_alias:
+            final_alias = build_alias_name(index, prefix=prefix, app=self.app)
+        index_result = (
+            self.client.indices.create(
+                index=final_index,
+                body=mapping_body,
+                ignore=ignore,
             )
-            if create_write_alias:
-                final_alias = build_alias_name(index, prefix=prefix, app=self.app)
-            index_result = (
-                self.client.indices.create(
+            if not dry_run
+            else None
+        )
+        if create_write_alias:
+            alias_result = (
+                self.client.indices.put_alias(
                     index=final_index,
-                    body=json.load(body),
+                    name=final_alias,
                     ignore=ignore,
                 )
                 if not dry_run
                 else None
             )
-            if create_write_alias:
-                alias_result = (
-                    self.client.indices.put_alias(
-                        index=final_index,
-                        name=final_alias,
-                        ignore=ignore,
-                    )
-                    if not dry_run
-                    else None
-                )
         return (final_index, index_result), (final_alias, alias_result)
 
     def create(self, ignore=None, ignore_existing=False, index_list=None):
@@ -419,7 +426,16 @@ class _SearchState(object):
 
     def update_mapping(self, index, check=True):
         """Update mapping of the existing index."""
-        mapping_path = self.mappings[index]
+        mapping = self.mappings[index]
+        if isinstance(mapping, dict):
+            mapping_body = mapping
+        # Load mapping from file
+        elif isinstance(mapping, str):
+            with open(mapping, "r") as mapping_body:
+                mapping_body = json.load(mapping_body)
+        # The Update API accepts only the mapping body, not the full index definition
+        mapping_body = mapping_body["mappings"]
+
         index_alias_name = build_alias_name(index)
 
         # get api returns only dicts
@@ -431,27 +447,25 @@ class _SearchState(object):
 
         full_index_name = index_keys[0]
 
-        old_mapping = index_dict[full_index_name]["mappings"]
+        old_mapping_body = index_dict[full_index_name]["mappings"]
 
         # need to initialise Index class to use the .put_mapping API wrapper method
         index_ = dsl.Index(full_index_name, using=self.client)
 
-        with open(mapping_path, "r") as body:
-            mapping = json.load(body)["mappings"]
-            changes = list(dictdiffer.diff(old_mapping, mapping))
+        changes = list(dictdiffer.diff(old_mapping_body, mapping_body))
 
-            # allow only additions to mappings (backwards compatibility is kept)
-            if not check or all([change[0] == "add" for change in changes]):
-                # raises 400 if the mapping cannot be updated
-                # (f.e. type changes or index needs to be closed)
-                index_.put_mapping(using=self.client, body=mapping)
-            else:
-                non_add_changes = [change for change in changes if change[0] != "add"]
-                raise NotAllowedMappingUpdate(
-                    "Only additions are allowed when updating mappings to keep backwards compatibility. "
-                    f"This mapping has {len(non_add_changes)} non addition changes.\n\n"
-                    f"Full list of changes: {changes}"
-                )
+        # allow only additions to mappings (backwards compatibility is kept)
+        if not check or all([change[0] == "add" for change in changes]):
+            # raises 400 if the mapping cannot be updated
+            # (f.e. type changes or index needs to be closed)
+            index_.put_mapping(using=self.client, body=mapping_body)
+        else:
+            non_add_changes = [change for change in changes if change[0] != "add"]
+            raise NotAllowedMappingUpdate(
+                "Only additions are allowed when updating mappings to keep backwards compatibility. "
+                f"This mapping has {len(non_add_changes)} non addition changes.\n\n"
+                f"Full list of changes: {changes}"
+            )
 
     def _replace_prefix(self, template_path, body, enforce_prefix):
         """Replace index prefix in template request body."""

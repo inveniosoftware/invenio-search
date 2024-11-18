@@ -38,6 +38,9 @@ def extra_entry_points():
         "invenio_search.index_templates": [
             "records = mock_module.index_templates",
         ],
+        "invenio_search.mappings": [
+            "organizations = mock_module:mock_mapping",
+        ],
     }
 
 

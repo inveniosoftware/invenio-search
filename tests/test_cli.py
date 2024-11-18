@@ -52,19 +52,20 @@ def test_init(app, template_entrypoints):
         "records-authorities-authority-v1.0.0",
         "records-bibliographic-bibliographic-v1.0.0",
         "records-default-v1.0.0",
+        "organizations-organization-v1.0.0",
     }
-    assert 3 == len(invenio_search.mappings)
+    assert 4 == len(invenio_search.mappings)
 
     with patch(
         "invenio_search.ext.iter_entry_points",
         return_value=template_entrypoints("invenio_search.templates"),
     ):
         assert len(invenio_search.templates.keys()) == 1
-        assert "record-view-{}".format(_get_version()) in invenio_search.templates
+        assert f"record-view-{_get_version()}" in invenio_search.templates
 
     current_search_client.indices.delete_alias("_all", "_all", ignore=[400, 404])
     current_search_client.indices.delete("*")
-    aliases = current_search_client.indices.get_alias()
+    aliases = current_search_client.indices.get_alias(expand_wildcards="open")
     assert 0 == len(aliases)
 
     runner = CliRunner()
@@ -74,7 +75,7 @@ def test_init(app, template_entrypoints):
         result = runner.invoke(cmd, ["init", "--force"], obj=script_info)
         assert result.exit_code == 0
         assert current_search_client.indices.exists_template(
-            "record-view-{}".format(_get_version())
+            f"record-view-{_get_version()}",
         )
         assert (
             len(
@@ -94,8 +95,8 @@ def test_init(app, template_entrypoints):
             "index_template_example"
         )
 
-    aliases = current_search_client.indices.get_alias()
-    assert 8 == sum(len(idx.get("aliases", {})) for idx in aliases.values())
+    aliases = current_search_client.indices.get_alias(expand_wildcards="open")
+    assert 11 == sum(len(idx.get("aliases", {})) for idx in aliases.values())
 
     assert current_search_client.indices.exists(list(invenio_search.mappings.keys()))
     # Clean-up:
@@ -105,7 +106,7 @@ def test_init(app, template_entrypoints):
     result = runner.invoke(cmd, ["destroy", "--yes-i-know"], obj=script_info)
     assert 0 == result.exit_code
 
-    aliases = current_search_client.indices.get_alias()
+    aliases = current_search_client.indices.get_alias(expand_wildcards="open")
     assert 0 == len(aliases)
 
 
@@ -123,12 +124,19 @@ def test_list(app):
 
     result = runner.invoke(cmd, ["list", "--only-aliases"], obj=script_info)
     # Turn cli outputted str presentation of Python list into a list
-    assert set(ast.literal_eval(result.output)) == {"records", "authors"}
+    assert set(ast.literal_eval(result.output)) == {
+        "records",
+        "authors",
+        "organizations",
+    }
 
     result = runner.invoke(cmd, ["list"], obj=script_info)
     assert result.output == (
         "├──authors\n"
         "│  └──authors-authors-v1.0.0\n"
+        "├──organizations\n"
+        "│  └──organizations-organization\n"
+        "│     └──organizations-organization-v1.0.0\n"
         "└──records *\n"
         "   ├──records-authorities\n"
         "   │  └──records-authorities-authority-v1.0.0\n"

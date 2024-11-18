@@ -197,7 +197,7 @@ def list_cmd(only_active, only_aliases, verbose):
                 new_rec_list = rec_list + [0 if len(d) - 1 == idx else 1]
                 _tree_print(d[key], new_rec_list, verbose)
             else:
-                leaf_txt = "{} -> {}".format(key, d[key]) if verbose else key
+                leaf_txt = f"{key} -> {d[key]}" if verbose else key
                 click.echo(leaf_txt)
 
     aliases = current_search.active_aliases if only_active else current_search.aliases

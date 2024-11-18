@@ -9,6 +9,7 @@
 
 """Pytest configuration."""
 
+import ast
 import os
 import shutil
 import sys
@@ -37,6 +38,9 @@ def extra_entry_points():
         "invenio_search.index_templates": [
             "records = mock_module.index_templates",
         ],
+        "invenio_search.mappings": [
+            "organizations = mock_module:mock_mapping",
+        ],
     }
 
 
@@ -47,6 +51,12 @@ def app(entry_points):
     instance_path = tempfile.mkdtemp()
     app = Flask("testapp", instance_path=instance_path)
     app.config.update(TESTING=True)
+
+    search_hosts = os.environ.get("SEARCH_HOSTS", [{"host": "localhost", "port": 9200}])
+    if isinstance(search_hosts, str):
+        search_hosts = ast.literal_eval(search_hosts)
+    app.config["SEARCH_HOSTS"] = search_hosts
+
     InvenioSearch(app)
 
     with app.app_context():

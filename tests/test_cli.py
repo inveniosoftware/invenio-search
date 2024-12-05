@@ -2,7 +2,7 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2015-2024 CERN.
-# Copyright (C) 2022 Graz University of Technology.
+# Copyright (C) 2022-2024 Graz University of Technology.
 # Copyright (C) 2022 TU Wien.
 #
 # Invenio is free software; you can redistribute it and/or modify it
@@ -63,7 +63,7 @@ def test_init(app, template_entrypoints):
         assert "record-view-{}".format(_get_version()) in invenio_search.templates
 
     current_search_client.indices.delete_alias("_all", "_all", ignore=[400, 404])
-    current_search_client.indices.delete("*")
+    current_search_client.indices.delete("*", expand_wildcards="all")
     aliases = current_search_client.indices.get_alias()
     assert 0 == len(aliases)
 
@@ -171,7 +171,9 @@ def test_create_put_and_delete(app):
         obj=script_info,
     )
     assert result.exit_code == 0
-    assert name in list(current_search_client.indices.get("*").keys())
+    assert name in list(
+        current_search_client.indices.get("*", expand_wildcards="all").keys()
+    )
 
     is_OS = SEARCH_DISTRIBUTION == OS
     is_ES = SEARCH_DISTRIBUTION == ES
@@ -206,4 +208,6 @@ def test_create_put_and_delete(app):
         obj=script_info,
     )
     assert result.exit_code == 0
-    assert name not in list(current_search_client.indices.get("*").keys())
+    assert name not in list(
+        current_search_client.indices.get("*", expand_wildcards="all").keys()
+    )

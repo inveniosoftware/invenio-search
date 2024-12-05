@@ -3,6 +3,7 @@
 # This file is part of Invenio.
 # Copyright (C) 2015-2018 CERN.
 # Copyright (C)      2022 TU Wien.
+# Copyright (C) 2024 Graz University of Technology.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -157,7 +158,7 @@ def test_whitelisted_aliases(app, aliases_config, expected_aliases):
     app.config.update(SEARCH_MAPPINGS=aliases_config)
 
     current_search_client.indices.delete_alias("_all", "_all", ignore=[400, 404])
-    current_search_client.indices.delete("*")
+    current_search_client.indices.delete("*", expand_wildcards="all")
     list(current_search.create(ignore=None))
 
     aliases = current_search_client.indices.get_alias()
@@ -197,7 +198,7 @@ def test_creating_alias_existing_index(
     search.register_mappings("authors", "mock_module.mappings")
     search._current_suffix = suffix
     current_search_client.indices.delete_alias("_all", "_all", ignore=[400, 404])
-    current_search_client.indices.delete("*")
+    current_search_client.indices.delete("*", expand_wildcards="all")
     new_indexes = []
     if create_index:
         current_search_client.indices.create(index=create_index)
@@ -215,7 +216,7 @@ def test_creating_alias_existing_index(
         assert len(results) == len(expected)
         for result in results:
             assert result[0] in expected
-        indices = current_search_client.indices.get("*")
+        indices = current_search_client.indices.get("*", expand_wildcards="all")
         index_names = list(indices.keys())
         alias_names = []
         for index in index_names:
@@ -228,7 +229,7 @@ def test_creating_alias_existing_index(
     else:
         with pytest.raises(Exception):
             results = list(current_search.create(ignore=None))
-        indices = current_search_client.indices.get("*")
+        indices = current_search_client.indices.get("*", expand_wildcards="all")
         index_names = list(indices.keys())
         assert index_names == new_indexes
         if create_index:
@@ -270,7 +271,7 @@ def _test_prefix_indices(app, prefix_value):
     search.register_mappings("records", "mock_module.mappings")
 
     # clean-up in case something failed previously
-    current_search_client.indices.delete("*")
+    current_search_client.indices.delete("*", expand_wildcards="all")
     # create indices and test
     list(search.create())
     es_indices = current_search_client.indices.get_alias()
@@ -302,7 +303,7 @@ def _test_prefix_indices(app, prefix_value):
         _f("{p}records"): all_indices,
     }
     # clean-up
-    current_search_client.indices.delete("*")
+    current_search_client.indices.delete("*", expand_wildcards="all")
 
 
 def test_indices_prefix_empty_value(app):
@@ -389,7 +390,7 @@ def test_current_suffix(app):
 
 def test_not_dry_run_and_index_exists(app):
     """Test create_index and no dry run when index exists."""
-    current_search_client.indices.delete("*")
+    current_search_client.indices.delete("*", expand_wildcards="all")
     current_search_client.indices.create(index="records-default-v1.0.0", body="")
     search = app.extensions["invenio-search"]
     search.register_mappings("records", "mock_module.mappings")
@@ -399,7 +400,7 @@ def test_not_dry_run_and_index_exists(app):
 
 def test_create_selected_indexes(app):
     search = app.extensions["invenio-search"]
-    current_search_client.indices.delete("*")
+    current_search_client.indices.delete("*", expand_wildcards="all")
     search.register_mappings("authors", "mock_module.mappings")
     search.register_mappings("records", "mock_module.mappings")
     list(search.create(index_list=["records-bibliographic-bibliographic-v1.0.0"]))
@@ -423,7 +424,7 @@ def test_create_selected_indexes(app):
 
 def test_delete_selected_indexes(app):
     search = app.extensions["invenio-search"]
-    current_search_client.indices.delete("*")
+    current_search_client.indices.delete("*", expand_wildcards="all")
     search.register_mappings("authors", "mock_module.mappings")
     search.register_mappings("records", "mock_module.mappings")
     list(search.create())
@@ -438,7 +439,7 @@ def test_delete_selected_indexes(app):
 
 def test_create_when_indexes_already_exists_with_ignore_existing_true(app):
     search = app.extensions["invenio-search"]
-    current_search_client.indices.delete("*")
+    current_search_client.indices.delete("*", expand_wildcards="all")
     search.register_mappings("authors", "mock_module.mappings")
     search.register_mappings("records", "mock_module.mappings")
     list(search.create(index_list=["authors-authors-v1.0.0", "records-default-v1.0.0"]))
@@ -453,7 +454,7 @@ def test_update_mappings(app):
     """Test if mapping gets correctly updated."""
 
     mapping_path = "tests/mock_module/mappings/os-v2/records/default-v1.0.0.json"
-    current_search_client.indices.delete("*")
+    current_search_client.indices.delete("*", expand_wildcards="all")
 
     with open(mapping_path, "r") as body:
         initial_mapping = json.load(body)

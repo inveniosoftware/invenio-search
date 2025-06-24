@@ -3,6 +3,7 @@
 # This file is part of Invenio.
 # Copyright (C) 2015-2024 CERN.
 # Copyright (C)      2022 TU Wien.
+# Copyright (C) 2025 Graz University of Technology.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -12,14 +13,10 @@
 import json
 import os
 import warnings
+from importlib.resources import files
 
 import dictdiffer
-from pkg_resources import (
-    iter_entry_points,
-    resource_filename,
-    resource_isdir,
-    resource_listdir,
-)
+from invenio_base.utils import entry_points
 from werkzeug.utils import cached_property
 
 from . import config
@@ -78,15 +75,14 @@ class _SearchState(object):
     def _collect_templates(self, entrypoint_group):
         """Load actions from an entry point group."""
         result = []
-
-        for ep in iter_entry_points(group=entrypoint_group):
+        for ep in entry_points(group=entrypoint_group):
             loaded_ep = ep.load()
 
             if callable(loaded_ep):
                 for template_dir in loaded_ep():
                     result.append(self.register_templates(template_dir))
             else:
-                result.append(self.register_templates(ep.module_name))
+                result.append(self.register_templates(ep.module))
 
         templates = {}
         for template in result:
@@ -126,9 +122,7 @@ class _SearchState(object):
 
             # Make sure that the OpenSearch mappings are in the folder.
             # The fallback can be removed after transition to OpenSearch.
-            try:
-                resource_listdir(module, subfolder)
-            except FileNotFoundError:
+            if not (files(module) / subfolder).is_dir():
                 # fallback to ES folder with a warning if `os-vx` is not found
                 subfolder = "v7"
                 warnings.warn(
@@ -159,10 +153,10 @@ class _SearchState(object):
 
             data = aliases.get(root_name, {})
 
-            for filename in resource_listdir(package_name, resource_name):
+            for filename in os.listdir(files(package_name) / resource_name):
                 file_path = os.path.join(resource_name, filename)
 
-                if resource_isdir(package_name, file_path):
+                if (files(package_name) / file_path).is_dir():
                     _walk_dir(data, *(parts + (filename,)))
                     continue
 
@@ -174,9 +168,8 @@ class _SearchState(object):
 
                 index_name = build_index_from_parts(*(parts + (filename_root,)))
                 assert index_name not in data, "Duplicate index"
-                filename = resource_filename(
-                    package_name, os.path.join(resource_name, filename)
-                )
+
+                filename = os.path.join(files(package_name), resource_name, filename)
                 data[index_name] = filename
                 self.mappings[index_name] = filename
 
@@ -196,10 +189,10 @@ class _SearchState(object):
         def _walk_dir(*parts):
             parts = parts or tuple()
             resource_name = os.path.join(*parts) if parts else ""
-            for filename in resource_listdir(module, resource_name):
+            for filename in os.listdir(files(module) / resource_name):
                 file_path = os.path.join(resource_name, filename)
 
-                if resource_isdir(module, file_path):
+                if (files(module) / file_path).is_dir():
                     _walk_dir(*(parts + (filename,)))
                     continue
 
@@ -210,9 +203,8 @@ class _SearchState(object):
                     continue
 
                 template_name = build_index_from_parts(*(parts + (filename_root,)))
-                result[template_name] = resource_filename(
-                    module, os.path.join(resource_name, filename)
-                )
+                filename = os.path.join(files(module), resource_name, filename)
+                result[template_name] = filename
 
         # Start the recursion here:
         _walk_dir()
@@ -220,8 +212,8 @@ class _SearchState(object):
 
     def load_entry_point_group_mappings(self, entry_point_group_mappings):
         """Load actions from an entry point group."""
-        for ep in iter_entry_points(group=entry_point_group_mappings):
-            self.register_mappings(ep.name, ep.module_name)
+        for ep in entry_points(group=entry_point_group_mappings):
+            self.register_mappings(ep.name, ep.module)
 
     def _client_builder(self):
         """Build search engine (ES/OS) client."""

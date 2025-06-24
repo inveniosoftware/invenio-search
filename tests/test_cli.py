@@ -2,7 +2,7 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2015-2024 CERN.
-# Copyright (C) 2022-2024 Graz University of Technology.
+# Copyright (C) 2022-2025 Graz University of Technology.
 # Copyright (C) 2022 TU Wien.
 #
 # Invenio is free software; you can redistribute it and/or modify it
@@ -56,7 +56,7 @@ def test_init(app, template_entrypoints):
     assert 3 == len(invenio_search.mappings)
 
     with patch(
-        "invenio_search.ext.iter_entry_points",
+        "invenio_search.ext.entry_points",
         return_value=template_entrypoints("invenio_search.templates"),
     ):
         assert len(invenio_search.templates.keys()) == 1

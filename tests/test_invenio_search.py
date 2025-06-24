@@ -3,7 +3,7 @@
 # This file is part of Invenio.
 # Copyright (C) 2015-2018 CERN.
 # Copyright (C)      2022 TU Wien.
-# Copyright (C) 2024 Graz University of Technology.
+# Copyright (C) 2024-2025 Graz University of Technology.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -109,17 +109,17 @@ def test_load_entry_point_group(template_entrypoints):
 
         class ep(object):
             name = "records"
-            module_name = "mock_module.mappings"
+            module = "mock_module.mappings"
 
         yield ep
 
     assert len(ext.mappings) == 0
-    with patch("invenio_search.ext.iter_entry_points", mock_entry_points_mappings):
+    with patch("invenio_search.ext.entry_points", mock_entry_points_mappings):
         ext.load_entry_point_group_mappings(entry_point_group_mappings=ep_group)
     assert len(ext.mappings) == 3
 
     with patch(
-        "invenio_search.ext.iter_entry_points",
+        "invenio_search.ext.entry_points",
         return_value=template_entrypoints("invenio_search.templates"),
     ):
         assert set(ext.templates.keys()) == {"record-view-{}".format(_get_version())}
@@ -344,7 +344,7 @@ def _test_prefix_templates(app, prefix_value, template_entrypoints):
     app.config["SEARCH_INDEX_PREFIX"] = prefix_value
     search = app.extensions["invenio-search"]
     with patch(
-        "invenio_search.ext.iter_entry_points",
+        "invenio_search.ext.entry_points",
         return_value=template_entrypoints("invenio_search.templates"),
     ):
         # clean-up in case something failed previously

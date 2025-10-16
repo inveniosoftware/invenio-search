@@ -11,6 +11,7 @@
 """Test CLI."""
 
 import ast
+from unittest.mock import PropertyMock
 
 import pytest
 from click.testing import CliRunner
@@ -152,6 +153,16 @@ def test_check(app):
     ):
         result = runner.invoke(cmd, ["check"], obj=script_info)
         assert result.exit_code > 0
+
+    # OpenSearch v2 client with v3 cluster (should pass)
+    if SEARCH_DISTRIBUTION == OS and search.VERSION[0] == 2:
+        with patch(
+            "invenio_search.ext._SearchState.cluster_version",
+            new_callable=PropertyMock,
+            return_value=(3, 0, 0),
+        ):
+            result = runner.invoke(cmd, ["check"], obj=script_info)
+            assert result.exit_code == 0
 
 
 def test_create_put_and_delete(app):

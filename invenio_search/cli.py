@@ -45,7 +45,17 @@ def search_version_check(f):
                 )
             )
 
-        if cluster_ver != client_ver:
+        has_same_major_ver = cluster_ver == client_ver
+        is_opensearch_v2_client = (
+            SEARCH_DISTRIBUTION.lower() == "opensearch" and client_ver == 2
+        )
+        is_compatible = (
+            has_same_major_ver
+            # OpenSearch v2.x client is compatible with both v2.x and v3.x cluster versions
+            or (is_opensearch_v2_client and cluster_ver in (2, 3)),
+        )
+
+        if not is_compatible:
             raise click.ClickException(
                 "{search} version mismatch. Invenio was installed with "
                 "{search} v{client_ver}.x support, but the cluster runs "

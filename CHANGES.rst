@@ -9,6 +9,12 @@
 Changes
 =======
 
+Version v3.1.1 (released 2025-10-17)
+
+- fix(cli): allow compatible OSv2 client with OSv3 cluster
+    * The OpenSearch v2.x client is compatible with both the OpenSearch v2
+      and v3 cluster versions.
+
 Version 3.1.0 (released 2025-07-01)
 
 - fix: pkg_resources DeprecationWarning

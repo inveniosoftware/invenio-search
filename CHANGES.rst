@@ -8,6 +8,12 @@
 Changes
 =======
 
+Version v2.4.2 (released 2025-10-28)
+
+- fix(cli): allow compatible OSv2 client with OSv3 cluster
+    * The OpenSearch v2.x client is compatible with both the OpenSearch v2
+      and v3 cluster versions.
+
 Version v2.4.1 (released 2024-08-07)
 
 - fix: avoid closing db session

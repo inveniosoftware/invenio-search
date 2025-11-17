@@ -9,6 +9,10 @@
 Changes
 =======
 
+Version v3.1.2 (released 2025-11-18)
+
+- fix(check): correct issue with compatibility check of 3.1.1
+
 Version v3.1.1 (released 2025-10-17)
 
 - fix(cli): allow compatible OSv2 client with OSv3 cluster

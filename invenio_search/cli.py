@@ -33,38 +33,34 @@ def search_version_check(f):
     @wraps(f)
     def inner(*args, **kwargs):
         # NOTE: here we want to compare the *actual* versions of the library and search
-        client_ver = search.VERSION[0]
-        cluster_ver = current_search.cluster_version[0]
-        cluster_distro = current_search.cluster_distribution
+        distribution_of_client = SEARCH_DISTRIBUTION.lower()
+        distribution_of_cluster = current_search.cluster_distribution
 
-        if SEARCH_DISTRIBUTION.lower() != cluster_distro:
+        if distribution_of_client != distribution_of_cluster:
             raise click.ClickException(
                 "Search distribution mismatch. Invenio was installed with "
-                "{expected} support, but the cluster runs {running}.".format(
-                    expected=SEARCH_DISTRIBUTION.lower(),
-                    running=cluster_distro,
-                )
+                f"{distribution_of_client} support, but the cluster runs {distribution_of_cluster}."
             )
 
-        has_same_major_ver = cluster_ver == client_ver
+        major_version_of_client = search.VERSION[0]
+        major_version_of_cluster = current_search.cluster_version[0]
+
         is_opensearch_v2_client = (
-            SEARCH_DISTRIBUTION.lower() == "opensearch" and client_ver == 2
+            distribution_of_client == "opensearch" and major_version_of_client == 2
         )
         is_compatible = (
-            has_same_major_ver
-            # OpenSearch v2.x client is compatible with both v2.x and v3.x cluster versions
-            or (is_opensearch_v2_client and cluster_ver in (2, 3)),
+            (major_version_of_cluster == major_version_of_client)
+            or
+            # OpenSearch v2.x client is compatible with both v2.x and v3.x
+            # cluster versions
+            (is_opensearch_v2_client and major_version_of_cluster in (2, 3))
         )
 
         if not is_compatible:
             raise click.ClickException(
-                "{search} version mismatch. Invenio was installed with "
-                "{search} v{client_ver}.x support, but the cluster runs "
-                "{search} v{cluster_ver}.x.".format(
-                    search=SEARCH_DISTRIBUTION.lower(),
-                    client_ver=client_ver,
-                    cluster_ver=cluster_ver,
-                )
+                f"{distribution_of_client} version mismatch. Invenio was installed with "
+                f"{distribution_of_client} v{major_version_of_client}.x support, but the cluster runs "
+                f"{distribution_of_cluster} v{major_version_of_cluster}.x."
             )
         return f(*args, **kwargs)
 

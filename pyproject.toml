@@ -1,4 +1,91 @@
-[build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+# SPDX-FileCopyrightText: 2015-2018 CERN.
+# SPDX-FileCopyrightText: 2022-2026 Graz University of Technology.
+# SPDX-FileCopyrightText: 2022-2026 TU Wien.
+# SPDX-License-Identifier: MIT
 
+[project]
+name = "invenio-search"
+description = "Invenio module for information retrieval."
+readme = "README.rst"
+requires-python = ">=3.9"
+license = "MIT"
+authors = [
+  { name = "CERN", email = "info@inveniosoftware.org" },
+]
+keywords = [
+  "invenio",
+  "search",
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+]
+dependencies = [
+  "dictdiffer>=0.9.0",
+  "invenio-base>=2.0.0,<3.0.0",
+]
+dynamic = ["version"]
+
+[project.urls]
+Repository = "https://github.com/inveniosoftware/invenio-search"
+
+[project.entry-points."invenio_base.api_apps"]
+invenio_search = "invenio_search:InvenioSearch"
+
+[project.entry-points."invenio_base.apps"]
+invenio_search = "invenio_search:InvenioSearch"
+
+[project.optional-dependencies]
+elasticsearch7 = [
+  "elasticsearch-dsl>=7.0.0,<8.0.0",
+  "elasticsearch>=7.0.0,<7.14",
+]
+opensearch1 = [
+  "opensearch-dsl>=1.0.0,<2.0.0",
+  "opensearch-py>=1.1.0,<2.0.0",
+]
+opensearch2 = [
+  "opensearch-dsl>=2.0.0,<3.0.0",
+  "opensearch-py>=2.0.0,<3.0.0",
+]
+tests = [
+  "invenio-db[versioning]>=2.2.0,<3.0.0",
+  "mock>=1.3.0",
+  "pytest-black>=0.6.0",
+  "pytest-invenio>=4.0.0,<5.0.0",
+  "sphinx>=3",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "invenio_search/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/invenio_search",
+]
+
+[tool.isort]
+profile = "black"
+
+[tool.pydocstyle]
+add_ignore = "D401"
+
+[tool.pytest.ini_options]
+addopts = '--black --isort --pydocstyle --doctest-glob="*.rst" --doctest-modules --cov=invenio_search --cov-report=term-missing'
+filterwarnings = ["ignore::pytest.PytestDeprecationWarning"]
+testpaths = "tests invenio_search"
+live_server_scope = "module"
+
+# UV needs to be told explicitly which extras are conflicting:
+# https://docs.astral.sh/uv/concepts/projects/config/#conflicting-dependencies
+[tool.uv]
+conflicts = [
+  [
+    { extra = "opensearch1" },
+    { extra = "opensearch2" },
+    { extra = "elasticsearch7" },
+  ]
+]

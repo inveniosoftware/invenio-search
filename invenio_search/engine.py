@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2015-2018 CERN.
 # SPDX-FileCopyrightText: 2022 University Münster.
 # SPDX-FileCopyrightText: 2022 TU Wien.
+# SPDX-FileCopyrightText: 2026 Graz University of Technology.
 # SPDX-License-Identifier: MIT
 
 """Transparency module for importing the chosen search engine.
@@ -32,11 +33,49 @@ except ModuleNotFoundError:
         SEARCH_DISTRIBUTION = ES
 
     except ModuleNotFoundError:
-        import opensearch_dsl as dsl
-        import opensearchpy as search
+        try:
+            # opensearch<3.0
+            # opensearch_dsl only exists for < 3
+            import opensearch_dsl as dsl
+            import opensearchpy as search
 
-        SearchEngine = search.OpenSearch
-        SEARCH_DISTRIBUTION = OS
+            SearchEngine = search.OpenSearch
+            SEARCH_DISTRIBUTION = OS
+        except ModuleNotFoundError:
+            # opensearch>=3.0
+            from types import SimpleNamespace
+
+            import opensearchpy as search
+            from opensearchpy.helpers import query, response
+            from opensearchpy.helpers.aggs import A
+            from opensearchpy.helpers.faceted_search import (
+                Facet,
+                FacetedResponse,
+                FacetedSearch,
+                TermsFacet,
+            )
+            from opensearchpy.helpers.index import Index
+            from opensearchpy.helpers.query import Q
+            from opensearchpy.helpers.search import Search
+            from opensearchpy.helpers.utils import AttrDict
+
+            dsl = SimpleNamespace(
+                A=A,
+                AttrDict=AttrDict,
+                FacetedResponse=FacetedResponse,
+                FacetedSearch=FacetedSearch,
+                Index=Index,
+                Q=Q,
+                Search=Search,
+                TermsFacet=TermsFacet,
+                Facet=Facet,
+                query=query,
+                response=response,
+            )
+
+            SearchEngine = search.OpenSearch
+            SEARCH_DISTRIBUTION = OS
+
 
 else:
     # no exception raised, both are installed. Fail.

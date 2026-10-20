@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2015-2024 CERN.
 # SPDX-FileCopyrightText: 2022 TU Wien.
-# SPDX-FileCopyrightText: 2025 Graz University of Technology.
+# SPDX-FileCopyrightText: 2025-2026 Graz University of Technology.
 # SPDX-License-Identifier: MIT
 
 """Invenio module for information retrieval."""
@@ -110,6 +110,7 @@ class _SearchState(object):
         :param module: the module/package name.
         """
         search_major_version = search.VERSION[0]
+
         if SEARCH_DISTRIBUTION == ES:
             subfolder = "v{}".format(search_major_version)
         elif SEARCH_DISTRIBUTION == OS:
@@ -119,13 +120,7 @@ class _SearchState(object):
             # The fallback can be removed after transition to OpenSearch.
             if not (files(module) / subfolder).is_dir():
                 # fallback to ES folder with a warning if `os-vx` is not found
-                subfolder = "v7"
-                warnings.warn(
-                    "OpenSearch v{version} mappings files not found, falling back to Elasticsearch v7 mappings for module {module}. Please add the missing OpenSearch os-v{version} mappings.".format(
-                        module=module,
-                        version=search_major_version,
-                    )
-                )
+                subfolder = "os-v2"
         else:
             # should never happen
             raise RuntimeError(
@@ -147,7 +142,6 @@ class _SearchState(object):
             resource_name = os.path.join(*parts)
 
             data = aliases.get(root_name, {})
-
             for filename in os.listdir(files(package_name) / resource_name):
                 file_path = os.path.join(resource_name, filename)
 
@@ -162,9 +156,11 @@ class _SearchState(object):
                     continue
 
                 index_name = build_index_from_parts(*(parts + (filename_root,)))
+
                 assert index_name not in data, "Duplicate index"
 
                 filename = os.path.join(files(package_name), resource_name, filename)
+
                 data[index_name] = filename
                 self.mappings[index_name] = filename
 

@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2015-2025 CERN.
 # SPDX-FileCopyrightText: 2022 University Münster.
 # SPDX-FileCopyrightText: 2022 TU Wien.
-# SPDX-FileCopyrightText: 2024-2025 Graz University of Technology.
+# SPDX-FileCopyrightText: 2024-2026 Graz University of Technology.
 # SPDX-FileCopyrightText: 2026 TU Wien.
 # SPDX-License-Identifier: MIT
 
@@ -412,7 +412,7 @@ from .api import (
 from .ext import InvenioSearch
 from .proxies import current_search, current_search_client
 
-__version__ = "3.1.3"
+__version__ = "4.0.0"
 
 
 __all__ = (

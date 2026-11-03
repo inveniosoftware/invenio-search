@@ -47,6 +47,9 @@ opensearch2 = [
   "opensearch-dsl>=2.0.0,<3.0.0",
   "opensearch-py>=2.0.0,<3.0.0",
 ]
+opensearch3 = [
+  "opensearch-py>=3.0.0,<4.0.0",
+]
 tests = [
   "invenio-db[versioning]>=2.2.0,<3.0.0",
   "mock>=1.3.0",
@@ -86,6 +89,7 @@ conflicts = [
   [
     { extra = "opensearch1" },
     { extra = "opensearch2" },
+    { extra = "opensearch3" },
     { extra = "elasticsearch7" },
   ]
 ]

@@ -118,12 +118,16 @@ class _SearchState(object):
             # Make sure that the OpenSearch mappings are in the folder.
             # The fallback can be removed after transition to OpenSearch.
             if not (files(module) / subfolder).is_dir():
-                # fallback to ES folder with a warning if `os-vx` is not found
+                # fallback with a warning if `os-vx` is not found: to `os-v2`
+                # for OpenSearch v3+ (compatible mappings), else to ES `v7`
                 subfolder = "v7"
+                if search_major_version >= 3 and (files(module) / "os-v2").is_dir():
+                    subfolder = "os-v2"
                 warnings.warn(
-                    "OpenSearch v{version} mappings files not found, falling back to Elasticsearch v7 mappings for module {module}. Please add the missing OpenSearch os-v{version} mappings.".format(
+                    "OpenSearch v{version} mappings files not found, falling back to {fallback} mappings for module {module}. Please add the missing OpenSearch os-v{version} mappings.".format(
                         module=module,
                         version=search_major_version,
+                        fallback=subfolder,
                     )
                 )
         else:
@@ -339,7 +343,7 @@ class _SearchState(object):
             ignore.append(400)
 
         def ensure_not_exists(name):
-            if not ignore_existing and self.client.indices.exists(name):
+            if not ignore_existing and self.client.indices.exists(index=name):
                 raise IndexAlreadyExistsError(
                     'index/alias with name "{}" already exists'.format(name)
                 )
@@ -412,7 +416,7 @@ class _SearchState(object):
         index_alias_name = build_alias_name(index)
 
         # get api returns only dicts
-        index_dict = self.client.indices.get(index_alias_name)
+        index_dict = self.client.indices.get(index=index_alias_name)
         index_keys = list(index_dict.keys())
 
         # make sure only one index exists

@@ -1,0 +1,18 @@
+{
+  "template": {
+    "mappings": {
+      "properties": {
+        "recid": {
+          "type": "integer",
+          "null_value": 0
+        },
+        "title": {
+          "type": "text"
+          }
+        }
+    },
+    "settings": {
+      "number_of_replicas": 1
+    }
+}
+}

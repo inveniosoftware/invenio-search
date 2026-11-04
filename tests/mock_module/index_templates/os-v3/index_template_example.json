@@ -1,0 +1,6 @@
+{  "index_patterns": ["__SEARCH_INDEX_PREFIX__example-*"],
+  "composed_of": [
+    "date_component",
+    "record_base"
+  ]
+}

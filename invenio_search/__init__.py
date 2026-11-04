@@ -299,6 +299,14 @@ repository:
     $ tree --dirsfirst examples/data
 
     examples/data
+    +- os-v3
+    |  +- demo        # OpenSearch 3 mappings
+    |  |  +- ...
+    |  +- __init__.py
+    +- os-v2
+    |  +- demo        # OpenSearch 2 mappings
+    |  |  +- ...
+    |  +- __init__.py
     +- os-v1
     |  +- demo        # OpenSearch 1 mappings
     |  |  +- authorities
@@ -316,6 +324,9 @@ repository:
     |  |  +- default-v1.0.0.json
     |  +- __init__.py
     +-- __init__.py
+
+If the ``os-v3`` folder is missing for OpenSearch v3, the ``os-v2`` mappings
+are used (with a warning).
 
 Elasticsearch plugins
 ~~~~~~~~~~~~~~~~~~~~~

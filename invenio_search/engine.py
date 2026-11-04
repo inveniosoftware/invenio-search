@@ -8,6 +8,7 @@
 This module imports the ``elasticsearch``/``opensearchpy`` and
 ``elasticsearch_dsl``/``opensearch_dsl`` packages based on availability,
 and provides them as ``search`` and ``dsl`` respectively.
+With ``opensearch-py`` v3+, the DSL bundled with ``opensearchpy`` is used.
 The aim of this is to make the choice of the search engine (Elasticsearch
 vs. OpenSearch) more transparent.
 """
@@ -32,8 +33,12 @@ except ModuleNotFoundError:
         SEARCH_DISTRIBUTION = ES
 
     except ModuleNotFoundError:
-        import opensearch_dsl as dsl
         import opensearchpy as search
+
+        if search.VERSION[0] >= 3:
+            from . import opensearchpy_dsl as dsl
+        else:
+            import opensearch_dsl as dsl
 
         SearchEngine = search.OpenSearch
         SEARCH_DISTRIBUTION = OS

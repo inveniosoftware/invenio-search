@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2015-2018 CERN.
 # SPDX-FileCopyrightText: 2022 TU Wien.
 # SPDX-FileCopyrightText: 2024-2025 Graz University of Technology.
+# SPDX-FileCopyrightText: 2026 CESNET z.s.p.o.
 # SPDX-License-Identifier: MIT
 
 
@@ -257,7 +258,7 @@ def test_prefix_search_mappings(app, aliases_config, prefix, expected_aliases):
         assert expected_alias in active_aliases
 
 
-def _test_prefix_indices(app, prefix_value):
+def _test_prefix_indices(app, prefix_value, search_index_names):
     """Assert that each index name contains the prefix."""
     app.config["SEARCH_INDEX_PREFIX"] = prefix_value
     suffix = "-abc"
@@ -275,7 +276,7 @@ def _test_prefix_indices(app, prefix_value):
     def _f(name):  # formatting helper
         return name.format(p=prefix, s=suffix)
 
-    assert set(es_indices.keys()) == {
+    assert search_index_names() == {
         _f("{p}records-authorities-authority-v1.0.0{s}"),
         _f("{p}records-bibliographic-bibliographic-v1.0.0{s}"),
         _f("{p}records-default-v1.0.0{s}"),
@@ -302,22 +303,22 @@ def _test_prefix_indices(app, prefix_value):
     current_search_client.indices.delete("*", expand_wildcards="all")
 
 
-def test_indices_prefix_empty_value(app):
+def test_indices_prefix_empty_value(app, search_index_names):
     """Test indices creation with prefix value empty string."""
     prefix_value = ""
-    _test_prefix_indices(app, prefix_value)
+    _test_prefix_indices(app, prefix_value, search_index_names)
 
 
-def test_indices_prefix_none_value(app):
+def test_indices_prefix_none_value(app, search_index_names):
     """Test indices creation with a prefix value None."""
     prefix_value = None
-    _test_prefix_indices(app, prefix_value)
+    _test_prefix_indices(app, prefix_value, search_index_names)
 
 
-def test_indices_prefix_some_value(app):
+def test_indices_prefix_some_value(app, search_index_names):
     """Test indices creation with a prefix value `myprefix-`."""
     prefix_value = "myprefix-"
-    _test_prefix_indices(app, prefix_value)
+    _test_prefix_indices(app, prefix_value, search_index_names)
 
 
 def _test_prefix_templates(app, prefix_value, template_entrypoints):

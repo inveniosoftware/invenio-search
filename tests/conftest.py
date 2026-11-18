@@ -1,14 +1,13 @@
 # SPDX-FileCopyrightText: 2015-2024 CERN.
 # SPDX-FileCopyrightText: 2025 Graz University of Technology.
+# SPDX-FileCopyrightText: 2026 CESNET z.s.p.o.
 # SPDX-License-Identifier: MIT
 
 
 """Pytest configuration."""
 
 import os
-import shutil
 import sys
-import tempfile
 from unittest.mock import Mock
 
 import pytest
@@ -38,20 +37,32 @@ def extra_entry_points():
     }
 
 
+@pytest.fixture(scope="module")
+def create_app(instance_path, entry_points):
+    """Application factory fixture.
+
+    Needed for compatibility with pytest-invenio.
+    """
+
+    def factory(**config):
+        app = Flask("testapp", instance_path=instance_path)
+        app.config.update(config)
+        InvenioSearch(app)
+        return app
+
+    return factory
+
+
 @pytest.fixture()
-def app(entry_points):
-    """Flask application fixture."""
-    # Set temporary instance path for sqlite
-    instance_path = tempfile.mkdtemp()
-    app = Flask("testapp", instance_path=instance_path)
-    app.config.update(TESTING=True)
-    InvenioSearch(app)
+def app(create_app, app_config):
+    """Flask application fixture.
+
+    Function-scoped (unlike the pytest-invenio one), as tests modify the config.
+    """
+    app = create_app(**app_config)
 
     with app.app_context():
         yield app
-
-    # Teardown instance path.
-    shutil.rmtree(instance_path)
 
 
 def mock_iter_entry_points_factory(data, mocked_group):

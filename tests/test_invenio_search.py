@@ -95,7 +95,7 @@ def test_default_client(app):
     current_search_client.cluster.health(wait_for_status="yellow", request_timeout=1)
 
 
-def test_load_entry_point_group(template_entrypoints):
+def test_load_entry_point_group(entry_points):
     """Test entry point loading."""
     app = Flask("testapp")
     ext = InvenioSearch(app)
@@ -115,11 +115,7 @@ def test_load_entry_point_group(template_entrypoints):
         ext.load_entry_point_group_mappings(entry_point_group_mappings=ep_group)
     assert len(ext.mappings) == 3
 
-    with patch(
-        "invenio_search.ext.entry_points",
-        return_value=template_entrypoints("invenio_search.templates"),
-    ):
-        assert set(ext.templates.keys()) == {"record-view-{}".format(_get_version())}
+    assert set(ext.templates.keys()) == {"record-view-{}".format(_get_version())}
 
 
 @pytest.mark.parametrize(
@@ -132,7 +128,9 @@ def test_load_entry_point_group(template_entrypoints):
         (["does_not_exist"], []),
     ],
 )
-def test_whitelisted_aliases(app, aliases_config, expected_aliases):
+def test_whitelisted_aliases(
+    app, aliases_config, expected_aliases, cleanup_search, set_app_config_fn_scoped
+):
     """Test functionality of active aliases configuration variable."""
     all_aliases = dict(
         authors=["authors", "authors-authors-v1.0.0"],
@@ -146,13 +144,11 @@ def test_whitelisted_aliases(app, aliases_config, expected_aliases):
         ],
     )
 
-    orig = app.config["SEARCH_MAPPINGS"]
-
     search = app.extensions["invenio-search"]
     search.register_mappings("records", "mock_module.mappings")
     search.register_mappings("authors", "mock_module.mappings")
 
-    app.config.update(SEARCH_MAPPINGS=aliases_config)
+    set_app_config_fn_scoped({"SEARCH_MAPPINGS": aliases_config})
 
     current_search_client.indices.delete_alias("_all", "_all", ignore=[400, 404])
     current_search_client.indices.delete("*", expand_wildcards="all")
@@ -165,8 +161,6 @@ def test_whitelisted_aliases(app, aliases_config, expected_aliases):
         for expected_alias in expected_aliases:
             all_expected = all_aliases[expected_alias]
             assert current_search_client.indices.exists(all_expected)
-
-    app.config["SEARCH_MAPPINGS"] = orig
 
 
 @pytest.mark.parametrize(
@@ -188,7 +182,7 @@ def test_whitelisted_aliases(app, aliases_config, expected_aliases):
     ],
 )
 def test_creating_alias_existing_index(
-    app, suffix, create_index, create_alias, expected
+    app, suffix, create_index, create_alias, expected, cleanup_search
 ):
     """Test creating new alias and index where there already exists one."""
     search = app.extensions["invenio-search"]
@@ -240,11 +234,20 @@ def test_creating_alias_existing_index(
         (["authors", "records"], "dev-", ["records", "authors"]),
     ],
 )
-def test_prefix_search_mappings(app, aliases_config, prefix, expected_aliases):
+def test_prefix_search_mappings(
+    app,
+    aliases_config,
+    prefix,
+    expected_aliases,
+    cleanup_search,
+    set_app_config_fn_scoped,
+):
     """Test that indices are created when prefix & search mappings are set."""
-    app.config.update(
-        SEARCH_MAPPINGS=aliases_config,
-        SEARCH_INDEX_PREFIX=prefix,
+    set_app_config_fn_scoped(
+        {
+            "SEARCH_MAPPINGS": aliases_config,
+            "SEARCH_INDEX_PREFIX": prefix,
+        }
     )
 
     search = app.extensions["invenio-search"]
@@ -258,9 +261,11 @@ def test_prefix_search_mappings(app, aliases_config, prefix, expected_aliases):
         assert expected_alias in active_aliases
 
 
-def _test_prefix_indices(app, prefix_value, search_index_names):
+def _test_prefix_indices(
+    app, prefix_value, search_index_names, set_app_config_fn_scoped
+):
     """Assert that each index name contains the prefix."""
-    app.config["SEARCH_INDEX_PREFIX"] = prefix_value
+    set_app_config_fn_scoped({"SEARCH_INDEX_PREFIX": prefix_value})
     suffix = "-abc"
     prefix = prefix_value or ""
     search = app.extensions["invenio-search"]
@@ -303,25 +308,37 @@ def _test_prefix_indices(app, prefix_value, search_index_names):
     current_search_client.indices.delete("*", expand_wildcards="all")
 
 
-def test_indices_prefix_empty_value(app, search_index_names):
+def test_indices_prefix_empty_value(
+    app, search_index_names, cleanup_search, set_app_config_fn_scoped
+):
     """Test indices creation with prefix value empty string."""
     prefix_value = ""
-    _test_prefix_indices(app, prefix_value, search_index_names)
+    _test_prefix_indices(
+        app, prefix_value, search_index_names, set_app_config_fn_scoped
+    )
 
 
-def test_indices_prefix_none_value(app, search_index_names):
+def test_indices_prefix_none_value(
+    app, search_index_names, cleanup_search, set_app_config_fn_scoped
+):
     """Test indices creation with a prefix value None."""
     prefix_value = None
-    _test_prefix_indices(app, prefix_value, search_index_names)
+    _test_prefix_indices(
+        app, prefix_value, search_index_names, set_app_config_fn_scoped
+    )
 
 
-def test_indices_prefix_some_value(app, search_index_names):
+def test_indices_prefix_some_value(
+    app, search_index_names, cleanup_search, set_app_config_fn_scoped
+):
     """Test indices creation with a prefix value `myprefix-`."""
     prefix_value = "myprefix-"
-    _test_prefix_indices(app, prefix_value, search_index_names)
+    _test_prefix_indices(
+        app, prefix_value, search_index_names, set_app_config_fn_scoped
+    )
 
 
-def _test_prefix_templates(app, prefix_value, template_entrypoints):
+def _test_prefix_templates(app, prefix_value, set_app_config_fn_scoped):
     """Assert that templates take into account the prefix name."""
 
     def _contains_prefix(prefix_value, string_or_list):
@@ -338,44 +355,40 @@ def _test_prefix_templates(app, prefix_value, template_entrypoints):
             assert name in tpl
             assert _contains_prefix(prefix_value, tpl[name][tpl_key])
 
-    app.config["SEARCH_INDEX_PREFIX"] = prefix_value
+    set_app_config_fn_scoped({"SEARCH_INDEX_PREFIX": prefix_value})
     search = app.extensions["invenio-search"]
-    with patch(
-        "invenio_search.ext.entry_points",
-        return_value=template_entrypoints("invenio_search.templates"),
-    ):
-        # clean-up in case something failed previously
-        current_search_client.indices.delete_template("*")
-        # create templates
-        list(search.put_templates())
+    # clean-up in case something failed previously
+    current_search_client.indices.delete_template("*")
+    # create templates
+    list(search.put_templates())
 
-        assert len(search.templates.keys()) == 1
-        name = "record-view-{0}".format(_get_version())
-        prefixed = (prefix_value or "") + name
-        assert name in search.templates
-        assert current_search_client.indices.exists_template(prefixed)
-        _test_prefix_replaced_in_body(prefixed, prefix_value, "index_patterns")
+    assert len(search.templates.keys()) == 1
+    name = "record-view-{0}".format(_get_version())
+    prefixed = (prefix_value or "") + name
+    assert name in search.templates
+    assert current_search_client.indices.exists_template(prefixed)
+    _test_prefix_replaced_in_body(prefixed, prefix_value, "index_patterns")
 
-        # clean-up
-        current_search_client.indices.delete_template("*")
+    # clean-up
+    current_search_client.indices.delete_template("*")
 
 
-def test_templates_prefix_empty_value(app, template_entrypoints):
+def test_templates_prefix_empty_value(app, cleanup_search, set_app_config_fn_scoped):
     """Test templates creation with prefix value empty string."""
     prefix_value = ""
-    _test_prefix_templates(app, prefix_value, template_entrypoints)
+    _test_prefix_templates(app, prefix_value, set_app_config_fn_scoped)
 
 
-def test_templates_prefix_none_value(app, template_entrypoints):
+def test_templates_prefix_none_value(app, cleanup_search, set_app_config_fn_scoped):
     """Test templates creation with a prefix value None."""
     prefix_value = None
-    _test_prefix_templates(app, prefix_value, template_entrypoints)
+    _test_prefix_templates(app, prefix_value, set_app_config_fn_scoped)
 
 
-def test_templates_prefix_some_value(app, template_entrypoints):
+def test_templates_prefix_some_value(app, cleanup_search, set_app_config_fn_scoped):
     """Test templates creation with a prefix value `myprefix-`."""
     prefix_value = "myprefix-"
-    _test_prefix_templates(app, prefix_value, template_entrypoints)
+    _test_prefix_templates(app, prefix_value, set_app_config_fn_scoped)
 
 
 def test_current_suffix(app):
@@ -385,7 +398,7 @@ def test_current_suffix(app):
     assert suffix == search.current_suffix
 
 
-def test_not_dry_run_and_index_exists(app):
+def test_not_dry_run_and_index_exists(app, cleanup_search):
     """Test create_index and no dry run when index exists."""
     current_search_client.indices.delete("*", expand_wildcards="all")
     current_search_client.indices.create(index="records-default-v1.0.0", body="")
@@ -395,7 +408,7 @@ def test_not_dry_run_and_index_exists(app):
         list(search.create())
 
 
-def test_create_selected_indexes(app):
+def test_create_selected_indexes(app, cleanup_search):
     search = app.extensions["invenio-search"]
     current_search_client.indices.delete("*", expand_wildcards="all")
     search.register_mappings("authors", "mock_module.mappings")
@@ -419,7 +432,7 @@ def test_create_selected_indexes(app):
     assert search.client.indices.exists("records-authorities-authority-v1.0.0") is False
 
 
-def test_delete_selected_indexes(app):
+def test_delete_selected_indexes(app, cleanup_search):
     search = app.extensions["invenio-search"]
     current_search_client.indices.delete("*", expand_wildcards="all")
     search.register_mappings("authors", "mock_module.mappings")
@@ -434,7 +447,9 @@ def test_delete_selected_indexes(app):
     )
 
 
-def test_create_when_indexes_already_exists_with_ignore_existing_true(app):
+def test_create_when_indexes_already_exists_with_ignore_existing_true(
+    app, cleanup_search
+):
     search = app.extensions["invenio-search"]
     current_search_client.indices.delete("*", expand_wildcards="all")
     search.register_mappings("authors", "mock_module.mappings")
@@ -447,7 +462,7 @@ def test_create_when_indexes_already_exists_with_ignore_existing_true(app):
     )
 
 
-def test_update_mappings(app):
+def test_update_mappings(app, cleanup_search):
     """Test if mapping gets correctly updated."""
 
     mapping_path = "tests/mock_module/mappings/os-v2/records/default-v1.0.0.json"

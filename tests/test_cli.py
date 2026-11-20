@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2015-2025 CERN.
 # SPDX-FileCopyrightText: 2022-2025 Graz University of Technology.
 # SPDX-FileCopyrightText: 2022 TU Wien.
+# SPDX-FileCopyrightText: 2026 CESNET z.s.p.o.
 # SPDX-License-Identifier: MIT
 
 """Test CLI."""
@@ -25,7 +26,7 @@ def _get_version():
     return version.format(search_major_version)
 
 
-def test_init(app, template_entrypoints):
+def test_init(app, cleanup_search):
     """Run client initialization."""
     suffix = "-abc"
     invenio_search = app.extensions["invenio-search"]
@@ -51,12 +52,8 @@ def test_init(app, template_entrypoints):
     }
     assert 3 == len(invenio_search.mappings)
 
-    with patch(
-        "invenio_search.ext.entry_points",
-        return_value=template_entrypoints("invenio_search.templates"),
-    ):
-        assert len(invenio_search.templates.keys()) == 1
-        assert "record-view-{}".format(_get_version()) in invenio_search.templates
+    assert len(invenio_search.templates.keys()) == 1
+    assert "record-view-{}".format(_get_version()) in invenio_search.templates
 
     current_search_client.indices.delete_alias("_all", "_all", ignore=[400, 404])
     current_search_client.indices.delete("*", expand_wildcards="all")
@@ -105,10 +102,10 @@ def test_init(app, template_entrypoints):
     assert 0 == len(aliases)
 
 
-def test_list(app):
+def test_list(app, cleanup_search, set_app_config_fn_scoped):
     """Run listing of mappings."""
     suffix = "-abc"
-    app.config["SEARCH_MAPPINGS"] = ["records"]
+    set_app_config_fn_scoped({"SEARCH_MAPPINGS": ["records"]})
     invenio_search = app.extensions["invenio-search"]
     invenio_search._current_suffix = suffix
     invenio_search.register_mappings("authors", "mock_module.mappings")

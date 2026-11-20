@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: 2015-2018 CERN.
 # SPDX-FileCopyrightText: 2022 TU Wien.
+# SPDX-FileCopyrightText: 2026 CESNET z.s.p.o.
 # SPDX-License-Identifier: MIT
 
 """Module tests."""
@@ -197,9 +198,9 @@ def test_recordsearchv2_with_preference_param(app):
 
 
 @pytest.mark.parametrize("search_cls", [RecordsSearch, RecordsSearchV2])
-def test_search_query_min_score(app, search_cls):
+def test_search_query_min_score(app, set_app_config_fn_scoped, search_cls):
     """Test building a query with min_score."""
-    app.config.update(SEARCH_RESULTS_MIN_SCORE=0.1)
+    set_app_config_fn_scoped({"SEARCH_RESULTS_MIN_SCORE": 0.1})
 
     q = search_cls()
     q = q.query(dsl.query.Q("match", title="Higgs"))
@@ -219,7 +220,7 @@ def _test_original_index_is_stored_when_prefixing(q, prefixed_index, original_in
     assert q._original_index == original_index
 
 
-def test_prefix_index_from_meta(app):
+def test_prefix_index_from_meta(app, set_app_config_fn_scoped):
     """Test that index is prefixed when you use `Meta.index` field."""
 
     class TestSearch(RecordsSearch):
@@ -228,7 +229,7 @@ def test_prefix_index_from_meta(app):
 
     prefix_value = "myprefix-"
     index_value = TestSearch.Meta.index
-    app.config["SEARCH_INDEX_PREFIX"] = prefix_value
+    set_app_config_fn_scoped({"SEARCH_INDEX_PREFIX": prefix_value})
 
     prefixed_index = ["{}{}".format(prefix_value, index_value)]
     q = TestSearch()
@@ -236,11 +237,11 @@ def test_prefix_index_from_meta(app):
 
 
 @pytest.mark.parametrize("search_cls", [RecordsSearch, RecordsSearchV2])
-def test_prefix_index_from_kwargs(app, search_cls):
+def test_prefix_index_from_kwargs(app, set_app_config_fn_scoped, search_cls):
     """Test that index is prefixed when pass it through kwargs."""
     prefix_value = "myprefix-"
     index_value = "myindex"
-    app.config["SEARCH_INDEX_PREFIX"] = prefix_value
+    set_app_config_fn_scoped({"SEARCH_INDEX_PREFIX": prefix_value})
 
     prefixed_index = ["{}{}".format(prefix_value, index_value)]
     q = search_cls(index=index_value)
@@ -248,11 +249,11 @@ def test_prefix_index_from_kwargs(app, search_cls):
 
 
 @pytest.mark.parametrize("search_cls", [RecordsSearch, RecordsSearchV2])
-def test_prefix_index_list(app, search_cls):
+def test_prefix_index_list(app, set_app_config_fn_scoped, search_cls):
     """Test that index is prefixed when pass it through kwargs."""
     prefix_value = "myprefix-"
     index_value = ["myindex", "myanotherindex"]
-    app.config["SEARCH_INDEX_PREFIX"] = prefix_value
+    set_app_config_fn_scoped({"SEARCH_INDEX_PREFIX": prefix_value})
 
     prefixed_index = ["{}{}".format(prefix_value, _index) for _index in index_value]
 
@@ -261,11 +262,11 @@ def test_prefix_index_list(app, search_cls):
 
 
 @pytest.mark.parametrize("search_cls", [RecordsSearch, RecordsSearchV2])
-def test_prefix_multi_index_string(app, search_cls):
+def test_prefix_multi_index_string(app, set_app_config_fn_scoped, search_cls):
     """Test that index is prefixed when pass it through kwargs."""
     prefix_value = "myprefix-"
     index_value = "myindex,myanotherindex"
-    app.config["SEARCH_INDEX_PREFIX"] = prefix_value
+    set_app_config_fn_scoped({"SEARCH_INDEX_PREFIX": prefix_value})
 
     prefixed_index = [
         ",".join(

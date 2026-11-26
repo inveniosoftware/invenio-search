@@ -1,19 +1,17 @@
 # SPDX-FileCopyrightText: 2015-2024 CERN.
 # SPDX-FileCopyrightText: 2025 Graz University of Technology.
+# SPDX-FileCopyrightText: 2026 CESNET z.s.p.o.
 # SPDX-License-Identifier: MIT
 
 
 """Pytest configuration."""
 
 import os
-import shutil
 import sys
-import tempfile
-from unittest.mock import Mock
 
 import pytest
 from flask import Flask
-from invenio_base.utils import entry_points
+from invenio_app.factory import create_app as _create_app
 
 from invenio_search import InvenioSearch
 
@@ -35,55 +33,29 @@ def extra_entry_points():
         "invenio_search.index_templates": [
             "records = mock_module.index_templates",
         ],
+        "invenio_search.templates": [
+            "records = mock_module.templates",
+        ],
     }
 
 
-@pytest.fixture()
-def app(entry_points):
-    """Flask application fixture."""
-    # Set temporary instance path for sqlite
-    instance_path = tempfile.mkdtemp()
-    app = Flask("testapp", instance_path=instance_path)
-    app.config.update(TESTING=True)
-    InvenioSearch(app)
-
-    with app.app_context():
-        yield app
-
-    # Teardown instance path.
-    shutil.rmtree(instance_path)
-
-
-def mock_iter_entry_points_factory(data, mocked_group):
-    """Create a mock iter_entry_points function."""
-
-    def entrypoints(group, name=None):
-        if group == mocked_group:
-            for entrypoint in data:
-                yield entrypoint
-        else:
-            eps = [eps for eps in entry_points(group=group) if eps.name == name]
-            for x in eps:
-                yield x
-
-    return entrypoints
+@pytest.fixture(scope="module")
+def create_app(instance_path, entry_points):
+    """Application factory fixture."""
+    return _create_app
 
 
 @pytest.fixture()
-def template_entrypoints():
-    """Declare some events by mocking the invenio_stats.events entrypoint.
+def cleanup_search(base_app):
+    """Re-initialize invenio-search after the test.
 
-    It yields a list like [{event_type: <event_type_name>}, ...].
+    ``base_app`` is module-scoped, so the invenio-search extension state
+    (registered mappings and aliases, current suffix, cached templates)
+    is shared between tests. Use this fixture in tests that modify it.
+
+    Similar to ``search_clear``, but resets the in-memory extension state
+    instead of the indices in the cluster. To change app config in a test,
+    use pytest-invenio's ``set_app_config_fn_scoped``.
     """
-    eps = []
-    for idx in range(5):
-        entrypoint = Mock(
-            name="mock_module",
-            value="mock_module",
-            group="invenio_search.templates",
-        )
-        entrypoint.load = lambda: lambda: ["mock_module.templates"]
-        eps.append(entrypoint)
-
-    entrypoints = mock_iter_entry_points_factory(eps, "invenio_search.templates")
-    return entrypoints
+    yield
+    InvenioSearch(base_app)
